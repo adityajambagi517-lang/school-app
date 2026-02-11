@@ -1,0 +1,51 @@
+{
+  "classes": [
+    {
+      "_id": "69885e441ef874e63bf415f3",
+      "className": "Class 10",
+      "section": "A",
+      "academicYear": "2025-2026",
+      "isActive": true,
+      "createdAt": "2026-02-08T09:58:28.331Z",
+      "updatedAt": "2026-02-09T10:05:52.671Z",
+      "__v": 0,
+      "classTeacherId": "69885e441ef874e63bf415fd"
+    },
+    {
+      "_id": "69899ee8901b2efa1f64e9c1",
+      "className": "Class10",
+      "section": "B",
+      "academicYear": "2025-2026",
+      "isActive": true,
+      "createdAt": "2026-02-09T08:46:32.982Z",
+      "updatedAt": "2026-02-09T10:15:40.924Z",
+      "__v": 0,
+      "classTeacherId": "69899f30901b2efa1f64e9e7"
+    }
+  ],
+  "teachers": [
+    {
+      "name": "John Smith",
+      "teacherId": "TCH001",
+      "dbId": "69885e441ef874e63bf415fd"
+    },
+    {
+      "name": "DIVYA",
+      "teacherId": "TCH002",
+      "dbId": "69899f30901b2efa1f64e9e7",
+      "assignedClassId": "69899ee8901b2efa1f64e9c1"
+    }
+  ],
+  "users": [
+    {
+      "userId": "TCH001",
+      "name": "John Smith",
+      "refId": "69885e441ef874e63bf415fd"
+    },
+    {
+      "userId": "TCH002",
+      "name": "DIVYA",
+      "refId": "69899f30901b2efa1f64e9e7"
+    }
+  ]
+}

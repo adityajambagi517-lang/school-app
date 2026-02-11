@@ -1,0 +1,257 @@
+.search-container {
+    min-height: 100vh;
+    background-color: #f8fafc;
+}
+
+.search-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.search-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.search-header h1 {
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.search-header p {
+    color: #64748b;
+    margin-bottom: 2rem;
+}
+
+.search-bar {
+    display: flex;
+    max-width: 600px;
+    margin: 0 auto;
+    gap: 1rem;
+    background: white;
+    padding: 0.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.search-bar input {
+    flex: 1;
+    border: none;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    outline: none;
+}
+
+.search-bar button {
+    background: #6366f1;
+    color: white;
+    border: none;
+    padding: 0 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.search-bar button:hover {
+    background: #4f46e5;
+}
+
+/* Results List */
+.results-list {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+}
+
+.result-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.result-item:hover {
+    background: #f1f5f9;
+}
+
+.result-item:last-child {
+    border-bottom: none;
+}
+
+.student-main {
+    display: flex;
+    flex-direction: column;
+}
+
+.student-main strong {
+    color: #1e293b;
+    font-size: 1.1rem;
+}
+
+.student-main span {
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+/* Student Profile Detail */
+.student-profile {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.profile-header {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.profile-main h2 {
+    font-size: 2rem;
+    margin: 0;
+    color: #1e293b;
+}
+
+.id-badge {
+    background: #e0e7ff;
+    color: #4338ca;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+    display: inline-block;
+}
+
+.attendance-circle {
+    text-align: center;
+    background: #f8fafc;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border: 4px solid #10b981;
+}
+
+.attendance-circle .percent {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #059669;
+}
+
+.attendance-circle .label {
+    font-size: 0.7rem;
+    color: #64748b;
+}
+
+.profile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.profile-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+}
+
+.profile-card h3 {
+    margin-top: 0;
+    color: #475569;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+/* Marks Table */
+.marks-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.marks-table th {
+    text-align: left;
+    color: #64748b;
+    font-size: 0.8rem;
+    padding: 0.5rem;
+}
+
+.marks-table td {
+    padding: 0.75rem 0.5rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.pass {
+    color: #059669;
+    font-weight: 600;
+}
+
+.fail {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+/* Stats List */
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.fee-total {
+    text-align: center;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.fee-total strong {
+    font-size: 1.5rem;
+}
+
+.paid {
+    color: #059669;
+}
+
+.unpaid {
+    color: #dc2626;
+}
+
+.fee-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    padding: 0.5rem 0;
+}
+
+.contact-info p {
+    margin: 0.75rem 0;
+    color: #475569;
+}
