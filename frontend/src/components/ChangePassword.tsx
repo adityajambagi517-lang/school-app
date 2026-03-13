@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/api';
+import PasswordInput from './Common/PasswordInput';
 import '../pages/Teacher/Dashboard.css';
 
 interface ChangePasswordProps {
-    role: 'teacher' | 'student';
+    role: 'teacher' | 'student' | 'admin';
 }
 
 function ChangePassword({ role }: ChangePasswordProps) {
@@ -90,43 +91,31 @@ function ChangePassword({ role }: ChangePasswordProps) {
                 )}
 
                 <form onSubmit={handleSubmit} className="form-container" style={{ maxWidth: '500px' }}>
-                    <div className="form-group">
-                        <label>Current Password *</label>
-                        <input
-                            type="password"
-                            value={formData.currentPassword}
-                            onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
-                            required
-                            className="form-input"
-                            placeholder="Enter current password"
-                        />
-                    </div>
+                    <PasswordInput
+                        label="Current Password *"
+                        value={formData.currentPassword}
+                        onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
+                        required
+                        placeholder="Enter current password"
+                    />
 
-                    <div className="form-group">
-                        <label>New Password *</label>
-                        <input
-                            type="password"
-                            value={formData.newPassword}
-                            onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
-                            required
-                            minLength={6}
-                            className="form-input"
-                            placeholder="Enter new password (min. 6 characters)"
-                        />
-                    </div>
+                    <PasswordInput
+                        label="New Password *"
+                        value={formData.newPassword}
+                        onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+                        required
+                        minLength={6}
+                        placeholder="Enter new password (min. 6 characters)"
+                    />
 
-                    <div className="form-group">
-                        <label>Confirm New Password *</label>
-                        <input
-                            type="password"
-                            value={formData.confirmPassword}
-                            onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                            required
-                            minLength={6}
-                            className="form-input"
-                            placeholder="Re-enter new password"
-                        />
-                    </div>
+                    <PasswordInput
+                        label="Confirm New Password *"
+                        value={formData.confirmPassword}
+                        onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                        required
+                        minLength={6}
+                        placeholder="Re-enter new password"
+                    />
 
                     <button type="submit" className="btn btn-primary" disabled={submitting}>
                         {submitting ? 'Changing Password...' : 'Change Password'}

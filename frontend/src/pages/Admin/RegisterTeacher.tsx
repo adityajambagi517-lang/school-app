@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../../services/api';
 import api from '../../services/api';
+import NavBar from '../../components/NavBar';
 import './RegisterTeacher.css';
 
 interface Class {
@@ -115,21 +116,7 @@ function RegisterTeacher() {
 
     return (
         <div className="register-container">
-            <nav className="dashboard-nav">
-                <div className="nav-brand">
-                    <h2>School Management</h2>
-                    <span className="badge badge-admin">Admin</span>
-                </div>
-                <div className="nav-user">
-                    <button onClick={() => navigate('/admin/dashboard')} className="btn btn-secondary">
-                        ← Back to Dashboard
-                    </button>
-                    <span className="user-name">{user?.name}</span>
-                    <button onClick={handleLogout} className="btn btn-logout">
-                        Logout
-                    </button>
-                </div>
-            </nav>
+            <NavBar role="admin" userName={user?.name} onLogout={handleLogout} backTo="/admin/dashboard" backLabel="← Dashboard" />
 
             <div className="register-content">
                 <div className="register-card">

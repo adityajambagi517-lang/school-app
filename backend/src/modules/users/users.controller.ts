@@ -37,4 +37,14 @@ export class UsersController {
   remove(@Param('id') id: string) {
     return this.usersService.remove(id);
   }
+
+  @Patch(':id/reset-password')
+  resetPassword(@Param('id') id: string) {
+    return this.usersService.resetPassword(id);
+  }
+
+  @Patch(':id/toggle-status')
+  toggleStatus(@Param('id') id: string) {
+    return this.usersService.toggleStatus(id);
+  }
 }

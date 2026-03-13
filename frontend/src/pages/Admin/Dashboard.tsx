@@ -1,48 +1,46 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService, notificationsService, approvalsService } from '../../services/api';
+import {
+    Users, GraduationCap, School, BarChart3,
+    UserPlus, BookUser, CheckSquare, DollarSign, Search, Megaphone, ShieldCheck
+} from 'lucide-react';
+import { authService, approvalsService } from '../../services/api';
 import api from '../../services/api';
+import NavBar from '../../components/NavBar';
 import './Dashboard.css';
+
+function getGreeting() {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
+}
 
 function AdminDashboard() {
     const navigate = useNavigate();
     const user = authService.getCurrentUser();
+
     const [stats, setStats] = useState<any>(null);
-    const [unreadCount, setUnreadCount] = useState(0);
     const [pendingApprovalsCount, setPendingApprovalsCount] = useState(0);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         loadDashboardStats();
-        loadUnreadCount();
         loadPendingApprovalsCount();
     }, []);
-
-    const loadUnreadCount = async () => {
-        try {
-            const data = await notificationsService.getUnreadCount();
-            setUnreadCount(data);
-        } catch (error) {
-            console.error('Failed to load unread count:', error);
-        }
-    };
 
     const loadPendingApprovalsCount = async () => {
         try {
             const data = await approvalsService.getPending();
             setPendingApprovalsCount(data.length);
-        } catch (error) {
-            console.error('Failed to load pending approvals count:', error);
-        }
+        } catch { /* silent */ }
     };
 
     const loadDashboardStats = async () => {
         try {
-            const response = await api.get('/analytics/dashboard');
-            setStats(response.data);
-        } catch (error) {
-            console.error('Failed to load stats:', error);
-        } finally {
+            const res = await api.get('/analytics/dashboard');
+            setStats(res.data);
+        } catch { /* silent */ } finally {
             setLoading(false);
         }
     };
@@ -52,152 +50,117 @@ function AdminDashboard() {
         navigate('/login');
     };
 
-    if (loading) {
-        return (
-            <div className="dashboard-container">
-                <div className="loading">Loading dashboard...</div>
-            </div>
-        );
-    }
+    const actions = [
+        { icon: <UserPlus size={22} color="white" />, label: 'Add Student', path: '/admin/register-student', style: 't-indigo' },
+        { icon: <BookUser size={22} color="white" />, label: 'Add Teacher', path: '/admin/register-teacher', style: 't-green' },
+        { icon: <Users size={22} color="white" />, label: 'Teachers', path: '/admin/teachers', style: 't-teal' },
+        { icon: <School size={22} color="white" />, label: 'Classes', path: '/admin/classes', style: 't-orange' },
+        { icon: <CheckSquare size={22} color="white" />, label: 'Approvals', path: '/admin/approvals', style: 't-red', badge: pendingApprovalsCount > 0 ? pendingApprovalsCount : undefined },
+        { icon: <Search size={22} color="white" />, label: 'Search', path: '/admin/search', style: 't-blue' },
+        { icon: <Megaphone size={22} color="white" />, label: 'Notices', path: '/admin/notices', style: 't-violet' },
+        { icon: <Users size={22} color="white" />, label: 'User Mgmt', path: '/admin/users', style: 't-indigo' },
+        { icon: <ShieldCheck size={22} color="white" />, label: 'Password', path: '/admin/change-password', style: 't-red' },
+        { icon: <DollarSign size={22} color="white" />, label: 'Fees', path: '/admin/dashboard', style: 't-lime' },
+    ];
 
     return (
-        <div className="dashboard-container">
-            <nav className="dashboard-nav">
-                <div className="nav-brand">
-                    <h2>School Management</h2>
-                    <span className="badge badge-admin">Admin</span>
-                </div>
-                <div className="nav-user">
-                    <span className="user-name">{user?.name}</span>
-                    <button onClick={handleLogout} className="btn btn-logout">
-                        Logout
-                    </button>
-                </div>
-            </nav>
+        <div className="dash-root">
+            <NavBar
+                role="admin"
+                userName={user?.name}
+                onLogout={handleLogout}
+                links={[
+                    { icon: '📝', label: 'Register Student', path: '/admin/register-student' },
+                    { icon: '👨‍🏫', label: 'View Teachers', path: '/admin/teachers' },
+                    { icon: '➕', label: 'Register Teacher', path: '/admin/register-teacher' },
+                    { icon: '🏫', label: 'Manage Classes', path: '/admin/classes' },
+                    { icon: '📣', label: 'School Notices', path: '/admin/notices' },
+                    { icon: '✅', label: `Approvals${pendingApprovalsCount > 0 ? ` (${pendingApprovalsCount})` : ''}`, path: '/admin/approvals' },
+                    { icon: '🔍', label: 'Student Search', path: '/admin/search' },
+                    { icon: '👥', label: 'User Management', path: '/admin/users' },
+                    { icon: '🔐', label: 'Change Password', path: '/admin/change-password' },
+                ]}
+            />
 
-            <div className="dashboard-content">
-                <div className="page-header">
-                    <h1>Admin Dashboard</h1>
-                    <p>Welcome back, {user?.name}!</p>
-                </div>
-
-                <div className="stats-grid">
-                    <div className="stat-card stat-primary">
-                        <div className="stat-icon">👥</div>
-                        <div className="stat-content">
-                            <div className="stat-value">{stats?.totalStudents || 0}</div>
-                            <div className="stat-label">Total Students</div>
-                        </div>
-                    </div>
-
-                    <div className="stat-card stat-success">
-                        <div className="stat-icon">👨‍🏫</div>
-                        <div className="stat-content">
-                            <div className="stat-value">{stats?.totalTeachers || 0}</div>
-                            <div className="stat-label">Total Teachers</div>
-                        </div>
-                    </div>
-
-                    <div className="stat-card stat-info">
-                        <div className="stat-icon">🏫</div>
-                        <div className="stat-content">
-                            <div className="stat-value">{stats?.totalClasses || 0}</div>
-                            <div className="stat-label">Total Classes</div>
-                        </div>
-                    </div>
-
-                    <div className="stat-card stat-warning">
-                        <div className="stat-icon">📊</div>
-                        <div className="stat-content">
-                            <div className="stat-value">{stats?.attendanceToday?.rate || 0}%</div>
-                            <div className="stat-label">Today's Attendance</div>
-                        </div>
-                    </div>
+            <div className="dash-scroll">
+                {/* Hero */}
+                <div className="dash-hero">
+                    <p className="hero-greeting">{getGreeting()} 👋</p>
+                    <h1 className="hero-name">{user?.name?.split(' ')[0] || 'Admin'}</h1>
+                    <span className="hero-role-badge">Administrator</span>
                 </div>
 
-                <div className="dashboard-grid">
-                    <div className="dashboard-card">
-                        <h3>Quick Actions</h3>
-                        <div className="action-list">
-                            <button className="action-btn" onClick={() => navigate('/admin/register-student')}>
-                                <span>📝</span>
-                                <div>
-                                    <strong>Register Student</strong>
-                                    <p>Add new students with profile photos</p>
-                                </div>
-                            </button>
-                            <button className="action-btn" onClick={() => navigate('/admin/teachers')}>
-                                <span>👨‍🏫</span>
-                                <div>
-                                    <strong>View Teachers</strong>
-                                    <p>See all teachers, their classes, and performance stats</p>
-                                </div>
-                            </button>
-                            <button className="action-btn" onClick={() => navigate('/admin/register-teacher')}>
-                                <span>➕</span>
-                                <div>
-                                    <strong>Register Teacher</strong>
-                                    <p>Add new teacher and assign to class</p>
-                                </div>
-                            </button>
-                            <button className="action-btn" onClick={() => navigate('/admin/classes')}>
-                                <span>🏫</span>
-                                <div>
-                                    <strong>Manage Classes</strong>
-                                    <p>Create, view, and delete classes & sections</p>
-                                </div>
-                            </button>
-                            <button className="action-btn" onClick={() => navigate('/admin/approvals')}>
-                                <span>✅</span>
-                                <div>
-                                    <strong>Pending Approvals</strong>
-                                    {pendingApprovalsCount > 0 && <span className="notification-badge">{pendingApprovalsCount}</span>}
-                                    <p>Review marks and fees pending approval</p>
-                                </div>
-                            </button>
-                            <button className="action-btn">
-                                <span>📈</span>
-                                <div>
-                                    <strong>Analytics</strong>
-                                    <p>View class performance and reports</p>
-                                </div>
-                            </button>
-                            <button className="action-btn" onClick={() => navigate('/admin/search')}>
-                                <span>🔍</span>
-                                <div>
-                                    <strong>Student Search</strong>
-                                    <p>Comprehensive search for marks, attendance & fees</p>
-                                </div>
-                            </button>
-                            <button className="action-btn">
-                                <span>💰</span>
-                                <div>
-                                    <strong>Fee Management</strong>
-                                    <p>Manage school fees and payments</p>
-                                </div>
-                            </button>
+                {/* Floating stat pills */}
+                <div className="stats-row">
+                    <div className="stat-pill pill-blue">
+                        <div className="stat-pill-top">
+                            <div className="stat-pill-icon"><Users size={18} /></div>
                         </div>
+                        <div className="stat-pill-value">{loading ? '…' : (stats?.totalStudents ?? 0)}</div>
+                        <div className="stat-pill-label">Students</div>
                     </div>
+                    <div className="stat-pill pill-green">
+                        <div className="stat-pill-top">
+                            <div className="stat-pill-icon"><GraduationCap size={18} /></div>
+                        </div>
+                        <div className="stat-pill-value">{loading ? '…' : (stats?.totalTeachers ?? 0)}</div>
+                        <div className="stat-pill-label">Teachers</div>
+                    </div>
+                    <div className="stat-pill pill-orange">
+                        <div className="stat-pill-top">
+                            <div className="stat-pill-icon"><School size={18} /></div>
+                        </div>
+                        <div className="stat-pill-value">{loading ? '…' : (stats?.totalClasses ?? 0)}</div>
+                        <div className="stat-pill-label">Classes</div>
+                    </div>
+                    <div className="stat-pill pill-purple">
+                        <div className="stat-pill-top">
+                            <div className="stat-pill-icon"><BarChart3 size={18} /></div>
+                        </div>
+                        <div className="stat-pill-value">{loading ? '…' : `${stats?.attendanceToday?.rate ?? 0}%`}</div>
+                        <div className="stat-pill-label">Attendance</div>
+                    </div>
+                </div>
 
-                    <div className="dashboard-card">
-                        <h3>Recent Activity</h3>
-                        <div className="activity-list">
-                            <div className="activity-item">
-                                <div className="activity-dot"></div>
-                                <div>
-                                    <strong>System Active</strong>
-                                    <p>Dashboard loaded successfully</p>
-                                </div>
+                {/* Quick actions */}
+                <div className="section-header">
+                    <h2 className="section-title">Quick Actions</h2>
+                </div>
+                <div className="action-grid">
+                    {actions.map((a, i) => (
+                        <button key={i} className="action-tile" onClick={() => navigate(a.path)}>
+                            <div className={`tile-icon ${a.style}`}>
+                                {a.icon}
+                                {a.badge && <span className="tile-badge">{a.badge}</span>}
                             </div>
-                            <div className="activity-item">
-                                <div className="activity-dot"></div>
-                                <div>
-                                    <strong>Stats Updated</strong >
-                                    <p>Latest statistics retrieved</p>
-                                </div>
-                            </div>
+                            <span className="tile-label">{a.label}</span>
+                        </button>
+                    ))}
+                </div>
+
+                {/* Recent Activity */}
+                <div className="section-header">
+                    <h2 className="section-title">Recent Activity</h2>
+                </div>
+                <div className="activity-card">
+                    <div className="activity-row">
+                        <span className="activity-dot-lg dot-green" />
+                        <div className="activity-text">
+                            <div className="activity-title">Dashboard Loaded</div>
+                            <div className="activity-desc">System is running normally</div>
                         </div>
+                        <span className="activity-time">Now</span>
                     </div>
+                    {pendingApprovalsCount > 0 && (
+                        <div className="activity-row" style={{ cursor: 'pointer' }} onClick={() => navigate('/admin/approvals')}>
+                            <span className="activity-dot-lg dot-blue" />
+                            <div className="activity-text">
+                                <div className="activity-title">{pendingApprovalsCount} Pending Approval{pendingApprovalsCount > 1 ? 's' : ''}</div>
+                                <div className="activity-desc">Tap to review requests</div>
+                            </div>
+                            <span className="activity-time">›</span>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

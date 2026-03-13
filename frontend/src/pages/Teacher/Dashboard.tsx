@@ -1,219 +1,145 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService } from '../../services/api';
+import {
+    BookOpen, ClipboardList, Users, BarChart3,
+    Calendar, DollarSign, BookMarked,
+    CheckSquare, Lock, UserPlus, Megaphone, Search
+} from 'lucide-react';
+import { authService, notificationsService } from '../../services/api';
+import NavBar from '../../components/NavBar';
 import './Dashboard.css';
+
+function getGreeting() {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
+}
 
 function TeacherDashboard() {
     const navigate = useNavigate();
     const [user, setUser] = useState(authService.getCurrentUser());
+    const [unreadNoticesCount, setUnreadNoticesCount] = useState(0);
 
     useEffect(() => {
-        const refreshUser = async () => {
-            try {
-                const freshUser = await authService.getMe();
-                setUser(freshUser);
-            } catch (err) {
-                console.error('Failed to refresh user profile:', err);
-            }
-        };
-        refreshUser();
+        authService.getMe()
+            .then(u => setUser(u))
+            .catch(() => { /* silent */ });
+        
+        loadUnreadNoticesCount();
     }, []);
+
+    const loadUnreadNoticesCount = async () => {
+        try {
+            const notifications = await notificationsService.getAll();
+            const count = notifications.filter((n: any) => n.type === 'school_notice' && !n.isRead).length;
+            setUnreadNoticesCount(count);
+        } catch { /* silent */ }
+    };
 
     const handleLogout = () => {
         authService.logout();
         navigate('/login');
     };
 
+    const actions = [
+        { icon: <BookOpen size={22} color="white" />, label: 'Subjects', path: '/teacher/manage-subjects', cls: 't-green' },
+        { icon: <ClipboardList size={22} color="white" />, label: 'Homework', path: '/teacher/manage-homework', cls: 't-indigo' },
+        { icon: <CheckSquare size={22} color="white" />, label: 'Attendance', path: '/teacher/mark-attendance', cls: 't-teal' },
+        { icon: <BarChart3 size={22} color="white" />, label: 'Marks', path: '/teacher/enter-marks', cls: 't-orange' },
+        { icon: <Users size={22} color="white" />, label: 'Students', path: '/teacher/view-students', cls: 't-blue' },
+        { icon: <UserPlus size={22} color="white" />, label: 'Register Student', path: '/teacher/register-student', cls: 't-green' },
+        { icon: <DollarSign size={22} color="white" />, label: 'Fees', path: '/teacher/manage-fees', cls: 't-violet' },
+        { icon: <Calendar size={22} color="white" />, label: 'Timetable', path: '/teacher/timetable', cls: 't-red' },
+        { icon: <Megaphone size={22} color="white" />, label: 'Notices', path: '/teacher/notices', cls: 't-indigo', badge: unreadNoticesCount > 0 ? unreadNoticesCount : undefined },
+        { icon: <Search size={22} color="white" />, label: 'Search Students', path: '/teacher/search', cls: 't-orange' },
+        { icon: <Lock size={22} color="white" />, label: 'Password', path: '/teacher/change-password', cls: 't-lime' },
+    ];
+
     return (
-        <div className="dashboard-container">
-            <nav className="dashboard-nav">
-                <div className="nav-brand">
-                    <h2>School Management</h2>
-                    <span className="badge badge-teacher">Teacher</span>
-                </div>
-                <div className="nav-user">
-                    {user?.teacherDetails?.profileImage ? (
-                        <img
-                            src={user.teacherDetails.profileImage}
-                            alt={user?.name}
-                            style={{
-                                width: '40px',
-                                height: '40px',
-                                borderRadius: '50%',
-                                objectFit: 'cover',
-                                marginRight: '10px'
-                            }}
-                        />
-                    ) : (
-                        <div style={{
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '50%',
-                            background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: 'white',
-                            fontWeight: 'bold',
-                            marginRight: '10px'
-                        }}>
-                            {user?.name?.charAt(0).toUpperCase()}
-                        </div>
-                    )}
-                    <span className="user-name">{user?.name}</span>
-                    <button onClick={handleLogout} className="btn btn-logout">
-                        Logout
-                    </button>
-                </div>
-            </nav>
+        <div className="dash-root">
+            <NavBar
+                role="teacher"
+                userName={user?.name}
+                onLogout={handleLogout}
+                links={[
+                    ...actions.map(a => ({ icon: '→', label: a.label, path: a.path })),
+                    { icon: '🔍', label: 'Search Students', path: '/teacher/search' }
+                ]}
+            />
 
-            <div className="dashboard-content">
-                <div className="page-header">
-                    <h1>👨‍🏫 Teacher Dashboard</h1>
-                    <p>Welcome back, {user?.name}!</p>
+            <div className="dash-scroll">
+                {/* Hero */}
+                <div className="dash-hero">
+                    <p className="hero-greeting">{getGreeting()} 🎓</p>
+                    <h1 className="hero-name">{(user as any)?.name?.split(' ')[0] || 'Teacher'}</h1>
+                    <span className="hero-role-badge">Teacher</span>
                 </div>
 
-                {/* Class Information Card */}
-                {user?.assignedClassId && (
-                    <div className="class-info-card" style={{
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        color: 'white',
-                        padding: '1.5rem',
-                        borderRadius: '12px',
-                        marginBottom: '2rem',
-                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            <div style={{ fontSize: '3rem' }}>🏫</div>
-                            <div style={{ flex: 1 }}>
-                                <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.5rem' }}>
-                                    Your Assigned Class
-                                </h3>
-                                <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
-                                    <div>
-                                        <div style={{ opacity: 0.9, fontSize: '0.9rem' }}>Class & Section</div>
-                                        <div style={{ fontSize: '1.8rem', fontWeight: 'bold' }}>
-                                            {user.className} - {user.section}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div style={{ opacity: 0.9, fontSize: '0.9rem' }}>Total Students</div>
-                                        <div style={{ fontSize: '1.8rem', fontWeight: 'bold' }}>
-                                            {user.totalStudents || 0}
-                                        </div>
-                                    </div>
-                                </div>
+                {/* Stats */}
+                <div className="stats-row">
+                    <div className="stat-pill pill-green">
+                        <div className="stat-pill-top">
+                            <div className="stat-pill-icon">
+                                <Users size={18} />
                             </div>
+                        </div>
+                        <div className="stat-pill-value">{(user as any)?.totalStudents ?? 0}</div>
+                        <div className="stat-pill-label">Students</div>
+                    </div>
+                    <div className="stat-pill pill-teal">
+                        <div className="stat-pill-top">
+                            <div className="stat-pill-icon">
+                                <BookMarked size={18} />
+                            </div>
+                        </div>
+                        <div className="stat-pill-value">
+                            {(user as any)?.className ? `${(user as any).className}-${(user as any).section}` : '—'}
+                        </div>
+                        <div className="stat-pill-label">My Class</div>
+                    </div>
+                </div>
+
+                {/* Class banner if assigned */}
+                {(user as any)?.assignedClassId && (
+                    <div className="class-feature-card">
+                        <div style={{ fontSize: 36 }}>🏫</div>
+                        <div className="class-feature-text">
+                            <h3>Assigned Class</h3>
+                            <p>{(user as any).className} — {(user as any).section}</p>
+                            <small>{(user as any).totalStudents || 0} students enrolled</small>
                         </div>
                     </div>
                 )}
 
-                <div className="dashboard-grid">
-                    <div className="dashboard-card">
-                        <h3>📋 Class Management</h3>
-                        <div className="action-list">
-                            <button className="action-btn" onClick={() => navigate('/teacher/manage-subjects')}>
-                                <span>📚</span>
-                                <div>
-                                    <strong>Manage Subjects</strong>
-                                    <p>Create and manage subjects</p>
-                                </div>
-                            </button>
-                            <button className="action-btn" onClick={() => navigate('/teacher/manage-homework')}>
-                                <span>📝</span>
-                                <div>
-                                    <strong>Manage Homework</strong>
-                                    <p>Assign homework to students</p>
-                                </div>
-                            </button>
-                            <button className="action-btn" onClick={() => navigate('/teacher/register-student')}>
-                                <span>👤</span>
-                                <div>
-                                    <strong>Register Student</strong>
-                                    <p>Add new students to your class</p>
-                                </div>
-                            </button>
-                            <button className="action-btn" onClick={() => navigate('/teacher/view-students')}>
-                                <span>👥</span>
-                                <div>
-                                    <strong>View All Students</strong>
-                                    <p>See complete list of your students</p>
-                                </div>
-                            </button>
-                            <button className="action-btn" onClick={() => navigate('/teacher/mark-attendance')}>
-                                <span>✅</span>
-                                <div>
-                                    <strong>Mark Attendance</strong>
-                                    <p>Take attendance for your class</p>
-                                </div>
-                            </button>
-                            <button className="action-btn" onClick={() => navigate('/teacher/homework')}>
-                                <span>📚</span>
-                                <div>
-                                    <strong>Homework</strong>
-                                    <p>Create and manage assignments</p>
-                                </div>
-                            </button>
-                            <button className="action-btn" onClick={() => navigate('/teacher/enter-marks')}>
-                                <span>📊</span>
-                                <div>
-                                    <strong>Enter Marks</strong>
-                                    <p>Record student marks for exams</p>
-                                </div>
-                            </button>
-                            <button className="action-btn" onClick={() => navigate('/teacher/manage-fees')}>
-                                <span>💰</span>
-                                <div>
-                                    <strong>Manage Fees</strong>
-                                    <p>Create and manage fee records</p>
-                                </div>
-                            </button>
-                            <button className="action-btn" onClick={() => navigate('/teacher/timetable')}>
-                                <span>📅</span>
-                                <div>
-                                    <strong>Timetable</strong>
-                                    <p>View and manage class schedule</p>
-                                </div>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="dashboard-card">
-                        <h3>📈 Quick Stats</h3>
-                        <div className="info-list">
-                            <div className="info-item">
-                                <span className="info-label">Assigned Class</span>
-                                <span className="info-value">Available after class assignment</span>
+                {/* Actions */}
+                <div className="section-header">
+                    <h2 className="section-title">Classroom Tools</h2>
+                </div>
+                <div className="action-grid">
+                    {actions.map((a, i) => (
+                        <button key={i} className="action-tile" onClick={() => navigate(a.path || '')}>
+                            <div className={`tile-icon ${a.cls}`}>
+                                {a.icon}
+                                {a.badge && <span className="tile-badge">{a.badge}</span>}
                             </div>
-                            <div className="info-item">
-                                <span className="info-label">Total Students</span>
-                                <span className="info-value">Loading...</span>
-                            </div>
-                            <div className="info-item">
-                                <span className="info-label">Pending Submissions</span>
-                                <span className="info-value">0</span>
-                            </div>
-                        </div>
-                        <button
-                            className="btn btn-primary"
-                            style={{ marginTop: '20px', width: '100%' }}
-                            onClick={() => navigate('/teacher/change-password')}
-                        >
-                            🔐 Change Password
+                            <span className="tile-label">{a.label}</span>
                         </button>
-                    </div>
+                    ))}
                 </div>
 
-                <div className="dashboard-card">
-                    <h3>📝 Recent Actions</h3>
-                    <div className="activity-list">
-                        <div className="activity-item">
-                            <div className="activity-dot"></div>
-                            <div>
-                                <strong>Dashboard Loaded</strong>
-                                <p>Welcome to your teacher portal</p>
-                            </div>
-                        </div>
+                {/* Quick info */}
+                <div className="section-header">
+                    <h2 className="section-title">My Profile</h2>
+                </div>
+                <div className="activity-card">
+                    <div className="info-row">
+                        <span className="info-row-label">Teacher ID</span>
+                        <span className="info-row-value">{(user as any)?.referenceId || '—'}</span>
+                    </div>
+                    <div className="info-row">
+                        <span className="info-row-label">Email</span>
+                        <span className="info-row-value" style={{ fontSize: 12 }}>{(user as any)?.email || '—'}</span>
                     </div>
                 </div>
             </div>

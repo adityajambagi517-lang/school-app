@@ -163,20 +163,31 @@ export class StudentsService {
         return student;
     }
 
-    async search(query: string) {
+    async search(query: string, user: CurrentUserData) {
         if (!query || query.trim() === '') {
             throw new NotFoundException('Search query is required');
         }
 
-        // Search by student ID or name (case-insensitive)
+        const filter: any = {
+            $or: [
+                { studentId: { $regex: query, $options: 'i' } },
+                { name: { $regex: query, $options: 'i' } },
+                { email: { $regex: query, $options: 'i' } }
+            ]
+        };
+
+        // If teacher, restrict to their assigned class
+        if (user.role === 'teacher' && user.referenceId) {
+            const teacher = await this.teacherModel.findById(user.referenceId);
+            if (!teacher || !teacher.assignedClassId) {
+                throw new ForbiddenException('Teacher has no assigned class to search within');
+            }
+            filter.classId = teacher.assignedClassId;
+        }
+
+        // Search by student ID or name (case-insensitive) with class filter
         const students = await this.studentModel
-            .find({
-                $or: [
-                    { studentId: { $regex: query, $options: 'i' } },
-                    { name: { $regex: query, $options: 'i' } },
-                    { email: { $regex: query, $options: 'i' } }
-                ]
-            })
+            .find(filter)
             .populate('classId', 'className section academicYear')
             .limit(20)
             .exec();
@@ -243,10 +254,26 @@ export class StudentsService {
             })
         );
 
+        let teachers = [];
+        if (user.role === 'admin') {
+            teachers = await this.teacherModel
+                .find({
+                    $or: [
+                        { teacherId: { $regex: query, $options: 'i' } },
+                        { name: { $regex: query, $options: 'i' } },
+                        { email: { $regex: query, $options: 'i' } }
+                    ]
+                })
+                .populate('assignedClassId', 'className section academicYear')
+                .limit(10)
+                .exec();
+        }
+
         return {
             query,
-            count: studentsWithDetails.length,
-            students: studentsWithDetails
+            count: studentsWithDetails.length + teachers.length,
+            students: studentsWithDetails,
+            teachers: teachers
         };
     }
 

@@ -18,6 +18,14 @@ export class CreateUserDto {
     name: string;
 
     @IsOptional()
+    @IsString()
+    phone?: string;
+
+    @IsOptional()
+    @IsString()
+    profilePicture?: string;
+
+    @IsOptional()
     @IsMongoId()
     referenceId?: string;
 }

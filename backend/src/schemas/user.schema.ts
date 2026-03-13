@@ -26,6 +26,12 @@ export class User {
     @Prop({ required: true })
     name: string;
 
+    @Prop({ required: false })
+    phone?: string;
+
+    @Prop({ required: false })
+    profilePicture?: string;
+
     @Prop({ default: true })
     isActive: boolean;
 
@@ -40,8 +46,5 @@ export class User {
     referenceModel: string;
 }
 
-export const UserSchema = SchemaFactory.createForClass(User);
 
-// Add indexes
-UserSchema.index({ userId: 1 }, { unique: true });
-UserSchema.index({ role: 1 });
+export const UserSchema = SchemaFactory.createForClass(User);

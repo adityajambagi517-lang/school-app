@@ -42,8 +42,5 @@ export class Student {
     isActive: boolean;
 }
 
-export const StudentSchema = SchemaFactory.createForClass(Student);
 
-// Add indexes
-StudentSchema.index({ studentId: 1 }, { unique: true });
-StudentSchema.index({ classId: 1 });
+export const StudentSchema = SchemaFactory.createForClass(Student);

@@ -4,6 +4,7 @@ import { Model, Types } from 'mongoose';
 import { Markcard, MarkcardDocument, MarkcardStatus } from '../../schemas/markcard.schema';
 import { Attendance, AttendanceDocument } from '../../schemas/attendance.schema';
 import { Student, StudentDocument } from '../../schemas/student.schema';
+import { Teacher, TeacherDocument } from '../../schemas/teacher.schema';
 import { Class, ClassDocument } from '../../schemas/class.schema';
 import { Fee, FeeDocument } from '../../schemas/fee.schema';
 
@@ -13,6 +14,7 @@ export class AnalyticsService {
     @InjectModel(Markcard.name) private markcardModel: Model<MarkcardDocument>,
     @InjectModel(Attendance.name) private attendanceModel: Model<AttendanceDocument>,
     @InjectModel(Student.name) private studentModel: Model<StudentDocument>,
+    @InjectModel(Teacher.name) private teacherModel: Model<TeacherDocument>,
     @InjectModel(Class.name) private classModel: Model<ClassDocument>,
     @InjectModel(Fee.name) private feeModel: Model<FeeDocument>,
   ) { }
@@ -329,7 +331,7 @@ export class AnalyticsService {
   async getDashboardStats() {
     const [totalStudents, totalTeachers, totalClasses] = await Promise.all([
       this.studentModel.countDocuments({ isActive: true }),
-      this.classModel.countDocuments({ isActive: true }),
+      this.teacherModel.countDocuments({ isActive: true }),
       this.classModel.countDocuments({ isActive: true }),
     ]);
 

@@ -260,6 +260,9 @@ export class MarkcardsService {
     markcard.status = MarkcardStatus.APPROVED;
     markcard.approvedBy = new Types.ObjectId(userId);
     markcard.approvedAt = new Date();
+    // Auto-publish: immediately make marks visible to students upon approval
+    markcard.status = MarkcardStatus.PUBLISHED;
+    markcard.publishedAt = new Date();
     await markcard.save();
 
     // Clean up approval notifications for this markcard
@@ -271,7 +274,7 @@ export class MarkcardsService {
       // Don't throw, main operation succeeded
     }
 
-    return { message: 'Marks approved. Teacher can now edit if needed.' };
+    return { message: 'Marks approved and published. Now visible to students.' };
   }
 
   /**

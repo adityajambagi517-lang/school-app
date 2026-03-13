@@ -60,6 +60,8 @@ export class AuthService {
             name: user.name,
             role: user.role,
             email: user.email,
+            phone: user.phone,
+            profilePicture: user.profilePicture,
             referenceId: user.referenceId?.toString(),
         };
 
@@ -125,5 +127,19 @@ export class AuthService {
         await user.save();
 
         return { message: 'Password changed successfully' };
+    }
+
+    async updateProfile(userId: string, updateDto: any): Promise<any> {
+        const user = await this.userModel.findOneAndUpdate(
+            { userId, isActive: true },
+            { $set: updateDto },
+            { new: true }
+        ).select('-password');
+
+        if (!user) {
+            throw new UnauthorizedException('User not found');
+        }
+
+        return user;
     }
 }

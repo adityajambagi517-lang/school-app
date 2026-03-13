@@ -80,4 +80,46 @@ export class UsersService {
     }
     return { message: 'User deactivated successfully' };
   }
+
+  async resetPassword(id: string) {
+    const defaultPassword = 'password123';
+    const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+    
+    const user = await this.userModel.findByIdAndUpdate(
+      id, 
+      { password: hashedPassword }, 
+      { new: true }
+    ).select('-password');
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return { 
+      message: 'Password reset to default successfully',
+      user 
+    };
+  }
+
+  async toggleStatus(id: string) {
+    const user = await this.userModel.findById(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.isActive = !user.isActive;
+    await user.save();
+
+    return { 
+      message: `User ${user.isActive ? 'activated' : 'deactivated'} successfully`,
+      isActive: user.isActive 
+    };
+  }
+
+  async findByRoles(roles: string[]) {
+    return this.userModel.find({ 
+      role: { $in: roles },
+      isActive: true 
+    }).select('_id role').exec();
+  }
 }

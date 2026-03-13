@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService, timetableService, subjectsService } from '../../services/api';
+import NavBar from '../../components/NavBar';
 import './Dashboard.css';
 
 interface TimetableItem {
@@ -111,21 +112,7 @@ function ManageTimetable() {
 
     return (
         <div className="dashboard-container">
-            <nav className="dashboard-nav">
-                <div className="nav-brand">
-                    <h2>School Management</h2>
-                    <span className="badge badge-teacher">Teacher</span>
-                </div>
-                <div className="nav-user">
-                    <button onClick={() => navigate('/teacher/dashboard')} className="btn btn-secondary">
-                        ← Back
-                    </button>
-                    <span className="user-name">{user?.name}</span>
-                    <button onClick={handleLogout} className="btn btn-logout">
-                        Logout
-                    </button>
-                </div>
-            </nav>
+            <NavBar role="teacher" userName={user?.name} onLogout={handleLogout} backTo="/teacher/dashboard" backLabel="← Dashboard" />
 
             <div className="dashboard-content">
                 <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

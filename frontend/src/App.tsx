@@ -1,15 +1,18 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import AdminDashboard from './pages/Admin/Dashboard';
+import ManageNotices from './pages/Admin/ManageNotices';
 import RegisterStudent from './pages/Admin/RegisterStudent';
 import RegisterTeacher from './pages/Admin/RegisterTeacher';
 import TeachersOverview from './pages/Admin/TeachersOverview';
 import ManageClasses from './pages/Admin/ManageClasses';
 import StudentSearch from './pages/Admin/StudentSearch';
 import ViewApprovals from './pages/Admin/ViewApprovals';
+import UserManagement from './pages/Admin/UserManagement';
 import TeacherDashboard from './pages/Teacher/Dashboard';
 import TeacherRegisterStudent from './pages/Teacher/RegisterStudent';
 import ViewStudents from './pages/Teacher/ViewStudents';
+import TeacherStudentSearch from './pages/Teacher/StudentSearch';
 import EnterMarks from './pages/Teacher/EnterMarks';
 import MarkAttendance from './pages/Teacher/MarkAttendance';
 import ManageFees from './pages/Teacher/ManageFees';
@@ -21,6 +24,9 @@ import AttendanceView from './pages/Student/AttendanceView';
 import MarksView from './pages/Student/MarksView';
 import HomeworkView from './pages/Student/HomeworkView';
 import TimetableView from './pages/Student/TimetableView';
+import FeesView from './pages/Student/FeesView';
+import NoticesView from './pages/Common/NoticesView';
+import Profile from './pages/Common/Profile';
 import ChangePassword from './components/ChangePassword';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
@@ -88,6 +94,30 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/admin/notices"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <ManageNotices />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <UserManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/change-password"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <ChangePassword role="admin" />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Teacher Routes */}
         <Route
@@ -111,6 +141,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['teacher']}>
               <ViewStudents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teacher/search"
+          element={
+            <ProtectedRoute allowedRoles={['teacher']}>
+              <TeacherStudentSearch />
             </ProtectedRoute>
           }
         />
@@ -170,6 +208,14 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/teacher/notices"
+          element={
+            <ProtectedRoute allowedRoles={['teacher']}>
+              <NoticesView />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Student Routes */}
         <Route
@@ -213,10 +259,50 @@ function App() {
           }
         />
         <Route
+          path="/student/fees"
+          element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <FeesView />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/student/change-password"
           element={
             <ProtectedRoute allowedRoles={['student']}>
               <ChangePassword role="student" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/notices"
+          element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <NoticesView />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/profile"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teacher/profile"
+          element={
+            <ProtectedRoute allowedRoles={['teacher']}>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/profile"
+          element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <Profile />
             </ProtectedRoute>
           }
         />

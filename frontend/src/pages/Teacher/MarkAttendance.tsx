@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService, attendanceService, studentsService, subjectsService } from '../../services/api';
-import '../Teacher/Dashboard.css';
+import NavBar from '../../components/NavBar';
+import './MarkAttendance.css';
 
 interface Student {
     _id: string;
@@ -16,7 +17,7 @@ interface Subject {
 
 interface AttendanceRecord {
     studentId: string;
-    status: 'present' | 'absent' | 'late';
+    status: 'present' | 'absent';
     remarks?: string;
 }
 
@@ -108,59 +109,47 @@ function MarkAttendance() {
     };
 
     if (loading) {
-        return <div className="dashboard-container">Loading...</div>;
+        return <div className="dash-root">Loading...</div>;
     }
 
     return (
-        <div className="dashboard-container">
-            <nav className="dashboard-nav">
-                <div className="nav-brand">
-                    <h2>School Management</h2>
-                    <span className="badge badge-teacher">Teacher</span>
-                </div>
-                <div className="nav-user">
-                    <button onClick={() => navigate('/teacher/dashboard')} className="btn btn-secondary">
-                        ← Back
-                    </button>
-                    <span className="user-name">{user?.name}</span>
-                    <button onClick={handleLogout} className="btn btn-logout">
-                        Logout
-                    </button>
-                </div>
-            </nav>
+        <div className="dash-root">
+            <NavBar role="teacher" userName={user?.name} onLogout={handleLogout} backTo="/teacher/dashboard" backLabel="← Dashboard" />
 
-            <div className="dashboard-content">
-                <div className="page-header">
-                    <h1>✅ Mark Attendance</h1>
-                    <p>Record attendance for your class</p>
+            <div className="dash-scroll" style={{ padding: '0 16px' }}>
+                <div className="dash-hero" style={{ padding: '20px', marginBottom: '24px', borderRadius: '0 0 24px 24px' }}>
+                    <p className="hero-greeting">Record Daily Logs 📝</p>
+                    <h1 className="hero-name">Mark Attendance</h1>
                 </div>
 
                 {message.text && (
-                    <div className={`message message-${message.type}`}>
-                        {message.text}
+                    <div className={`activity-card`} style={{ borderLeft: `4px solid ${message.type === 'success' ? '#48bb78' : '#f56565'}`, marginBottom: '1rem' }}>
+                        <p style={{ margin: 0, fontWeight: 600 }}>{message.text}</p>
                     </div>
                 )}
 
                 <form onSubmit={handleSubmit} className="attendance-form">
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                    <div className="form-grid-responsive" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
                         <div className="form-group">
-                            <label>Date *</label>
+                            <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)' }}>Date *</label>
                             <input
                                 type="date"
                                 value={date}
                                 onChange={(e) => setDate(e.target.value)}
                                 required
                                 className="form-input"
+                                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-main)' }}
                             />
                         </div>
 
                         <div className="form-group">
-                            <label>Subject *</label>
+                            <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)' }}>Subject *</label>
                             <select
                                 value={subjectId}
                                 onChange={(e) => setSubjectId(e.target.value)}
                                 className="form-input"
                                 required
+                                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-main)' }}
                             >
                                 <option value="">Select Subject</option>
                                 {subjects.map(subject => (
@@ -169,17 +158,15 @@ function MarkAttendance() {
                                     </option>
                                 ))}
                             </select>
-                            <small style={{ color: '#666', fontSize: '0.85rem' }}>
-                                Subject is required for marking attendance
-                            </small>
                         </div>
                     </div>
+
                     <div className="attendance-table">
-                        <table>
+                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                             <thead>
                                 <tr>
-                                    <th>Student ID</th>
-                                    <th>Name</th>
+                                    <th>ID</th>
+                                    <th>Student</th>
                                     <th>Status</th>
                                     <th>Remarks</th>
                                 </tr>
@@ -189,9 +176,9 @@ function MarkAttendance() {
                                     const record = attendanceRecords.find(r => r.studentId === student._id);
                                     return (
                                         <tr key={student._id}>
-                                            <td>{student.studentId}</td>
-                                            <td>{student.name}</td>
-                                            <td>
+                                            <td data-label="ID">{student.studentId}</td>
+                                            <td data-label="Student">{student.name}</td>
+                                            <td data-label="Status">
                                                 <div className="radio-group">
                                                     <label>
                                                         <input
@@ -201,7 +188,7 @@ function MarkAttendance() {
                                                             checked={record?.status === 'present'}
                                                             onChange={(e) => updateAttendance(student._id, 'status', e.target.value)}
                                                         />
-                                                        Present
+                                                        P
                                                     </label>
                                                     <label>
                                                         <input
@@ -211,27 +198,18 @@ function MarkAttendance() {
                                                             checked={record?.status === 'absent'}
                                                             onChange={(e) => updateAttendance(student._id, 'status', e.target.value)}
                                                         />
-                                                        Absent
-                                                    </label>
-                                                    <label>
-                                                        <input
-                                                            type="radio"
-                                                            name={`status-${student._id}`}
-                                                            value="late"
-                                                            checked={record?.status === 'late'}
-                                                            onChange={(e) => updateAttendance(student._id, 'status', e.target.value)}
-                                                        />
-                                                        Late
+                                                        A
                                                     </label>
                                                 </div>
                                             </td>
-                                            <td>
+                                            <td data-label="Remarks">
                                                 <input
                                                     type="text"
-                                                    placeholder="Optional remarks"
+                                                    placeholder="Remarks"
                                                     value={record?.remarks || ''}
                                                     onChange={(e) => updateAttendance(student._id, 'remarks', e.target.value)}
                                                     className="form-input"
+                                                    style={{ padding: '6px 10px', fontSize: '13px' }}
                                                 />
                                             </td>
                                         </tr>
@@ -241,7 +219,7 @@ function MarkAttendance() {
                         </table>
                     </div>
 
-                    <button type="submit" className="btn btn-primary" disabled={submitting}>
+                    <button type="submit" className="btn btn-primary" disabled={submitting} style={{ width: '100%', marginTop: '20px', padding: '14px', borderRadius: '12px', fontWeight: 700, background: 'var(--primary)', color: 'white', border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
                         {submitting ? 'Submitting...' : 'Submit Attendance'}
                     </button>
                 </form>

@@ -16,6 +16,7 @@ import { ClassesModule } from './modules/classes/classes.module';
 import { TeachersModule } from './modules/teachers/teachers.module';
 import { SubjectsModule } from './modules/subjects/subjects.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { NoticesModule } from './modules/notices/notices.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 
     SubjectsModule,
     NotificationsModule,
+    NoticesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

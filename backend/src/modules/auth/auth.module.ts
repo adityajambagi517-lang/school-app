@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
+import { ProfileController } from './profile.controller';
 import { JwtStrategy } from './jwt.strategy';
 import { User, UserSchema } from '../../schemas/user.schema';
 import { Student, StudentSchema } from '../../schemas/student.schema';
@@ -27,7 +28,7 @@ import { Teacher, TeacherSchema } from '../../schemas/teacher.schema';
       { name: Teacher.name, schema: TeacherSchema },
     ]),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, ProfileController],
   providers: [AuthService, JwtStrategy],
   exports: [AuthService],
 })

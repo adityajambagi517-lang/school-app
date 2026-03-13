@@ -36,7 +36,7 @@ export class StudentsController {
     }
 
     @Post('upload-image')
-    @Roles(UserRole.ADMIN)
+    @Roles(UserRole.ADMIN, UserRole.TEACHER)
     @UseInterceptors(
         FileInterceptor('image', {
             storage: diskStorage({
@@ -67,9 +67,9 @@ export class StudentsController {
     }
 
     @Get('search')
-    @Roles(UserRole.ADMIN)
-    search(@Query('q') query: string) {
-        return this.studentsService.search(query);
+    @Roles(UserRole.ADMIN, UserRole.TEACHER)
+    search(@Query('q') query: string, @CurrentUser() user: CurrentUserData) {
+        return this.studentsService.search(query, user);
     }
 
     @Get('class/:classId')

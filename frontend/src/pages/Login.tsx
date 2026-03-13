@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { authService } from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import PasswordInput from '../components/Common/PasswordInput';
 import './Login.css';
 
 function Login() {
@@ -68,17 +69,14 @@ function Login() {
                         />
                     </div>
 
-                    <div className="form-group">
-                        <label htmlFor="password">Password</label>
-                        <input
-                            type="password"
-                            id="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Enter your password"
-                            required
-                        />
-                    </div>
+                    <PasswordInput
+                        id="password"
+                        label="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Enter your password"
+                        required
+                    />
 
                     <button type="submit" className="login-button" disabled={loading}>
                         {loading ? 'Signing in...' : 'Sign In'}
@@ -86,12 +84,7 @@ function Login() {
                 </form>
 
                 <div className="login-footer">
-                    <p className="demo-credentials">
-                        <strong>Demo Credentials:</strong><br />
-                        Admin: admin / password123<br />
-                        Teacher: TCH001 / password123<br />
-                        Student: STU001 / password123
-                    </p>
+                    <p>© 2026 School Management System. All rights reserved.</p>
                 </div>
             </div>
         </div>

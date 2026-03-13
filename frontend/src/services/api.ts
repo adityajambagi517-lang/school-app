@@ -53,6 +53,39 @@ export const authService = {
         });
         return response.data;
     },
+
+    getProfile: async () => {
+        const response = await api.get('/auth/profile');
+        if (response.data) {
+            localStorage.setItem('user', JSON.stringify(response.data));
+        }
+        return response.data;
+    },
+
+    updateProfile: async (data: any) => {
+        const response = await api.patch('/auth/profile', data);
+        if (response.data) {
+            // Update stored user info
+            const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+            const updatedUser = { ...currentUser, ...response.data };
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+        }
+        return response.data;
+    },
+
+    uploadProfilePicture: async (file: File) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await api.post('/auth/profile/upload-picture', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        if (response.data && response.data.url) {
+            const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+            currentUser.profilePicture = response.data.url;
+            localStorage.setItem('user', JSON.stringify(currentUser));
+        }
+        return response.data;
+    },
 };
 
 export const markcardsService = {
@@ -89,6 +122,10 @@ export const feesService = {
     },
     getByClass: async (classId: string) => {
         const response = await api.get(`/fees/class/${classId}`);
+        return response.data;
+    },
+    getStudentFees: async (studentId: string) => {
+        const response = await api.get(`/fees/student/${studentId}`);
         return response.data;
     },
 };
@@ -224,6 +261,10 @@ export const notificationsService = {
         const response = await api.patch(`/notifications/${id}/read`);
         return response.data;
     },
+    markAllAsRead: async () => {
+        const response = await api.patch('/notifications/read-all');
+        return response.data;
+    },
 };
 
 export const approvalsService = {
@@ -256,6 +297,46 @@ export const analyticsService = {
         const response = await api.get(`/analytics/student/${studentId}/subject-attendance`, {
             params: { startDate, endDate }
         });
+        return response.data;
+    },
+};
+
+export const usersService = {
+    getAll: async (page = 1, limit = 50) => {
+        const response = await api.get('/users', { params: { page, limit } });
+        return response.data;
+    },
+    create: async (data: any) => {
+        const response = await api.post('/users', data);
+        return response.data;
+    },
+    resetPassword: async (id: string) => {
+        const response = await api.patch(`/users/${id}/reset-password`);
+        return response.data;
+    },
+    toggleStatus: async (id: string) => {
+        const response = await api.patch(`/users/${id}/toggle-status`);
+        return response.data;
+    },
+};
+
+export const noticesService = {
+    create: async (formData: FormData) => {
+        const response = await api.post('/notices', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return response.data;
+    },
+    getAll: async () => {
+        const response = await api.get('/notices');
+        return response.data;
+    },
+    delete: async (id: string) => {
+        const response = await api.delete(`/notices/${id}`);
+        return response.data;
+    },
+    toggleActive: async (id: string, isActive: boolean) => {
+        const response = await api.patch(`/notices/${id}/toggle-active`, { isActive });
         return response.data;
     },
 };

@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService, timetableService } from '../../services/api';
+import NavBar from '../../components/NavBar';
 import './Dashboard.css';
 
 function TimetableView() {
@@ -45,20 +46,13 @@ function TimetableView() {
         return timetable.filter(t => t.dayOfWeek === dayIndex);
     };
 
+    const handleLogout = () => {
+        authService.logout();
+        navigate('/login');
+    };
     return (
         <div className="dashboard-container">
-            <nav className="dashboard-nav">
-                <div className="nav-brand">
-                    <h2>School Management</h2>
-                    <span className="badge badge-student">Student</span>
-                </div>
-                <div className="nav-user">
-                    <button onClick={() => navigate('/student/dashboard')} className="btn btn-secondary">
-                        ← Back
-                    </button>
-                    <span className="user-name">{user?.name}</span>
-                </div>
-            </nav>
+            <NavBar role="student" userName={user?.name} onLogout={handleLogout} backTo="/student/dashboard" backLabel="← Dashboard" />
 
             <div className="dashboard-content">
                 <div className="page-header">

@@ -1,0 +1,105 @@
+/* ===== MARK ATTENDANCE — MOBILE RESPONSIVE ===== */
+@import './Dashboard.css';
+
+/* ── Container adjustments ── */
+.attendance-form {
+    background: var(--bg-card);
+    padding: 24px;
+    border-radius: 20px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+}
+
+/* ── Table transformations ── */
+@media (max-width: 640px) {
+    .attendance-table table, 
+    .attendance-table thead, 
+    .attendance-table tbody, 
+    .attendance-table th, 
+    .attendance-table td, 
+    .attendance-table tr {
+        display: block;
+    }
+
+    .attendance-table thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+
+    .attendance-table tr {
+        margin-bottom: 20px;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 12px;
+        background: var(--bg-page);
+    }
+
+    .attendance-table td {
+        border: none;
+        position: relative;
+        padding-left: 50%;
+        margin-bottom: 8px;
+        text-align: right;
+        min-height: 24px;
+    }
+
+    .attendance-table td:last-child {
+        margin-bottom: 0;
+    }
+
+    .attendance-table td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 12px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        text-align: left;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        font-size: 10px;
+    }
+
+    /* Radio group adjustment for mobile */
+    .radio-group {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+    }
+
+    .radio-group label {
+        margin: 0 !important;
+        font-size: 13px !important;
+    }
+
+    .form-input {
+        width: 100% !important;
+        text-align: left;
+    }
+}
+
+/* ── Radio group styling ── */
+.radio-group {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-main);
+}
+
+.radio-group input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);
+    cursor: pointer;
+}

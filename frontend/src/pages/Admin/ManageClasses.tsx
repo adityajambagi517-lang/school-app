@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService, classesService, teachersService } from '../../services/api';
+import NavBar from '../../components/NavBar';
+import { getCurrentAcademicYear } from '../../utils/dateUtils';
 import './ManageClasses.css';
 
 interface Class {
@@ -42,7 +44,7 @@ function ManageClasses() {
     const [formData, setFormData] = useState<ClassFormData>({
         className: '',
         section: '',
-        academicYear: '2024-2025',
+        academicYear: getCurrentAcademicYear(),
     });
 
     useEffect(() => {
@@ -71,12 +73,12 @@ function ManageClasses() {
             setAssigningTeacher(classId);
             setError('');
             await classesService.assignTeacher(classId, teacherId);
-            setSuccess('✅ Teacher assigned successfully!');
+            setSuccess('Teacher assigned successfully!');
             await fetchData(); // Refresh the list
             setTimeout(() => setSuccess(''), 3000);
         } catch (err: any) {
             console.error('Failed to assign teacher:', err);
-            setError(`❌ ${err.response?.data?.message || 'Failed to assign teacher'}`);
+            setError(`${err.response?.data?.message || 'Failed to assign teacher'}`);
         } finally {
             setAssigningTeacher(null);
         }
@@ -97,14 +99,14 @@ function ManageClasses() {
         try {
             await classesService.create(formData);
             console.log('Class created');
-            setSuccess(`✅ Class ${formData.className} Section ${formData.section} created successfully!`);
-            setFormData({ className: '', section: '', academicYear: '2024-2025' });
+            setSuccess(`Class ${formData.className} Section ${formData.section} created successfully!`);
+            setFormData({ className: '', section: '', academicYear: getCurrentAcademicYear() });
             setShowForm(false);
             await fetchData(); // Refresh the list
         } catch (err: any) {
             console.error('Failed to create class:', err);
             const errorMessage = err.response?.data?.message || err.message || 'Failed to create class';
-            setError(`❌ ${errorMessage}`);
+            setError(`${errorMessage}`);
         } finally {
             setSubmitting(false);
         }
@@ -118,11 +120,11 @@ function ManageClasses() {
         try {
             setError('');
             await classesService.delete(classId);
-            setSuccess(`✅ ${className} Section ${section} deleted successfully!`);
+            setSuccess(`${className} Section ${section} deleted successfully!`);
             await fetchData(); // Refresh the list
         } catch (err: any) {
             console.error('Failed to delete class:', err);
-            setError(`❌ ${err.response?.data?.message || 'Failed to delete class'}`);
+            setError(`${err.response?.data?.message || 'Failed to delete class'}`);
         }
     };
 
@@ -137,30 +139,38 @@ function ManageClasses() {
 
     return (
         <div className="dashboard-container">
-            <nav className="dashboard-nav">
-                <div className="nav-brand">
-                    <h2>School Management</h2>
-                    <span className="badge badge-admin">Admin</span>
-                </div>
-                <div className="nav-user">
-                    <button onClick={() => navigate('/admin/dashboard')} className="btn btn-secondary">
-                        ← Back to Dashboard
-                    </button>
-                    <span className="user-name">{user?.name}</span>
-                    <button onClick={handleLogout} className="btn btn-logout">
-                        Logout
-                    </button>
-                </div>
-            </nav>
+            <NavBar role="admin" userName={user?.name} onLogout={handleLogout} backTo="/admin/dashboard" backLabel="Dashboard" />
 
             <div className="dashboard-content">
                 <div className="page-header">
                     <div>
-                        <h1>🏫 Manage Classes</h1>
+                        <h1>
+                            <span className="heading-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                                    <polyline points="9 22 9 12 15 12 15 22" />
+                                </svg>
+                            </span> 
+                            Manage Classes
+                        </h1>
                         <p>Create, view, and manage all classes and sections</p>
                     </div>
                     <button onClick={() => setShowForm(!showForm)} className="btn btn-primary">
-                        {showForm ? '❌ Cancel' : '➕ Add New Class'}
+                        {showForm ? (
+                            <>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                                Cancel
+                            </>
+                        ) : (
+                            <>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                                </svg>
+                                Add New Class
+                            </>
+                        )}
                     </button>
                 </div>
 
@@ -217,13 +227,15 @@ function ManageClasses() {
                             </div>
 
                             <button type="submit" className="btn btn-primary" disabled={submitting}>
-                                {submitting ? '⏳ Creating...' : '✅ Create Class'}
+                                {submitting ? 'Creating...' : 'Create Class'}
                             </button>
                         </form>
                     </div>
                 )}
 
                 <div className="classes-table-container">
+                    <header>Active Classes</header>
+                    <div className="table-responsive">
                     <table className="classes-table">
                         <thead>
                             <tr>
@@ -231,7 +243,7 @@ function ManageClasses() {
                                 <th>Section</th>
                                 <th>Academic Year</th>
                                 <th>Class Teacher</th>
-                                <th>Actions</th>
+                                <th style={{ textAlign: 'center' }}>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -243,7 +255,7 @@ function ManageClasses() {
                                     <td>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                             {cls.classTeacherId?.name ? (
-                                                <span className="teacher-assigned">👨‍🏫 {cls.classTeacherId.name}</span>
+                                                <span className="teacher-assigned">{cls.classTeacherId.name}</span>
                                             ) : (
                                                 <span className="not-assigned">Not Assigned</span>
                                             )}
@@ -275,23 +287,29 @@ function ManageClasses() {
                                             </select>
                                         </div>
                                     </td>
-                                    <td>
+                                    <td style={{ textAlign: 'center' }}>
                                         <button
                                             onClick={() => handleDelete(cls._id, cls.className, cls.section)}
-                                            className="btn btn-delete"
+                                            className="btn-delete"
                                             title="Delete class"
                                         >
-                                            🗑️ Delete
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                            </svg>
                                         </button>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
+                    </div>
 
                     {classes.length === 0 && !loading && (
                         <div className="empty-state">
-                            <span>📚</span>
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--gray-300)', marginBottom: '16px' }}>
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                <line x1="9" y1="9" x2="15" y2="9" /><line x1="9" y1="13" x2="15" y2="13" /><line x1="9" y1="17" x2="13" y2="17" />
+                            </svg>
                             <h3>No Classes Found</h3>
                             <p>Click "Add New Class" to create your first class</p>
                         </div>
@@ -300,21 +318,37 @@ function ManageClasses() {
 
                 <div className="stats-summary">
                     <div className="stat-box">
-                        <span className="stat-icon">📊</span>
+                        <span className="stat-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                                <line x1="9" y1="14" x2="15" y2="14" />
+                            </svg>
+                        </span>
                         <div>
                             <div className="stat-number">{classes.length}</div>
                             <div className="stat-label">Total Classes</div>
                         </div>
                     </div>
                     <div className="stat-box">
-                        <span className="stat-icon">📋</span>
+                        <span className="stat-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                                <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                            </svg>
+                        </span>
                         <div>
                             <div className="stat-number">{new Set(classes.map(c => c.className)).size}</div>
                             <div className="stat-label">Unique Grades</div>
                         </div>
                     </div>
                     <div className="stat-box">
-                        <span className="stat-icon">👨‍🏫</span>
+                        <span className="stat-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                <circle cx="8.5" cy="7" r="4" />
+                                <polyline points="17 11 19 13 23 9" />
+                            </svg>
+                        </span>
                         <div>
                             <div className="stat-number">{classes.filter(c => c.classTeacherId).length}</div>
                             <div className="stat-label">Assigned Teachers</div>

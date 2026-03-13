@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService, subjectsService } from '../../services/api';
+import NavBar from '../../components/NavBar';
 import '../Teacher/Dashboard.css';
 
 interface Subject {
@@ -100,21 +101,7 @@ function ManageSubjects() {
 
     return (
         <div className="dashboard-container">
-            <nav className="dashboard-nav">
-                <div className="nav-brand">
-                    <h2>School Management</h2>
-                    <span className="badge badge-teacher">Teacher</span>
-                </div>
-                <div className="nav-user">
-                    <button onClick={() => navigate('/teacher/dashboard')} className="btn btn-secondary">
-                        ← Back
-                    </button>
-                    <span className="user-name">{user?.name}</span>
-                    <button onClick={handleLogout} className="btn btn-logout">
-                        Logout
-                    </button>
-                </div>
-            </nav>
+            <NavBar role="teacher" userName={user?.name} onLogout={handleLogout} backTo="/teacher/dashboard" backLabel="← Dashboard" />
 
             <div className="dashboard-content">
                 <div className="page-header">
@@ -128,7 +115,7 @@ function ManageSubjects() {
                     </div>
                 )}
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
                     {/* Subject Form */}
                     <form onSubmit={handleSubmit} className="form-container">
                         <h3>{editingId ? 'Edit Subject' : 'Add New Subject'}</h3>

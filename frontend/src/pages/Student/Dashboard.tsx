@@ -1,41 +1,56 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService, analyticsService } from '../../services/api';
+import {
+    BarChart3, CheckSquare, BookOpen, Calendar,
+    DollarSign, Lock, TrendingUp, Megaphone
+} from 'lucide-react';
+import { authService, analyticsService, notificationsService } from '../../services/api';
+import NavBar from '../../components/NavBar';
 import './Dashboard.css';
+
+function getGreeting() {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
+}
 
 function StudentDashboard() {
     const navigate = useNavigate();
     const [user, setUser] = useState<any>(authService.getCurrentUser());
     const [performance, setPerformance] = useState<any>(null);
     const [attendanceRate, setAttendanceRate] = useState<any>(null);
+    const [unreadNoticesCount, setUnreadNoticesCount] = useState(0);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
+    useEffect(() => { 
         loadStudentData();
+        loadUnreadNoticesCount();
     }, []);
+
+    const loadUnreadNoticesCount = async () => {
+        try {
+            const notifications = await notificationsService.getAll();
+            const count = notifications.filter((n: any) => n.type === 'school_notice' && !n.isRead).length;
+            setUnreadNoticesCount(count);
+        } catch { /* silent */ }
+    };
 
     const loadStudentData = async () => {
         try {
             setLoading(true);
-            // Refresh user data to ensure we have the latest (including classId)
             const userData = await authService.getMe();
             setUser(userData);
-
             const studentId = userData.referenceId;
             if (studentId) {
-                // Fetch performance stats
                 const perf = await analyticsService.getStudentPerformance(studentId);
                 setPerformance(perf);
-
-                // Fetch attendance rate (current year)
-                const startOfYear = new Date(new Date().getFullYear(), 0, 1).toISOString();
+                const start = new Date(new Date().getFullYear(), 0, 1).toISOString();
                 const today = new Date().toISOString();
-                const att = await analyticsService.getStudentAttendanceRate(studentId, startOfYear, today);
+                const att = await analyticsService.getStudentAttendanceRate(studentId, start, today);
                 setAttendanceRate(att);
             }
-        } catch (error) {
-            console.error('Failed to load student data:', error);
-        } finally {
+        } catch { /* silent */ } finally {
             setLoading(false);
         }
     };
@@ -45,133 +60,99 @@ function StudentDashboard() {
         navigate('/login');
     };
 
+    const actions = [
+        { icon: <BarChart3 size={22} color="white" />, label: 'My Marks', path: '/student/marks', cls: 't-indigo' },
+        { icon: <CheckSquare size={22} color="white" />, label: 'Attendance', path: '/student/attendance', cls: 't-green' },
+        { icon: <BookOpen size={22} color="white" />, label: 'Homework', path: '/student/homework', cls: 't-orange' },
+        { icon: <Calendar size={22} color="white" />, label: 'Timetable', path: '/student/timetable', cls: 't-teal' },
+        { icon: <DollarSign size={22} color="white" />, label: 'Fees', path: '/student/fees', cls: 't-red' },
+        { icon: <Megaphone size={22} color="white" />, label: 'Notices', path: '/student/notices', cls: 't-indigo', badge: unreadNoticesCount > 0 ? unreadNoticesCount : undefined },
+        { icon: <Lock size={22} color="white" />, label: 'Password', path: '/student/change-password', cls: 't-orange' },
+    ];
+
     return (
-        <div className="dashboard-container">
-            <nav className="dashboard-nav">
-                <div className="nav-brand">
-                    <h2>School Management</h2>
-                    <span className="badge badge-student">Student</span>
-                </div>
-                <div className="nav-user">
-                    {user?.studentDetails?.profileImage ? (
-                        <img
-                            src={user.studentDetails.profileImage}
-                            alt={user?.name}
-                            style={{
-                                width: '40px',
-                                height: '40px',
-                                borderRadius: '50%',
-                                objectFit: 'cover',
-                                marginRight: '10px'
-                            }}
-                        />
-                    ) : (
-                        <div style={{
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '50%',
-                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: 'white',
-                            fontWeight: 'bold',
-                            marginRight: '10px'
-                        }}>
-                            {user?.name?.charAt(0).toUpperCase()}
-                        </div>
-                    )}
-                    <span className="user-name">{user?.name}</span>
-                    <button onClick={handleLogout} className="btn btn-logout">
-                        Logout
-                    </button>
-                </div>
-            </nav>
+        <div className="dash-root">
+            <NavBar
+                role="student"
+                userName={user?.name}
+                profileImage={user?.studentDetails?.profileImage}
+                onLogout={handleLogout}
+                links={actions.map(a => ({ icon: '→', label: a.label, path: a.path }))}
+            />
 
-            <div className="dashboard-content">
-                <div className="page-header">
-                    <h1>Student Dashboard</h1>
-                    <p>Hello, {user?.name}!</p>
+            <div className="dash-scroll">
+                {/* Hero */}
+                <div className="dash-hero">
+                    <p className="hero-greeting">{getGreeting()} 📚</p>
+                    <h1 className="hero-name">{user?.name?.split(' ')[0] || 'Student'}</h1>
+                    <span className="hero-role-badge">Student</span>
                 </div>
 
-                <div className="dashboard-grid">
-                    <div className="dashboard-card">
-                        <h3>📚 My Academics</h3>
-                        <div className="action-list">
-                            <button className="action-btn" onClick={() => navigate('/student/marks')}>
-                                <span>📊</span>
-                                <div>
-                                    <strong>My Marks</strong>
-                                    <p>View your published exam results</p>
-                                </div>
-                            </button>
-                            <button className="action-btn" onClick={() => navigate('/student/attendance')}>
-                                <span>✅</span>
-                                <div>
-                                    <strong>Attendance</strong>
-                                    <p>Check your attendance record</p>
-                                </div>
-                            </button>
-                            <button className="action-btn" onClick={() => navigate('/student/homework')}>
-                                <span>📖</span>
-                                <div>
-                                    <strong>Homework</strong>
-                                    <p>View assigned homework and tasks</p>
-                                </div>
-                            </button>
-                            <button className="action-btn" onClick={() => navigate('/student/timetable')}>
-                                <span>📅</span>
-                                <div>
-                                    <strong>Timetable</strong>
-                                    <p>View your class schedule</p>
-                                </div>
-                            </button>
+                {/* Stats */}
+                <div className="stats-row">
+                    <div className="stat-pill pill-orange">
+                        <div className="stat-pill-top">
+                            <div className="stat-pill-icon">
+                                <TrendingUp size={18} />
+                            </div>
                         </div>
+                        <div className="stat-pill-value">
+                            {loading ? '…' : `${performance?.overallAverage?.toFixed(0) ?? 0}%`}
+                        </div>
+                        <div className="stat-pill-label">Avg Score</div>
                     </div>
-
-                    <div className="dashboard-card">
-                        <h3>💰 Fees</h3>
-                        <div className="action-list">
-                            <button className="action-btn" onClick={() => navigate('/student/fees')}>
-                                <span>💵</span>
-                                <div>
-                                    <strong>Fee Status</strong>
-                                    <p>View your fee payment status</p>
-                                </div>
-                            </button>
+                    <div className="stat-pill pill-green">
+                        <div className="stat-pill-top">
+                            <div className="stat-pill-icon">
+                                <CheckSquare size={18} />
+                            </div>
                         </div>
+                        <div className="stat-pill-value">
+                            {loading ? '…' : `${attendanceRate?.attendanceRate ?? 0}%`}
+                        </div>
+                        <div className="stat-pill-label">Attendance</div>
                     </div>
                 </div>
 
-                <div className="dashboard-card">
-                    <h3>📈 Performance Overview</h3>
-                    <div className="info-list">
-                        <div className="info-item">
-                            <span className="info-label">Overall Average</span>
-                            <span className="info-value">
-                                {loading ? 'Loading...' : `${performance?.overallAverage?.toFixed(1) || 0}%`}
-                            </span>
-                        </div>
-                        <div className="info-item">
-                            <span className="info-label">Attendance Rate</span>
-                            <span className="info-value">
-                                {loading ? 'Loading...' : `${attendanceRate?.attendanceRate || 0}%`}
-                            </span>
-                        </div>
-                        <div className="info-item">
-                            <span className="info-label">Current Class</span>
-                            <span className="info-value">
-                                {loading ? 'Loading...' : user?.studentDetails?.classId?.className || 'N/A'}
-                            </span>
-                        </div>
+                {/* Actions */}
+                <div className="section-header">
+                    <h2 className="section-title">My Portal</h2>
+                </div>
+                <div className="action-grid">
+                    {actions.map((a, i) => (
+                        <button key={i} className="action-tile" onClick={() => navigate(a.path || '')}>
+                            <div className={`tile-icon ${a.cls}`}>
+                                {a.icon}
+                                {a.badge && <span className="tile-badge">{a.badge}</span>}
+                            </div>
+                            <span className="tile-label">{a.label}</span>
+                        </button>
+                    ))}
+                </div>
+
+                {/* Info */}
+                <div className="section-header">
+                    <h2 className="section-title">My Details</h2>
+                </div>
+                <div className="activity-card">
+                    <div className="info-row">
+                        <span className="info-row-label">Class</span>
+                        <span className="info-row-value">
+                            {loading ? '…' : (
+                                user?.studentDetails?.classId 
+                                ? `${user.studentDetails.classId.className} - ${user.studentDetails.classId.section}` 
+                                : 'Not assigned'
+                            )}
+                        </span>
                     </div>
-                    <button
-                        className="btn btn-primary"
-                        style={{ marginTop: '20px', width: '100%' }}
-                        onClick={() => navigate('/student/change-password')}
-                    >
-                        🔐 Change Password
-                    </button>
+                    <div className="info-row">
+                        <span className="info-row-label">Student ID</span>
+                        <span className="info-row-value">{user?.referenceId || '—'}</span>
+                    </div>
+                    <div className="info-row">
+                        <span className="info-row-label">Email</span>
+                        <span className="info-row-value" style={{ fontSize: 12 }}>{user?.email || '—'}</span>
+                    </div>
                 </div>
             </div>
         </div>
