@@ -1,0 +1,35 @@
+[
+  {
+    "_id": "69899ee8901b2efa1f64e9c1",
+    "className": "Class10",
+    "section": "B",
+    "academicYear": "2025-2026",
+    "isActive": true,
+    "createdAt": "2026-02-09T08:46:32.982Z",
+    "updatedAt": "2026-03-11T18:06:19.100Z",
+    "__v": 0,
+    "classTeacherId": "69899f30901b2efa1f64e9e7"
+  },
+  {
+    "_id": "6989da3f006f6654d1b1a6a4",
+    "className": "Class10",
+    "section": "C",
+    "academicYear": "2025-2026",
+    "isActive": true,
+    "createdAt": "2026-02-09T12:59:43.274Z",
+    "updatedAt": "2026-02-10T10:27:29.590Z",
+    "__v": 0,
+    "classTeacherId": "69885e441ef874e63bf415fd"
+  },
+  {
+    "_id": "698b0803c1eb54e336183fac",
+    "className": "class 9",
+    "section": "A",
+    "academicYear": "2025-2026",
+    "isActive": true,
+    "createdAt": "2026-02-10T10:27:15.110Z",
+    "updatedAt": "2026-02-11T03:58:16.638Z",
+    "__v": 0,
+    "classTeacherId": "698bfe42aab63625cb884b6d"
+  }
+]

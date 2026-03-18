@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService, classesService, studentsService } from '../../services/api';
+import { authService, classesService, studentsService, teachersService } from '../../services/api';
 import type { StudentWithDetails } from '../../types/student';
 import NavBar from '../../components/NavBar';
 import './StudentSearch.css';
@@ -95,6 +95,42 @@ function StudentSearch() {
     const handleLogout = () => {
         authService.logout();
         navigate('/login');
+    };
+
+    const handleDeleteStudent = async (id: string, name: string) => {
+        if (!window.confirm(`⚠️ Are you sure you want to PERMANENTLY delete student ${name} and their login account?`)) {
+            return;
+        }
+
+        try {
+            setLoading(true);
+            await studentsService.delete(id);
+            alert('Student deleted successfully');
+            setSelectedStudent(null);
+            setResults(results.filter(r => r._id !== id));
+        } catch (err: any) {
+            setError(`Failed to delete student: ${err.response?.data?.message || err.message}`);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDeleteTeacher = async (id: string, name: string) => {
+        if (!window.confirm(`⚠️ Are you sure you want to PERMANENTLY delete teacher ${name} and their login account?`)) {
+            return;
+        }
+
+        try {
+            setLoading(true);
+            await teachersService.delete(id);
+            alert('Teacher deleted successfully');
+            setSelectedTeacher(null);
+            setTeacherResults(teacherResults.filter(r => r._id !== id));
+        } catch (err: any) {
+            setError(`Failed to delete teacher: ${err.response?.data?.message || err.message}`);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -222,12 +258,21 @@ function StudentSearch() {
 
                     {selectedStudent && (
                         <div className="student-profile">
-                            <button className="btn btn-sm btn-secondary" style={{ marginBottom: '16px' }} onClick={() => setSelectedStudent(null)}>
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
-                                    <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
-                                </svg>
-                                Back to results
-                            </button>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                                <button className="btn btn-sm btn-secondary" onClick={() => setSelectedStudent(null)}>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                                        <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
+                                    </svg>
+                                    Back to results
+                                </button>
+                                <button 
+                                    className="btn btn-sm btn-danger" 
+                                    onClick={() => handleDeleteStudent(selectedStudent._id, selectedStudent.name)}
+                                    style={{ backgroundColor: '#ff4d4d', color: 'white' }}
+                                >
+                                    🗑️ Delete Student
+                                </button>
+                            </div>
 
                             <div className="profile-header">
                                 <div className="profile-main">
@@ -328,12 +373,21 @@ function StudentSearch() {
 
                     {selectedTeacher && (
                         <div className="student-profile teacher-profile">
-                            <button className="btn btn-sm btn-secondary" style={{ marginBottom: '16px' }} onClick={() => setSelectedTeacher(null)}>
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
-                                    <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
-                                </svg>
-                                Back to results
-                            </button>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                                <button className="btn btn-sm btn-secondary" onClick={() => setSelectedTeacher(null)}>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                                        <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
+                                    </svg>
+                                    Back to results
+                                </button>
+                                <button 
+                                    className="btn btn-sm btn-danger" 
+                                    onClick={() => handleDeleteTeacher(selectedTeacher._id, selectedTeacher.name)}
+                                    style={{ backgroundColor: '#ff4d4d', color: 'white' }}
+                                >
+                                    🗑️ Delete Teacher
+                                </button>
+                            </div>
 
                             <div className="profile-header" style={{ borderBottomColor: 'var(--accent-primary)' }}>
                                 <div className="profile-main">

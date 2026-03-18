@@ -6,8 +6,18 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Markcard, MarkcardDocument, MarkcardStatus } from '../../schemas/markcard.schema';
-import { EditRequest, EditRequestDocument, EditRequestType, EditRequestStatus, EntityType } from '../../schemas/edit-request.schema';
+import {
+  Markcard,
+  MarkcardDocument,
+  MarkcardStatus,
+} from '../../schemas/markcard.schema';
+import {
+  EditRequest,
+  EditRequestDocument,
+  EditRequestType,
+  EditRequestStatus,
+  EntityType,
+} from '../../schemas/edit-request.schema';
 import { Teacher, TeacherDocument } from '../../schemas/teacher.schema';
 import { CreateMarkcardDto } from './dto/create-markcard.dto';
 import { BulkCreateMarkcardDto } from './dto/bulk-create-markcard.dto';
@@ -20,16 +30,21 @@ import { NotificationRecipientRole } from '../../schemas/notification.schema';
 export class MarkcardsService {
   constructor(
     @InjectModel(Markcard.name) private markcardModel: Model<MarkcardDocument>,
-    @InjectModel(EditRequest.name) private editRequestModel: Model<EditRequestDocument>,
+    @InjectModel(EditRequest.name)
+    private editRequestModel: Model<EditRequestDocument>,
     @InjectModel(Teacher.name) private teacherModel: Model<TeacherDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private readonly notificationsService: NotificationsService,
-  ) { }
+  ) {}
 
   /**
    * DRAFT: Teacher creates marks (not visible to students)
    */
-  async create(createMarkcardDto: CreateMarkcardDto, userRole: string, referenceId: string) {
+  async create(
+    createMarkcardDto: CreateMarkcardDto,
+    userRole: string,
+    referenceId: string,
+  ) {
     // Only teachers can create marks
     if (userRole !== UserRole.TEACHER) {
       throw new ForbiddenException('Only teachers can create marks');
@@ -52,7 +67,11 @@ export class MarkcardsService {
   /**
    * BULK CREATE: Teacher creates marks for all subjects and auto-submits for approval
    */
-  async bulkCreate(bulkDto: BulkCreateMarkcardDto, userRole: string, referenceId: string) {
+  async bulkCreate(
+    bulkDto: BulkCreateMarkcardDto,
+    userRole: string,
+    referenceId: string,
+  ) {
     // Only teachers can create marks
     if (userRole !== UserRole.TEACHER) {
       throw new ForbiddenException('Only teachers can create marks');
@@ -66,7 +85,7 @@ export class MarkcardsService {
     const classId = new Types.ObjectId(bulkDto.classId);
 
     // Create all markcards as DRAFT first
-    const markcardPromises = bulkDto.marks.map(markItem =>
+    const markcardPromises = bulkDto.marks.map((markItem) =>
       this.markcardModel.create({
         studentId,
         classId,
@@ -76,13 +95,13 @@ export class MarkcardsService {
         maxMarks: markItem.maxMarks,
         status: MarkcardStatus.DRAFT,
         submittedBy: teacherId,
-      })
+      }),
     );
 
     const createdMarkcards = await Promise.all(markcardPromises);
 
     // Auto-submit all for approval (create edit requests)
-    const editRequestPromises = createdMarkcards.map(markcard =>
+    const editRequestPromises = createdMarkcards.map((markcard) =>
       this.editRequestModel.create({
         entityType: EntityType.MARKS,
         entityId: markcard._id,
@@ -92,7 +111,7 @@ export class MarkcardsService {
         newData: markcard.toObject(),
         requestedBy: teacherId,
         requestedAt: new Date(),
-      })
+      }),
     );
 
     const createdEditRequests = await Promise.all(editRequestPromises);
@@ -102,7 +121,7 @@ export class MarkcardsService {
       type: 'marks_approval_pending',
       title: 'New Marks Pending Approval',
       message: `Teacher has submitted ${createdMarkcards.length} marks for bulk student registration.`,
-      relatedEntity: { type: 'bulk_marks', id: createdEditRequests[0]._id } // Reference first one or handle differently
+      relatedEntity: { type: 'bulk_marks', id: createdEditRequests[0]._id }, // Reference first one or handle differently
     });
 
     // Update all markcards to SUBMITTED status
@@ -120,7 +139,7 @@ export class MarkcardsService {
       count: createdMarkcards.length,
       student: bulkDto.studentId,
       examType: bulkDto.examType,
-      markcards: createdMarkcards.map(m => ({
+      markcards: createdMarkcards.map((m) => ({
         id: m._id,
         subject: m.subject,
         marks: m.marks,
@@ -133,7 +152,11 @@ export class MarkcardsService {
   /**
    * SUBMITTED: Teacher submits marks for admin approval
    */
-  async submitForApproval(markcardId: string, userRole: string, referenceId: string) {
+  async submitForApproval(
+    markcardId: string,
+    userRole: string,
+    referenceId: string,
+  ) {
     if (userRole !== UserRole.TEACHER) {
       throw new ForbiddenException('Only teachers can submit marks');
     }
@@ -171,7 +194,7 @@ export class MarkcardsService {
       type: 'marks_approval_pending',
       title: 'Marks Pending Approval',
       message: `A teacher has submitted marks for student ID: ${markcard.studentId} for approval.`,
-      relatedEntity: { type: 'markcard', id: markcard._id }
+      relatedEntity: { type: 'markcard', id: markcard._id },
     });
 
     // Update markcard status
@@ -180,21 +203,33 @@ export class MarkcardsService {
     markcard.submittedAt = new Date();
     await markcard.save();
 
-    return { message: 'Marks submitted for approval', markcardId, editRequestId: editRequest._id };
+    return {
+      message: 'Marks submitted for approval',
+      markcardId,
+      editRequestId: editRequest._id,
+    };
   }
 
   /**
    * Helper to notify all admins
    */
-  private async notifyAdmins(data: { type: string; title: string; message: string; relatedEntity?: { type: string; id: any } }) {
+  private async notifyAdmins(data: {
+    type: string;
+    title: string;
+    message: string;
+    relatedEntity?: { type: string; id: any };
+  }) {
     try {
-      const admins = await this.userModel.find({ role: UserRole.ADMIN, isActive: true });
-      const notificationPromises = admins.map(admin =>
+      const admins = await this.userModel.find({
+        role: UserRole.ADMIN,
+        isActive: true,
+      });
+      const notificationPromises = admins.map((admin) =>
         this.notificationsService.create({
           recipientId: admin._id,
           recipientRole: NotificationRecipientRole.ADMIN,
-          ...data
-        })
+          ...data,
+        }),
       );
       await Promise.all(notificationPromises);
     } catch (error) {
@@ -206,7 +241,12 @@ export class MarkcardsService {
   /**
    * BULK APPROVE: Admin approves multiple mark requests at once
    */
-  async bulkApproveMarks(editRequestIds: string[], userRole: string, userId: string, comments?: string) {
+  async bulkApproveMarks(
+    editRequestIds: string[],
+    userRole: string,
+    userId: string,
+    comments?: string,
+  ) {
     if (userRole !== UserRole.ADMIN) {
       throw new ForbiddenException('Only admins can approve marks');
     }
@@ -218,19 +258,24 @@ export class MarkcardsService {
         } catch (error) {
           return { id, error: error.message, success: false };
         }
-      })
+      }),
     );
 
     return {
       message: `Processed ${editRequestIds.length} approval requests`,
-      results
+      results,
     };
   }
 
   /**
    * APPROVED: Admin approves marks (teacher can now edit)
    */
-  async approveMarks(editRequestId: string, userRole: string, userId: string, comments?: string) {
+  async approveMarks(
+    editRequestId: string,
+    userRole: string,
+    userId: string,
+    comments?: string,
+  ) {
     if (userRole !== UserRole.ADMIN) {
       throw new ForbiddenException('Only admins can approve marks');
     }
@@ -267,14 +312,22 @@ export class MarkcardsService {
 
     // Clean up approval notifications for this markcard
     try {
-      await this.notificationsService.deleteByRelatedEntity('markcard', markcard._id.toString());
-      await this.notificationsService.deleteByRelatedEntity('EditRequest', editRequestId);
+      await this.notificationsService.deleteByRelatedEntity(
+        'markcard',
+        markcard._id.toString(),
+      );
+      await this.notificationsService.deleteByRelatedEntity(
+        'EditRequest',
+        editRequestId,
+      );
     } catch (error) {
       console.error('Failed to clean up notifications:', error);
       // Don't throw, main operation succeeded
     }
 
-    return { message: 'Marks approved and published. Now visible to students.' };
+    return {
+      message: 'Marks approved and published. Now visible to students.',
+    };
   }
 
   /**

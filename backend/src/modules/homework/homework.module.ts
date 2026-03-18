@@ -4,7 +4,10 @@ import { HomeworkService } from './homework.service';
 import { HomeworkController } from './homework.controller';
 import { Homework, HomeworkSchema } from '../../schemas/homework.schema';
 import { Teacher, TeacherSchema } from '../../schemas/teacher.schema';
-import { Notification, NotificationSchema } from '../../schemas/notification.schema';
+import {
+  Notification,
+  NotificationSchema,
+} from '../../schemas/notification.schema';
 import { Student, StudentSchema } from '../../schemas/student.schema';
 import { NotificationsService } from '../notifications/notifications.service';
 
@@ -20,4 +23,4 @@ import { NotificationsService } from '../notifications/notifications.service';
   controllers: [HomeworkController],
   providers: [HomeworkService, NotificationsService],
 })
-export class HomeworkModule { }
+export class HomeworkModule {}

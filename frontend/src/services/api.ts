@@ -18,6 +18,19 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
+// Handle authentication errors
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+        }
+        return Promise.reject(error);
+    }
+);
+
 export const authService = {
     login: async (userId: string, password: string) => {
         const response = await api.post('/auth/login', { userId, password });
@@ -159,6 +172,10 @@ export const studentsService = {
         const response = await api.get(`/students/search?q=${query}`);
         return response.data;
     },
+    delete: async (id: string) => {
+        const response = await api.delete(`/students/${id}`);
+        return response.data;
+    },
 };
 
 export const classesService = {
@@ -187,6 +204,10 @@ export const classesService = {
 export const teachersService = {
     getAll: async () => {
         const response = await api.get('/teachers');
+        return response.data;
+    },
+    delete: async (id: string) => {
+        const response = await api.delete(`/teachers/${id}`);
         return response.data;
     },
 };
@@ -316,6 +337,10 @@ export const usersService = {
     },
     toggleStatus: async (id: string) => {
         const response = await api.patch(`/users/${id}/toggle-status`);
+        return response.data;
+    },
+    delete: async (id: string) => {
+        const response = await api.delete(`/users/${id}`);
         return response.data;
     },
 };

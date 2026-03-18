@@ -1,8 +1,19 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Fee, FeeDocument, FeeStatus } from '../../schemas/fee.schema';
-import { EditRequest, EditRequestDocument, EditRequestStatus, EditRequestType, EntityType } from '../../schemas/edit-request.schema';
+import {
+  EditRequest,
+  EditRequestDocument,
+  EditRequestStatus,
+  EditRequestType,
+  EntityType,
+} from '../../schemas/edit-request.schema';
 import { Teacher, TeacherDocument } from '../../schemas/teacher.schema';
 import { Student, StudentDocument } from '../../schemas/student.schema';
 import { CreateFeeDto } from './dto/create-fee.dto';
@@ -12,15 +23,20 @@ import { UserRole } from '../../schemas/user.schema';
 export class FeesService {
   constructor(
     @InjectModel(Fee.name) private feeModel: Model<FeeDocument>,
-    @InjectModel(EditRequest.name) private editRequestModel: Model<EditRequestDocument>,
+    @InjectModel(EditRequest.name)
+    private editRequestModel: Model<EditRequestDocument>,
     @InjectModel(Teacher.name) private teacherModel: Model<TeacherDocument>,
     @InjectModel(Student.name) private studentModel: Model<StudentDocument>,
-  ) { }
+  ) {}
 
   /**
    * DRAFT: Teacher/Admin creates fee record
    */
-  async create(createFeeDto: CreateFeeDto, userRole: string, referenceId: string) {
+  async create(
+    createFeeDto: CreateFeeDto,
+    userRole: string,
+    referenceId: string,
+  ) {
     // Verify student exists
     const student = await this.studentModel.findById(createFeeDto.studentId);
     if (!student) {
@@ -34,7 +50,9 @@ export class FeesService {
         throw new NotFoundException('Teacher not found');
       }
       if (teacher.assignedClassId.toString() !== student.classId.toString()) {
-        throw new ForbiddenException('You can only manage fees for students in your assigned class');
+        throw new ForbiddenException(
+          'You can only manage fees for students in your assigned class',
+        );
       }
     }
 
@@ -64,7 +82,10 @@ export class FeesService {
     }
 
     // Verify ownership for teachers
-    if (userRole === UserRole.TEACHER && fee.submittedBy.toString() !== referenceId) {
+    if (
+      userRole === UserRole.TEACHER &&
+      fee.submittedBy.toString() !== referenceId
+    ) {
       throw new ForbiddenException('You can only submit your own fee records');
     }
 
@@ -189,8 +210,10 @@ export class FeesService {
       }
     }
 
-    const students = await this.studentModel.find({ classId: new Types.ObjectId(classId) });
-    const studentIds = students.map(s => s._id);
+    const students = await this.studentModel.find({
+      classId: new Types.ObjectId(classId),
+    });
+    const studentIds = students.map((s) => s._id);
 
     return this.feeModel
       .find({ studentId: { $in: studentIds } })

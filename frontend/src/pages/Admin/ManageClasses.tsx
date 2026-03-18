@@ -58,6 +58,8 @@ function ManageClasses() {
                 classesService.getAll(),
                 teachersService.getAll(),
             ]);
+            console.log('[DEBUG] Classes received:', classesData);
+            console.log('[DEBUG] Teachers received:', teachersData);
             setClasses(classesData);
             setTeachers(teachersData);
             setLoading(false);

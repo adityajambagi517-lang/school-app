@@ -75,7 +75,6 @@ function StudentDashboard() {
             <NavBar
                 role="student"
                 userName={user?.name}
-                profileImage={user?.studentDetails?.profileImage}
                 onLogout={handleLogout}
                 links={actions.map(a => ({ icon: '→', label: a.label, path: a.path }))}
             />

@@ -1,6 +1,6 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService } from '../../services/api';
+import { authService, teachersService } from '../../services/api';
 import api from '../../services/api';
 import NavBar from '../../components/NavBar';
 import './TeachersOverview.css';
@@ -78,6 +78,24 @@ function TeachersOverview() {
         }
     };
 
+    const handleDeleteTeacher = async (id: string, name: string) => {
+        if (!window.confirm(`⚠️ Are you sure you want to PERMANENTLY delete teacher ${name} and their login account? This action cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            setLoading(true);
+            await teachersService.delete(id);
+            setSuccess(`✅ Teacher ${name} deleted successfully`);
+            await fetchTeachers();
+            setTimeout(() => setSuccess(''), 3000);
+        } catch (err: any) {
+            setError(`❌ ${err.response?.data?.message || 'Failed to delete teacher'}`);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleLogout = () => {
         authService.logout();
         navigate('/login');
@@ -116,6 +134,13 @@ function TeachersOverview() {
                                     <p className="teacher-id">ID: {teacher.teacherId}</p>
                                     {teacher.subject && <p className="teacher-subject">📚 {teacher.subject}</p>}
                                 </div>
+                                <button 
+                                    className="btn-delete-icon" 
+                                    onClick={() => handleDeleteTeacher(teacher._id, teacher.name)}
+                                    title="Delete Teacher"
+                                >
+                                    🗑️
+                                </button>
                             </div>
 
                             <div className="teacher-contact">
@@ -138,7 +163,6 @@ function TeachersOverview() {
                                     )}
                                 </div>
 
-                                {/* Assign/Reassign Class Dropdown */}
                                 <div className="assign-class-section">
                                     <label>Assign/Reassign Class:</label>
                                     <select

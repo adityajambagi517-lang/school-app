@@ -1,24 +1,25 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import * as mongoose from 'mongoose';
 
 export type SubjectDocument = Subject & Document;
 
 @Schema({ timestamps: true })
 export class Subject {
-    @Prop({ required: true })
-    name: string;
+  @Prop({ required: true })
+  name: string;
 
-    @Prop()
-    description?: string;
+  @Prop()
+  description?: string;
 
-    @Prop({ type: Types.ObjectId, ref: 'Teacher', required: true, index: true })
-    teacherId: Types.ObjectId;
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Teacher', required: true, index: true })
+  teacherId: Types.ObjectId;
 
-    @Prop({ type: Types.ObjectId, ref: 'Class', required: true, index: true })
-    classId: Types.ObjectId;
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Class', required: true, index: true })
+  classId: Types.ObjectId;
 
-    @Prop({ default: true })
-    isActive: boolean;
+  @Prop({ default: true })
+  isActive: boolean;
 }
 
 export const SubjectSchema = SchemaFactory.createForClass(Subject);

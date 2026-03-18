@@ -1,8 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Markcard, MarkcardDocument, MarkcardStatus } from '../../schemas/markcard.schema';
-import { Attendance, AttendanceDocument } from '../../schemas/attendance.schema';
+import {
+  Markcard,
+  MarkcardDocument,
+  MarkcardStatus,
+} from '../../schemas/markcard.schema';
+import {
+  Attendance,
+  AttendanceDocument,
+} from '../../schemas/attendance.schema';
 import { Student, StudentDocument } from '../../schemas/student.schema';
 import { Teacher, TeacherDocument } from '../../schemas/teacher.schema';
 import { Class, ClassDocument } from '../../schemas/class.schema';
@@ -12,12 +19,13 @@ import { Fee, FeeDocument } from '../../schemas/fee.schema';
 export class AnalyticsService {
   constructor(
     @InjectModel(Markcard.name) private markcardModel: Model<MarkcardDocument>,
-    @InjectModel(Attendance.name) private attendanceModel: Model<AttendanceDocument>,
+    @InjectModel(Attendance.name)
+    private attendanceModel: Model<AttendanceDocument>,
     @InjectModel(Student.name) private studentModel: Model<StudentDocument>,
     @InjectModel(Teacher.name) private teacherModel: Model<TeacherDocument>,
     @InjectModel(Class.name) private classModel: Model<ClassDocument>,
     @InjectModel(Fee.name) private feeModel: Model<FeeDocument>,
-  ) { }
+  ) {}
 
   /**
    * Class average for a subject and exam type
@@ -52,10 +60,15 @@ export class AnalyticsService {
    * Compare performance across sections
    * OPTIMIZED for large-scale comparison
    */
-  async compareSections(className: string, academicYear: string, subject: string, examType: string) {
+  async compareSections(
+    className: string,
+    academicYear: string,
+    subject: string,
+    examType: string,
+  ) {
     // Get all classes for this className and year
     const classes = await this.classModel.find({ className, academicYear });
-    const classIds = classes.map(c => c._id);
+    const classIds = classes.map((c) => c._id);
 
     const result = await this.markcardModel.aggregate([
       {
@@ -139,9 +152,10 @@ export class AnalyticsService {
     ]);
 
     // Calculate overall average
-    const overallAvg = marks.length > 0
-      ? marks.reduce((sum, m) => sum + m.percentage, 0) / marks.length
-      : 0;
+    const overallAvg =
+      marks.length > 0
+        ? marks.reduce((sum, m) => sum + m.percentage, 0) / marks.length
+        : 0;
 
     return {
       subjects: marks,
@@ -153,7 +167,11 @@ export class AnalyticsService {
    * Attendance statistics for a class
    * OPTIMIZED with aggregation pipeline
    */
-  async getClassAttendanceStats(classId: string, startDate: Date, endDate: Date) {
+  async getClassAttendanceStats(
+    classId: string,
+    startDate: Date,
+    endDate: Date,
+  ) {
     const result = await this.attendanceModel.aggregate([
       {
         $match: {
@@ -177,13 +195,15 @@ export class AnalyticsService {
       attendanceRate: 0,
     };
 
-    result.forEach(item => {
+    result.forEach((item) => {
       stats[item._id] = item.count;
       stats.total += item.count;
     });
 
     if (stats.total > 0) {
-      stats.attendanceRate = (stats.present / stats.total * 100).toFixed(2) as any;
+      stats.attendanceRate = ((stats.present / stats.total) * 100).toFixed(
+        2,
+      ) as any;
     }
 
     return stats;
@@ -192,7 +212,11 @@ export class AnalyticsService {
   /**
    * Student attendance percentage
    */
-  async getStudentAttendanceRate(studentId: string, startDate: Date, endDate: Date) {
+  async getStudentAttendanceRate(
+    studentId: string,
+    startDate: Date,
+    endDate: Date,
+  ) {
     const result = await this.attendanceModel.aggregate([
       {
         $match: {
@@ -211,7 +235,7 @@ export class AnalyticsService {
     let present = 0;
     let total = 0;
 
-    result.forEach(item => {
+    result.forEach((item) => {
       total += item.count;
       if (item._id === 'present') present = item.count;
     });
@@ -226,7 +250,11 @@ export class AnalyticsService {
   /**
    * Student subject-wise attendance breakdown
    */
-  async getStudentSubjectAttendance(studentId: string, startDate: Date, endDate: Date) {
+  async getStudentSubjectAttendance(
+    studentId: string,
+    startDate: Date,
+    endDate: Date,
+  ) {
     return this.attendanceModel.aggregate([
       {
         $match: {
@@ -255,7 +283,10 @@ export class AnalyticsService {
         $project: {
           subjectId: '$_id',
           subjectName: {
-            $ifNull: [{ $arrayElemAt: ['$subjectInfo.name', 0] }, 'General Attendance'],
+            $ifNull: [
+              { $arrayElemAt: ['$subjectInfo.name', 0] },
+              'General Attendance',
+            ],
           },
           present: 1,
           total: 1,
@@ -278,8 +309,10 @@ export class AnalyticsService {
    * Fee collection statistics
    */
   async getFeeCollectionStats(classId: string) {
-    const students = await this.studentModel.find({ classId: new Types.ObjectId(classId) });
-    const studentIds = students.map(s => s._id);
+    const students = await this.studentModel.find({
+      classId: new Types.ObjectId(classId),
+    });
+    const studentIds = students.map((s) => s._id);
 
     const result = await this.feeModel.aggregate([
       {
@@ -306,7 +339,7 @@ export class AnalyticsService {
       collectionRate: 0,
     };
 
-    result.forEach(item => {
+    result.forEach((item) => {
       if (item._id === true) {
         stats.paidFees = item.count;
         stats.collectedAmount = item.totalAmount;
@@ -319,7 +352,9 @@ export class AnalyticsService {
     });
 
     if (stats.totalAmount > 0) {
-      stats.collectionRate = parseFloat(((stats.collectedAmount / stats.totalAmount) * 100).toFixed(2));
+      stats.collectionRate = parseFloat(
+        ((stats.collectedAmount / stats.totalAmount) * 100).toFixed(2),
+      );
     }
 
     return stats;
@@ -357,7 +392,7 @@ export class AnalyticsService {
 
     let presentToday = 0;
     let totalToday = 0;
-    attendanceToday.forEach(item => {
+    attendanceToday.forEach((item) => {
       totalToday += item.count;
       if (item._id === 'present') presentToday = item.count;
     });
@@ -369,7 +404,8 @@ export class AnalyticsService {
       attendanceToday: {
         present: presentToday,
         total: totalToday,
-        rate: totalToday > 0 ? ((presentToday / totalToday) * 100).toFixed(2) : 0,
+        rate:
+          totalToday > 0 ? ((presentToday / totalToday) * 100).toFixed(2) : 0,
       },
     };
   }

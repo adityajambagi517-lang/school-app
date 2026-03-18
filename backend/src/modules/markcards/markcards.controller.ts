@@ -14,13 +14,16 @@ import { BulkCreateMarkcardDto } from './dto/bulk-create-markcard.dto';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { RolesGuard } from '../../guards/roles.guard';
 import { Roles } from '../../decorators/roles.decorator';
-import { CurrentUser, CurrentUserData } from '../../decorators/current-user.decorator';
+import {
+  CurrentUser,
+  CurrentUserData,
+} from '../../decorators/current-user.decorator';
 import { UserRole } from '../../schemas/user.schema';
 
 @Controller('markcards')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class MarkcardsController {
-  constructor(private readonly markcardsService: MarkcardsService) { }
+  constructor(private readonly markcardsService: MarkcardsService) {}
 
   // TEACHER: Create marks (DRAFT)
   @Post()
@@ -53,8 +56,15 @@ export class MarkcardsController {
   // TEACHER: Submit marks for approval (DRAFT → SUBMITTED)
   @Patch(':id/submit')
   @Roles(UserRole.TEACHER)
-  submitForApproval(@Param('id') id: string, @CurrentUser() user: CurrentUserData) {
-    return this.markcardsService.submitForApproval(id, user.role, user.referenceId || '');
+  submitForApproval(
+    @Param('id') id: string,
+    @CurrentUser() user: CurrentUserData,
+  ) {
+    return this.markcardsService.submitForApproval(
+      id,
+      user.role,
+      user.referenceId || '',
+    );
   }
 
   // ADMIN: Approve marks (SUBMITTED → APPROVED)
@@ -110,7 +120,10 @@ export class MarkcardsController {
     @Param('classId') classId: string,
     @CurrentUser() user: CurrentUserData,
   ) {
-    return this.markcardsService.getTeacherMarks(classId, user.referenceId || '');
+    return this.markcardsService.getTeacherMarks(
+      classId,
+      user.referenceId || '',
+    );
   }
 
   // ADMIN: Get all pending approvals

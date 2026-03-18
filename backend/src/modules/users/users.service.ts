@@ -1,4 +1,8 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import * as bcrypt from 'bcrypt';
@@ -8,13 +12,13 @@ import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
-  ) { }
+  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
   async create(createUserDto: CreateUserDto) {
     // Check if user already exists
-    const existing = await this.userModel.findOne({ userId: createUserDto.userId });
+    const existing = await this.userModel.findOne({
+      userId: createUserDto.userId,
+    });
     if (existing) {
       throw new ConflictException('User ID already exists');
     }
@@ -25,7 +29,9 @@ export class UsersService {
     const user = new this.userModel({
       ...createUserDto,
       password: hashedPassword,
-      referenceId: createUserDto.referenceId ? new Types.ObjectId(createUserDto.referenceId) : null,
+      referenceId: createUserDto.referenceId
+        ? new Types.ObjectId(createUserDto.referenceId)
+        : null,
     });
 
     return user.save();
@@ -66,7 +72,9 @@ export class UsersService {
       updateUserDto.password = await bcrypt.hash(updateUserDto.password, 10);
     }
 
-    const user = await this.userModel.findByIdAndUpdate(id, updateUserDto, { new: true }).select('-password');
+    const user = await this.userModel
+      .findByIdAndUpdate(id, updateUserDto, { new: true })
+      .select('-password');
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -74,30 +82,28 @@ export class UsersService {
   }
 
   async remove(id: string) {
-    const user = await this.userModel.findByIdAndUpdate(id, { isActive: false }, { new: true });
+    const user = await this.userModel.findByIdAndDelete(id);
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    return { message: 'User deactivated successfully' };
+    return { message: 'User deleted successfully' };
   }
 
   async resetPassword(id: string) {
     const defaultPassword = 'password123';
     const hashedPassword = await bcrypt.hash(defaultPassword, 10);
-    
-    const user = await this.userModel.findByIdAndUpdate(
-      id, 
-      { password: hashedPassword }, 
-      { new: true }
-    ).select('-password');
+
+    const user = await this.userModel
+      .findByIdAndUpdate(id, { password: hashedPassword }, { new: true })
+      .select('-password');
 
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    return { 
+    return {
       message: 'Password reset to default successfully',
-      user 
+      user,
     };
   }
 
@@ -110,16 +116,19 @@ export class UsersService {
     user.isActive = !user.isActive;
     await user.save();
 
-    return { 
+    return {
       message: `User ${user.isActive ? 'activated' : 'deactivated'} successfully`,
-      isActive: user.isActive 
+      isActive: user.isActive,
     };
   }
 
   async findByRoles(roles: string[]) {
-    return this.userModel.find({ 
-      role: { $in: roles },
-      isActive: true 
-    }).select('_id role').exec();
+    return this.userModel
+      .find({
+        role: { $in: roles },
+        isActive: true,
+      })
+      .select('_id role')
+      .exec();
   }
 }

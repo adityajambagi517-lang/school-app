@@ -1,19 +1,25 @@
-import { IsMongoId, IsNumber, IsString, IsDateString, Min } from 'class-validator';
+import {
+  IsMongoId,
+  IsNumber,
+  IsString,
+  IsDateString,
+  Min,
+} from 'class-validator';
 
 export class CreateFeeDto {
-    @IsMongoId()
-    studentId: string;
+  @IsMongoId()
+  studentId: string;
 
-    @IsString()
-    academicYear: string;
+  @IsString()
+  academicYear: string;
 
-    @IsString()
-    termName: string;
+  @IsString()
+  termName: string;
 
-    @IsNumber()
-    @Min(0)
-    amount: number;
+  @IsNumber()
+  @Min(0)
+  amount: number;
 
-    @IsDateString()
-    dueDate: string;
+  @IsDateString()
+  dueDate: string;
 }

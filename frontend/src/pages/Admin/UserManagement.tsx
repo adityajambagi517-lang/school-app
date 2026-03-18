@@ -95,6 +95,21 @@ function UserManagement() {
         }
     };
 
+    const handleDeleteUser = async (id: string, name: string) => {
+        if (!window.confirm(`⚠️ Are you sure you want to PERMANENTLY delete user ${name}? This will NOT delete associated profile records if any.`)) {
+            return;
+        }
+
+        try {
+            await usersService.delete(id);
+            setUsers(users.filter(u => u._id !== id));
+            setSuccess(`✅ User ${name} deleted successfully`);
+            setTimeout(() => setSuccess(''), 3000);
+        } catch (err) {
+            setError('Failed to delete user');
+        }
+    };
+
     const handleLogout = () => {
         authService.logout();
         navigate('/login');
@@ -262,6 +277,13 @@ function UserManagement() {
                                                 className={`btn-action ${user.isActive ? 'btn-deactivate' : 'btn-activate'}`}
                                             >
                                                 {user.isActive ? '🚫 Deactivate' : '✔️ Activate'}
+                                            </button>
+                                            <button 
+                                                onClick={() => handleDeleteUser(user._id, user.name)}
+                                                className="btn-action btn-delete"
+                                                title="Delete User Permanently"
+                                            >
+                                                🗑️ Delete
                                             </button>
                                         </td>
                                     </tr>

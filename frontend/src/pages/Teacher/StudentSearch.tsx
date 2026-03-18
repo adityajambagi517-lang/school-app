@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService, studentsService } from '../../services/api';
 import type { StudentWithDetails } from '../../types/student';
@@ -26,8 +26,9 @@ function StudentSearch() {
 
         try {
             const response = await studentsService.search(query);
-            setResults(response.students);
-            if (response.students.length === 0) {
+            const students = response.students || [];
+            setResults(students);
+            if (students.length === 0) {
                 setError('No students found in your class matching your search.');
             }
         } catch (err: any) {

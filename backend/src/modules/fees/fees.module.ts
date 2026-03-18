@@ -3,7 +3,10 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { FeesService } from './fees.service';
 import { FeesController } from './fees.controller';
 import { Fee, FeeSchema } from '../../schemas/fee.schema';
-import { EditRequest, EditRequestSchema } from '../../schemas/edit-request.schema';
+import {
+  EditRequest,
+  EditRequestSchema,
+} from '../../schemas/edit-request.schema';
 import { Teacher, TeacherSchema } from '../../schemas/teacher.schema';
 import { Student, StudentSchema } from '../../schemas/student.schema';
 
@@ -19,4 +22,4 @@ import { Student, StudentSchema } from '../../schemas/student.schema';
   controllers: [FeesController],
   providers: [FeesService],
 })
-export class FeesModule { }
+export class FeesModule {}

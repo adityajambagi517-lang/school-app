@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+} from '@nestjs/common';
 import { TimetableService } from './timetable.service';
 import { CreateTimetableDto } from './dto/create-timetable.dto';
 import { UpdateTimetableDto } from './dto/update-timetable.dto';
@@ -10,7 +19,7 @@ import { UserRole } from '../../schemas/user.schema';
 @Controller('timetable')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class TimetableController {
-  constructor(private readonly timetableService: TimetableService) { }
+  constructor(private readonly timetableService: TimetableService) {}
 
   @Post()
   @Roles(UserRole.TEACHER, UserRole.ADMIN)
@@ -25,7 +34,10 @@ export class TimetableController {
 
   @Patch(':id')
   @Roles(UserRole.TEACHER, UserRole.ADMIN)
-  update(@Param('id') id: string, @Body() updateTimetableDto: UpdateTimetableDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateTimetableDto: UpdateTimetableDto,
+  ) {
     return this.timetableService.update(id, updateTimetableDto);
   }
 

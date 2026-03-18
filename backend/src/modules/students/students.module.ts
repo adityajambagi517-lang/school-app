@@ -11,19 +11,19 @@ import { Fee, FeeSchema } from '../../schemas/fee.schema';
 import { Attendance, AttendanceSchema } from '../../schemas/attendance.schema';
 
 @Module({
-    imports: [
-        MongooseModule.forFeature([
-            { name: Student.name, schema: StudentSchema },
-            { name: Class.name, schema: ClassSchema },
-            { name: Teacher.name, schema: TeacherSchema },
-            { name: User.name, schema: UserSchema },
-            { name: Markcard.name, schema: MarkcardSchema },
-            { name: Fee.name, schema: FeeSchema },
-            { name: Attendance.name, schema: AttendanceSchema },
-        ]),
-    ],
-    controllers: [StudentsController],
-    providers: [StudentsService],
-    exports: [StudentsService],
+  imports: [
+    MongooseModule.forFeature([
+      { name: Student.name, schema: StudentSchema },
+      { name: Class.name, schema: ClassSchema },
+      { name: Teacher.name, schema: TeacherSchema },
+      { name: User.name, schema: UserSchema },
+      { name: Markcard.name, schema: MarkcardSchema },
+      { name: Fee.name, schema: FeeSchema },
+      { name: Attendance.name, schema: AttendanceSchema },
+    ]),
+  ],
+  controllers: [StudentsController],
+  providers: [StudentsService],
+  exports: [StudentsService],
 })
-export class StudentsModule { }
+export class StudentsModule {}

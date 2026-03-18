@@ -15,4 +15,4 @@ import { Teacher, TeacherSchema } from '../../schemas/teacher.schema';
   controllers: [AttendanceController],
   providers: [AttendanceService],
 })
-export class AttendanceModule { }
+export class AttendanceModule {}

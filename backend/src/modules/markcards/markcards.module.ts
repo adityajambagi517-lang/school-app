@@ -3,7 +3,10 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { MarkcardsService } from './markcards.service';
 import { MarkcardsController } from './markcards.controller';
 import { Markcard, MarkcardSchema } from '../../schemas/markcard.schema';
-import { EditRequest, EditRequestSchema } from '../../schemas/edit-request.schema';
+import {
+  EditRequest,
+  EditRequestSchema,
+} from '../../schemas/edit-request.schema';
 import { Teacher, TeacherSchema } from '../../schemas/teacher.schema';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { User, UserSchema } from '../../schemas/user.schema';
@@ -21,4 +24,4 @@ import { User, UserSchema } from '../../schemas/user.schema';
   controllers: [MarkcardsController],
   providers: [MarkcardsService],
 })
-export class MarkcardsModule { }
+export class MarkcardsModule {}

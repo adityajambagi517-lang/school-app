@@ -1,58 +1,59 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import * as mongoose from 'mongoose';
 
 export type FeeDocument = Fee & Document;
 
 export enum FeeStatus {
-    DRAFT = 'DRAFT',
-    SUBMITTED = 'SUBMITTED',
-    APPROVED = 'APPROVED',
-    PUBLISHED = 'PUBLISHED',
+  DRAFT = 'DRAFT',
+  SUBMITTED = 'SUBMITTED',
+  APPROVED = 'APPROVED',
+  PUBLISHED = 'PUBLISHED',
 }
 
 @Schema({ timestamps: true })
 export class Fee {
-    @Prop({ type: Types.ObjectId, ref: 'Student', required: true, index: true })
-    studentId: Types.ObjectId;
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Student', required: true, index: true })
+  studentId: Types.ObjectId;
 
-    @Prop({ required: true })
-    academicYear: string;
+  @Prop({ required: true })
+  academicYear: string;
 
-    @Prop({ required: true })
-    termName: string; // e.g., "Term 1", "Term 2"
+  @Prop({ required: true })
+  termName: string; // e.g., "Term 1", "Term 2"
 
-    @Prop({ required: true })
-    amount: number;
+  @Prop({ required: true })
+  amount: number;
 
-    @Prop({ required: true })
-    dueDate: Date;
+  @Prop({ required: true })
+  dueDate: Date;
 
-    @Prop({ required: true, enum: FeeStatus, default: FeeStatus.DRAFT })
-    status: FeeStatus;
+  @Prop({ required: true, enum: FeeStatus, default: FeeStatus.DRAFT })
+  status: FeeStatus;
 
-    @Prop({ type: Types.ObjectId, ref: 'EditRequest' })
-    editRequestId: Types.ObjectId;
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'EditRequest' })
+  editRequestId: Types.ObjectId;
 
-    @Prop({ type: Types.ObjectId, ref: 'Teacher' })
-    submittedBy: Types.ObjectId;
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Teacher' })
+  submittedBy: Types.ObjectId;
 
-    @Prop({ type: Types.ObjectId, ref: 'User' })
-    approvedBy: Types.ObjectId;
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
+  approvedBy: Types.ObjectId;
 
-    @Prop()
-    submittedAt: Date;
+  @Prop()
+  submittedAt: Date;
 
-    @Prop()
-    approvedAt: Date;
+  @Prop()
+  approvedAt: Date;
 
-    @Prop()
-    publishedAt: Date;
+  @Prop()
+  publishedAt: Date;
 
-    @Prop({ default: false })
-    isPaid: boolean;
+  @Prop({ default: false })
+  isPaid: boolean;
 
-    @Prop()
-    paidAt: Date;
+  @Prop()
+  paidAt: Date;
 }
 
 export const FeeSchema = SchemaFactory.createForClass(Fee);

@@ -1,4 +1,15 @@
-import { Controller, Get, Patch, Body, UseGuards, Request, Post, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Body,
+  UseGuards,
+  Request,
+  Post,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -27,14 +38,18 @@ export class ProfileController {
       storage: diskStorage({
         destination: './uploads/profiles',
         filename: (req, file, callback) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
           const ext = extname(file.originalname);
           callback(null, `profile-${uniqueSuffix}${ext}`);
         },
       }),
       fileFilter: (req, file, callback) => {
         if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
-          return callback(new BadRequestException('Only image files are allowed!'), false);
+          return callback(
+            new BadRequestException('Only image files are allowed!'),
+            false,
+          );
         }
         callback(null, true);
       },
@@ -43,17 +58,22 @@ export class ProfileController {
       },
     }),
   )
-  async uploadPicture(@Request() req, @UploadedFile() file: Express.Multer.File) {
+  async uploadPicture(
+    @Request() req,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
     if (!file) {
       throw new BadRequestException('File is required');
     }
-    
+
     const pictureUrl = `/uploads/profiles/${file.filename}`;
-    await this.authService.updateProfile(req.user.userId, { profilePicture: pictureUrl });
-    
-    return { 
+    await this.authService.updateProfile(req.user.userId, {
+      profilePicture: pictureUrl,
+    });
+
+    return {
       message: 'Profile picture uploaded successfully',
-      url: pictureUrl 
+      url: pictureUrl,
     };
   }
 }

@@ -18,4 +18,4 @@ import { Teacher, TeacherSchema } from '../../schemas/teacher.schema';
   providers: [UsersService],
   exports: [UsersService],
 })
-export class UsersModule { }
+export class UsersModule {}

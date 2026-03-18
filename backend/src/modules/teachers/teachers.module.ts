@@ -8,16 +8,16 @@ import { Student, StudentSchema } from '../../schemas/student.schema';
 import { User, UserSchema } from '../../schemas/user.schema';
 
 @Module({
-    imports: [
-        MongooseModule.forFeature([
-            { name: Teacher.name, schema: TeacherSchema },
-            { name: Class.name, schema: ClassSchema },
-            { name: Student.name, schema: StudentSchema },
-            { name: User.name, schema: UserSchema },
-        ]),
-    ],
-    controllers: [TeachersController],
-    providers: [TeachersService],
-    exports: [TeachersService],
+  imports: [
+    MongooseModule.forFeature([
+      { name: Teacher.name, schema: TeacherSchema },
+      { name: Class.name, schema: ClassSchema },
+      { name: Student.name, schema: StudentSchema },
+      { name: User.name, schema: UserSchema },
+    ]),
+  ],
+  controllers: [TeachersController],
+  providers: [TeachersService],
+  exports: [TeachersService],
 })
-export class TeachersModule { }
+export class TeachersModule {}

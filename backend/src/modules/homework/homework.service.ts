@@ -1,4 +1,8 @@
-import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Homework, HomeworkDocument } from '../../schemas/homework.schema';
@@ -17,9 +21,13 @@ export class HomeworkService {
     @InjectModel(Teacher.name) private teacherModel: Model<TeacherDocument>,
     @InjectModel(Student.name) private studentModel: Model<StudentDocument>,
     private notificationsService: NotificationsService,
-  ) { }
+  ) {}
 
-  async create(createHomeworkDto: CreateHomeworkDto, userRole: string, referenceId: string) {
+  async create(
+    createHomeworkDto: CreateHomeworkDto,
+    userRole: string,
+    referenceId: string,
+  ) {
     if (userRole === UserRole.TEACHER) {
       await this.verifyTeacherAccess(referenceId, createHomeworkDto.classId);
     }
@@ -40,7 +48,10 @@ export class HomeworkService {
     const savedHomework = await homework.save();
 
     // Send notifications to students
-    await this.sendHomeworkNotifications(savedHomework, createHomeworkDto.classId);
+    await this.sendHomeworkNotifications(
+      savedHomework,
+      createHomeworkDto.classId,
+    );
 
     return savedHomework;
   }
@@ -57,7 +68,12 @@ export class HomeworkService {
       .exec();
   }
 
-  async update(id: string, updateHomeworkDto: UpdateHomeworkDto, userRole: string, referenceId: string) {
+  async update(
+    id: string,
+    updateHomeworkDto: UpdateHomeworkDto,
+    userRole: string,
+    referenceId: string,
+  ) {
     const homework = await this.homeworkModel.findById(id);
     if (!homework) {
       throw new NotFoundException('Homework not found');
@@ -96,17 +112,21 @@ export class HomeworkService {
     }
 
     if (teacher.assignedClassId.toString() !== classId) {
-      throw new ForbiddenException('You can only manage homework for your assigned class');
+      throw new ForbiddenException(
+        'You can only manage homework for your assigned class',
+      );
     }
   }
 
   private async sendHomeworkNotifications(homework: any, classId: string) {
     try {
       // Fetch all students in the class
-      const students = await this.studentModel.find({ classId: new Types.ObjectId(classId) });
+      const students = await this.studentModel.find({
+        classId: new Types.ObjectId(classId),
+      });
 
       // Create notifications for each student
-      const notificationPromises = students.map(student =>
+      const notificationPromises = students.map((student) =>
         this.notificationsService.create({
           recipientId: student._id,
           recipientRole: NotificationRecipientRole.STUDENT,
@@ -117,7 +137,7 @@ export class HomeworkService {
             type: 'Homework',
             id: homework._id,
           },
-        })
+        }),
       );
 
       await Promise.all(notificationPromises);

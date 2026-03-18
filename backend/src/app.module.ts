@@ -28,6 +28,7 @@ import { NoticesModule } from './modules/notices/notices.module';
 
     // MongoDB connection using environment variables
     MongooseModule.forRootAsync({
+      imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         uri: configService.get<string>('MONGODB_URI'),
@@ -66,4 +67,4 @@ import { NoticesModule } from './modules/notices/notices.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

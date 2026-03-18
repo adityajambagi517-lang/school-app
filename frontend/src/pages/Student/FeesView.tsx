@@ -72,7 +72,6 @@ function FeesView() {
             <NavBar
                 role="student"
                 userName={user?.name}
-                profileImage={user?.studentDetails?.profileImage}
                 onLogout={handleLogout}
                 backTo="/student/dashboard"
                 backLabel="← Dashboard"

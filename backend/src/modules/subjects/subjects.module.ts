@@ -6,14 +6,14 @@ import { Subject, SubjectSchema } from '../../schemas/subject.schema';
 import { Teacher, TeacherSchema } from '../../schemas/teacher.schema';
 
 @Module({
-    imports: [
-        MongooseModule.forFeature([
-            { name: Subject.name, schema: SubjectSchema },
-            { name: Teacher.name, schema: TeacherSchema },
-        ]),
-    ],
-    controllers: [SubjectsController],
-    providers: [SubjectsService],
-    exports: [SubjectsService],
+  imports: [
+    MongooseModule.forFeature([
+      { name: Subject.name, schema: SubjectSchema },
+      { name: Teacher.name, schema: TeacherSchema },
+    ]),
+  ],
+  controllers: [SubjectsController],
+  providers: [SubjectsService],
+  exports: [SubjectsService],
 })
-export class SubjectsModule { }
+export class SubjectsModule {}

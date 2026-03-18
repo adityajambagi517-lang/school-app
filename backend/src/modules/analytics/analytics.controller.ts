@@ -8,7 +8,7 @@ import { UserRole } from '../../schemas/user.schema';
 @Controller('analytics')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class AnalyticsController {
-  constructor(private readonly analyticsService: AnalyticsService) { }
+  constructor(private readonly analyticsService: AnalyticsService) {}
 
   @Get('class/:classId/average')
   @Roles(UserRole.ADMIN, UserRole.TEACHER)
@@ -28,7 +28,12 @@ export class AnalyticsController {
     @Query('subject') subject: string,
     @Query('examType') examType: string,
   ) {
-    return this.analyticsService.compareSections(className, academicYear, subject, examType);
+    return this.analyticsService.compareSections(
+      className,
+      academicYear,
+      subject,
+      examType,
+    );
   }
 
   @Get('student/:studentId/performance')
@@ -58,7 +63,11 @@ export class AnalyticsController {
   ) {
     const start = new Date(startDate);
     const end = new Date(endDate);
-    return this.analyticsService.getStudentAttendanceRate(studentId, start, end);
+    return this.analyticsService.getStudentAttendanceRate(
+      studentId,
+      start,
+      end,
+    );
   }
 
   @Get('student/:studentId/subject-attendance')
@@ -70,7 +79,11 @@ export class AnalyticsController {
   ) {
     const start = new Date(startDate);
     const end = new Date(endDate);
-    return this.analyticsService.getStudentSubjectAttendance(studentId, start, end);
+    return this.analyticsService.getStudentSubjectAttendance(
+      studentId,
+      start,
+      end,
+    );
   }
 
   @Get('class/:classId/fee-collection')

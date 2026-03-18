@@ -8,8 +8,9 @@ import { UpdateTimetableDto } from './dto/update-timetable.dto';
 @Injectable()
 export class TimetableService {
   constructor(
-    @InjectModel(Timetable.name) private timetableModel: Model<TimetableDocument>,
-  ) { }
+    @InjectModel(Timetable.name)
+    private timetableModel: Model<TimetableDocument>,
+  ) {}
 
   async create(createTimetableDto: CreateTimetableDto) {
     const timetable = new this.timetableModel({
@@ -30,7 +31,9 @@ export class TimetableService {
   }
 
   async update(id: string, updateTimetableDto: UpdateTimetableDto) {
-    return this.timetableModel.findByIdAndUpdate(id, updateTimetableDto, { new: true });
+    return this.timetableModel.findByIdAndUpdate(id, updateTimetableDto, {
+      new: true,
+    });
   }
 
   async remove(id: string) {

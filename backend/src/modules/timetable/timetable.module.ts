@@ -13,4 +13,4 @@ import { Timetable, TimetableSchema } from '../../schemas/timetable.schema';
   controllers: [TimetableController],
   providers: [TimetableService],
 })
-export class TimetableModule { }
+export class TimetableModule {}

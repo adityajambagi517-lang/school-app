@@ -9,6 +9,7 @@ import { Class, ClassSchema } from '../../schemas/class.schema';
 import { Teacher, TeacherSchema } from '../../schemas/teacher.schema';
 import { Fee, FeeSchema } from '../../schemas/fee.schema';
 
+
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -23,4 +24,4 @@ import { Fee, FeeSchema } from '../../schemas/fee.schema';
   controllers: [AnalyticsController],
   providers: [AnalyticsService],
 })
-export class AnalyticsModule { }
+export class AnalyticsModule {}

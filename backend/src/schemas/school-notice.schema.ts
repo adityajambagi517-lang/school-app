@@ -6,20 +6,20 @@ export type SchoolNoticeDocument = SchoolNotice & Document;
 
 @Schema({ timestamps: true })
 export class SchoolNotice {
-    @Prop({ required: true })
-    title: string;
+  @Prop({ required: true })
+  title: string;
 
-    @Prop({ required: true })
-    content: string;
+  @Prop({ required: true })
+  content: string;
 
-    @Prop()
-    imageUrl?: string;
+  @Prop()
+  imageUrl?: string;
 
-    @Prop({ type: [String], enum: UserRole, required: true })
-    targetRoles: UserRole[];
+  @Prop({ type: [String], enum: UserRole, required: true })
+  targetRoles: UserRole[];
 
-    @Prop({ default: true })
-    isActive: boolean;
+  @Prop({ default: true })
+  isActive: boolean;
 }
 
 export const SchoolNoticeSchema = SchemaFactory.createForClass(SchoolNotice);

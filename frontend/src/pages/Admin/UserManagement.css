@@ -94,6 +94,17 @@
 
 .btn-activate:hover { background: #dcfce7; }
 
+.btn-delete {
+    background: #fff1f2;
+    color: #9f1239;
+    border: 1px solid #ffe4e6;
+}
+
+.btn-delete:hover {
+    background: #ffe4e6;
+    transform: translateY(-1px);
+}
+
 .search-input {
     padding: 10px 16px;
     border-radius: 8px;
