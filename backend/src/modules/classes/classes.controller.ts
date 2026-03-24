@@ -7,6 +7,7 @@ import {
   Delete,
   Patch,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { ClassesService } from './classes.service';
 import { CreateClassDto } from './dto/create-class.dto';
@@ -31,6 +32,12 @@ export class ClassesController {
   @Roles(UserRole.ADMIN, UserRole.TEACHER)
   findAll() {
     return this.classesService.findAll();
+  }
+
+  @Get('search')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  search(@Query('q') q: string) {
+    return this.classesService.search(q);
   }
 
   @Get('my-classes')

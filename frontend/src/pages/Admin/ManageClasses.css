@@ -48,37 +48,97 @@
     color: var(--text-main);
 }
 
-.classes-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 520px;
+/* ── Classes grid container ── */
+.classes-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
 }
 
-.classes-table thead {
-    background: linear-gradient(135deg, var(--primary), var(--primary-end));
-    color: white;
+.class-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.classes-table th {
-    padding: 12px 14px;
-    text-align: left;
-    font-weight: 600;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+.class-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border-color: var(--primary);
 }
 
-.classes-table tbody tr {
-    border-bottom: 1px solid var(--gray-100);
-    transition: background 0.15s;
+.class-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
 }
 
-.classes-table tbody tr:active { background: var(--gray-50); }
+.class-info {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
 
-.classes-table td {
-    padding: 12px 14px;
-    font-size: 14px;
+.class-info h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
     color: var(--text-main);
+}
+
+.academic-year-badge {
+    font-size: 12px;
+    color: var(--text-muted);
+    background: var(--bg-hover);
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.btn-delete-icon {
+    background: transparent;
+    color: var(--danger);
+    border: none;
+    padding: 4px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-delete-icon:hover {
+    background: rgba(239, 68, 68, 0.1);
+    transform: scale(1.05);
+}
+
+.class-card-teacher {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-light);
+}
+
+.teacher-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.teacher-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
 }
 
 .class-name { font-weight: 600; color: var(--text-main); }
@@ -106,15 +166,16 @@
 }
 
 .assign-teacher-select {
-    padding: 6px 10px;
-    font-size: 13px;
+    width: 100%;
+    max-width: none;
+    padding: 8px 12px;
+    font-size: 14px;
     border-radius: 6px;
     border: 1.5px solid var(--border);
     cursor: pointer;
     background: var(--bg-input);
     color: var(--primary);
     font-weight: 600;
-    max-width: 150px;
     -webkit-appearance: none;
     appearance: none;
 }
@@ -125,21 +186,6 @@
 }
 
 .assign-teacher-select:disabled { opacity: 0.5; cursor: not-allowed; }
-
-.btn-delete {
-    padding: 6px 12px;
-    background: linear-gradient(135deg, #fc8181, var(--danger));
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition);
-    min-height: 32px;
-}
-
-.btn-delete:active { transform: scale(0.96); }
 
 /* ── Stats summary ── */
 .stats-summary {
@@ -179,4 +225,22 @@
     .form-card { padding: 28px; }
     .stats-summary { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
     .stat-number { font-size: 24px; }
+    
+    .classes-grid {
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        display: grid;
+        padding: 20px;
+    }
+    
+    .class-card-teacher {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+    }
+    
+    .assign-teacher-select {
+        width: auto;
+        min-width: 160px;
+    }
 }

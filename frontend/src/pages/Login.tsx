@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { authService } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import PasswordInput from '../components/Common/PasswordInput';
+import ForgotPassword from '../components/ForgotPassword';
 import './Login.css';
 
 function Login() {
@@ -10,6 +11,7 @@ function Login() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [showForgotPassword, setShowForgotPassword] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -81,10 +83,20 @@ function Login() {
                     <button type="submit" className="login-button" disabled={loading}>
                         {loading ? 'Signing in...' : 'Sign In'}
                     </button>
+
+                    <button
+                        type="button"
+                        className="forgot-password-link"
+                        onClick={() => setShowForgotPassword(true)}
+                    >
+                        Forgot Password?
+                    </button>
                 </form>
 
+                {showForgotPassword && <ForgotPassword onClose={() => setShowForgotPassword(false)} />}
+
                 <div className="login-footer">
-                    <p>© 2026 School Management System. All rights reserved.</p>
+                    <p>© School Management System. All rights reserved.</p>
                 </div>
             </div>
         </div>

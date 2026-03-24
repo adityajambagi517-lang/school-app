@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
     BookOpen, ClipboardList, Users, BarChart3,
     Calendar, DollarSign, BookMarked,
-    CheckSquare, Lock, UserPlus, Megaphone, Search
+    CheckSquare, Lock, UserPlus, Megaphone, Search, AlertCircle
 } from 'lucide-react';
 import { authService, notificationsService } from '../../services/api';
 import NavBar from '../../components/NavBar';
@@ -54,6 +54,7 @@ function TeacherDashboard() {
         { icon: <Megaphone size={22} color="white" />, label: 'Notices', path: '/teacher/notices', cls: 't-indigo', badge: unreadNoticesCount > 0 ? unreadNoticesCount : undefined },
         { icon: <Search size={22} color="white" />, label: 'Search Students', path: '/teacher/search', cls: 't-orange' },
         { icon: <Lock size={22} color="white" />, label: 'Password', path: '/teacher/change-password', cls: 't-lime' },
+        { icon: <AlertCircle size={22} color="white" />, label: 'Report Problem', path: '/teacher/report-problem', cls: 't-red' },
     ];
 
     return (
@@ -64,7 +65,8 @@ function TeacherDashboard() {
                 onLogout={handleLogout}
                 links={[
                     ...actions.map(a => ({ icon: '→', label: a.label, path: a.path })),
-                    { icon: '🔍', label: 'Search Students', path: '/teacher/search' }
+                    { icon: '🔍', label: 'Search Students', path: '/teacher/search' },
+                    { icon: '🛠️', label: 'Report a Problem', path: '/teacher/report-problem' },
                 ]}
             />
 

@@ -39,12 +39,10 @@ export class StudentsService {
       if (!teacher) {
         throw new ForbiddenException('Teacher not found');
       }
-      if (!teacher.assignedClassId) {
-        throw new ForbiddenException('Teacher has no assigned class');
-      }
-      if (teacher.assignedClassId.toString() !== registerDto.classId) {
+      const isAssigned = await this.isTeacherAssignedToClass(user.referenceId, registerDto.classId);
+      if (!isAssigned) {
         throw new ForbiddenException(
-          'Teachers can only register students to their assigned class',
+          'Teachers can only register students to their assigned classes',
         );
       }
     }
@@ -114,9 +112,10 @@ export class StudentsService {
       if (!teacher) {
         throw new ForbiddenException('Teacher not found');
       }
-      if (teacher.assignedClassId.toString() !== createStudentDto.classId) {
+      const isAssigned = await this.isTeacherAssignedToClass(user.referenceId, createStudentDto.classId);
+      if (!isAssigned) {
         throw new ForbiddenException(
-          'Teachers can only add students to their assigned class',
+          'Teachers can only add students to their assigned classes',
         );
       }
     }
@@ -197,13 +196,13 @@ export class StudentsService {
 
     // If teacher, restrict to their assigned class
     if (user.role === 'teacher' && user.referenceId) {
-      const teacher = await this.teacherModel.findById(user.referenceId);
-      if (!teacher || !teacher.assignedClassId) {
+      const assignedClassIds = await this.getTeacherAssignedClassIds(user.referenceId);
+      if (assignedClassIds.length === 0) {
         throw new ForbiddenException(
           'Teacher has no assigned class to search within',
         );
       }
-      filter.classId = teacher.assignedClassId;
+      filter.classId = { $in: assignedClassIds };
     }
 
     // Search by student ID or name (case-insensitive) with class filter
@@ -288,7 +287,6 @@ export class StudentsService {
             { email: { $regex: query, $options: 'i' } },
           ],
         })
-        .populate('assignedClassId', 'className section academicYear')
         .limit(10)
         .exec();
     }
@@ -308,9 +306,10 @@ export class StudentsService {
       if (!teacher) {
         throw new ForbiddenException('Teacher not found');
       }
-      if (teacher.assignedClassId?.toString() !== classId) {
+      const isAssigned = await this.isTeacherAssignedToClass(user.referenceId, classId);
+      if (!isAssigned) {
         throw new ForbiddenException(
-          'You can only access students from your assigned class',
+          'You can only access students from your assigned classes',
         );
       }
     }
@@ -359,9 +358,10 @@ export class StudentsService {
       if (!teacher) {
         throw new ForbiddenException('Teacher not found');
       }
-      if (teacher.assignedClassId?.toString() !== student.classId.toString()) {
+      const isAssigned = await this.isTeacherAssignedToClass(user.referenceId, student.classId.toString());
+      if (!isAssigned) {
         throw new ForbiddenException(
-          'Teachers can only delete students from their assigned class',
+          'Teachers can only delete students from their assigned classes',
         );
       }
     }
@@ -376,5 +376,15 @@ export class StudentsService {
     await this.studentModel.findByIdAndDelete(id);
 
     return { message: 'Student and associated user account deleted successfully' };
+  }
+  private async getTeacherAssignedClassIds(teacherId: string): Promise<string[]> {
+    const classModel = this.teacherModel.db.model('Class');
+    const classes = await classModel.find({ classTeacherId: teacherId }).lean().exec();
+    return classes.map(c => c._id.toString());
+  }
+
+  private async isTeacherAssignedToClass(teacherId: string, classId: string): Promise<boolean> {
+    const classModel = this.teacherModel.db.model('Class');
+    return !!(await classModel.exists({ _id: classId, classTeacherId: teacherId }));
   }
 }

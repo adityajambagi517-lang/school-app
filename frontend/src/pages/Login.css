@@ -1,4 +1,5 @@
 /* Login Page — Mobile First */
+@import '../styles/forgot-password.css';
 @import '../styles/mobile.css';
 
 .login-container {
@@ -164,6 +165,22 @@
     opacity: 0.6;
     cursor: not-allowed;
 }
+
+.forgot-password-link {
+    background: none;
+    border: none;
+    color: var(--primary, #6366f1);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: center;
+    padding: 4px;
+    opacity: 0.8;
+    transition: opacity 0.15s;
+}
+.forgot-password-link:hover { opacity: 1; text-decoration: underline; }
+
 
 .login-footer {
     margin-top: 20px;

@@ -197,7 +197,7 @@ function ManageNotices() {
                         <div key={notice._id} className="card" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                             {notice.imageUrl && (
                                 <img 
-                                    src={`http://localhost:3000${notice.imageUrl}`} 
+                                    src={notice.imageUrl} 
                                     alt={notice.title} 
                                     style={{ width: '100%', height: '180px', objectFit: 'cover' }} 
                                 />

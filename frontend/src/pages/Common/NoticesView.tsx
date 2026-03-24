@@ -68,7 +68,7 @@ function NoticesView() {
                             <div key={notice._id} className="activity-card" style={{ marginBottom: '1.5rem', padding: 0, overflow: 'hidden' }}>
                                 {notice.imageUrl && (
                                     <img 
-                                        src={`http://localhost:3000${notice.imageUrl}`} 
+                                        src={notice.imageUrl} 
                                         alt={notice.title} 
                                         style={{ width: '100%', maxHeight: '300px', objectFit: 'cover' }} 
                                     />

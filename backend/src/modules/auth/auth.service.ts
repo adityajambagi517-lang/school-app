@@ -6,6 +6,7 @@ import * as bcrypt from 'bcrypt';
 import { User, UserDocument } from '../../schemas/user.schema';
 import { Student, StudentDocument } from '../../schemas/student.schema';
 import { Teacher, TeacherDocument } from '../../schemas/teacher.schema';
+import { Class, ClassDocument } from '../../schemas/class.schema';
 import { LoginDto, LoginResponse } from './dto/login.dto';
 
 @Injectable()
@@ -14,6 +15,7 @@ export class AuthService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(Student.name) private studentModel: Model<StudentDocument>,
     @InjectModel(Teacher.name) private teacherModel: Model<TeacherDocument>,
+    @InjectModel(Class.name) private classModel: Model<ClassDocument>,
     private jwtService: JwtService,
   ) {}
 
@@ -65,24 +67,30 @@ export class AuthService {
       referenceId: user.referenceId?.toString(),
     };
 
-    // If teacher, include assignedClassId and class details
+    // If teacher, dynamically find associated classes from the Class collection
     if (user.role === 'teacher' && user.referenceId) {
-      const teacher = await this.teacherModel
-        .findById(user.referenceId)
-        .populate('assignedClassId');
+      const teacher = await this.teacherModel.findById(user.referenceId);
 
-      if (teacher && teacher.assignedClassId) {
-        const classData: any = teacher.assignedClassId;
-        userResponse.assignedClassId = classData._id.toString();
-        userResponse.className = classData.className;
-        userResponse.section = classData.section;
+      if (teacher) {
+        const assignedClasses = await this.classModel.find({ classTeacherId: teacher._id }).lean().exec();
+        
+        // Pass array of all classes for advanced components
+        userResponse.assignedClasses = assignedClasses;
 
-        // Get student count for this class
-        const studentCount = await this.studentModel.countDocuments({
-          classId: classData._id,
-          isActive: true,
-        });
-        userResponse.totalStudents = studentCount;
+        // Maintain backward compatibility with the Teacher Dashboard by elevating the primary class
+        if (assignedClasses.length > 0) {
+          const primaryClass = assignedClasses[0];
+          userResponse.assignedClassId = primaryClass._id.toString();
+          userResponse.className = primaryClass.className;
+          userResponse.section = primaryClass.section;
+
+          // Get student count for this specific primary class
+          const studentCount = await this.studentModel.countDocuments({
+            classId: primaryClass._id,
+            isActive: true,
+          });
+          userResponse.totalStudents = studentCount;
+        }
       }
     }
 

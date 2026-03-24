@@ -47,8 +47,17 @@ export class TeachersService {
     if (registerDto.subject) {
       teacherData.subject = registerDto.subject;
     }
+    
     if (registerDto.assignedClassId) {
-      teacherData.assignedClassId = registerDto.assignedClassId;
+      // Check if the class is already assigned to ANY teacher
+      const existingAssignment = await this.classModel.findOne({
+        _id: registerDto.assignedClassId,
+        classTeacherId: { $exists: true, $ne: null }
+      });
+      
+      if (existingAssignment && existingAssignment.classTeacherId) {
+        throw new ConflictException(`This class is already assigned to another teacher.`);
+      }
     }
 
     // Create teacher
@@ -70,6 +79,13 @@ export class TeachersService {
       });
       await user.save();
 
+      // Synchronize Class document: give it this new teacher's ID
+      if (registerDto.assignedClassId) {
+        await this.classModel.findByIdAndUpdate(registerDto.assignedClassId, {
+          classTeacherId: savedTeacher._id
+        });
+      }
+
       return {
         success: true,
         message: 'Teacher registered successfully',
@@ -83,54 +99,63 @@ export class TeachersService {
   }
 
   async findAll() {
-    return this.teacherModel
-      .find()
-      .populate('assignedClassId', 'className section academicYear')
-      .exec();
+    const teachers = await this.teacherModel.find().lean().exec();
+    return Promise.all(teachers.map(async (t) => {
+      const classes = await this.classModel.find({ classTeacherId: t._id }, 'className section academicYear').lean().exec();
+      return { ...t, assignedClasses: classes };
+    }));
   }
 
-  async findAllWithStats() {
+  async search(query: string) {
+    const regex = new RegExp(query, 'i');
     const teachers = await this.teacherModel
-      .find()
-      .populate('assignedClassId', 'className section academicYear')
+      .find({
+        $or: [{ name: regex }, { email: regex }, { teacherId: regex }],
+      })
+      .limit(8)
       .lean()
       .exec();
 
+    return Promise.all(teachers.map(async (t) => {
+      const classes = await this.classModel.find({ classTeacherId: t._id }, 'className section academicYear').lean().exec();
+      return { ...t, assignedClasses: classes };
+    }));
+  }
+
+  async findAllWithStats() {
+    const teachers = await this.teacherModel.find().lean().exec();
+
     const teachersWithStats = await Promise.all(
       teachers.map(async (teacher) => {
-        if (!teacher.assignedClassId) {
+        const assignedClasses = await this.classModel.find({ classTeacherId: teacher._id }).lean().exec();
+
+        if (!assignedClasses || assignedClasses.length === 0) {
           return {
             ...teacher,
+            assignedClasses: [],
             stats: {
               studentCount: 0,
               averageMarks: 0,
               attendanceRate: 0,
-              className: 'Not Assigned',
-              section: '-',
             },
           };
         }
 
-        const classId = teacher.assignedClassId._id;
+        let totalStudents = 0;
+        for (const cls of assignedClasses) {
+          totalStudents += await this.studentModel.countDocuments({ classId: cls._id });
+        }
 
-        // Count students in the class
-        const studentCount = await this.studentModel.countDocuments({
-          classId,
-        });
-
-        // For now, return basic stats (marks and attendance can be added later)
         return {
           ...teacher,
+          assignedClasses,
           stats: {
-            studentCount,
-            averageMarks: 0, // Placeholder - can be calculated from markcards later
-            attendanceRate: 0, // Placeholder - can be calculated from attendance later
-            className: (teacher.assignedClassId as any).className,
-            section: (teacher.assignedClassId as any).section,
-            academicYear: (teacher.assignedClassId as any).academicYear,
-          },
+             studentCount: totalStudents,
+             averageMarks: 0,
+             attendanceRate: 0,
+          }
         };
-      }),
+      })
     );
 
     return teachersWithStats;
@@ -148,15 +173,53 @@ export class TeachersService {
   async update(id: string, updateTeacherDto: any) {
     return this.teacherModel
       .findByIdAndUpdate(id, updateTeacherDto, { new: true })
-      .populate('assignedClassId')
       .exec();
   }
 
+  async updateProfileImage(id: string, imageUrl: string) {
+    const teacher = await this.teacherModel.findByIdAndUpdate(
+      id,
+      { profilePicture: imageUrl },
+      { new: true },
+    );
+
+    if (!teacher) {
+      throw new NotFoundException('Teacher not found');
+    }
+
+    // Update the linked user account as well
+    await this.userModel.findOneAndUpdate(
+      { userId: teacher.teacherId, role: 'teacher' },
+      { profilePicture: imageUrl }
+    );
+
+    return teacher;
+  }
+
   async assignClass(teacherId: string, classId: string) {
-    return this.teacherModel
-      .findByIdAndUpdate(teacherId, { assignedClassId: classId }, { new: true })
-      .populate('assignedClassId')
-      .exec();
+    if (!classId) {
+      // If unassigning all classes is intended, we'd need a specific route,
+      // but if an empty classId came in, we just ignore or return bad request.
+      throw new ConflictException('Class ID is required to assign');
+    }
+
+    // Check if the class is already assigned to ANOTHER teacher
+    const classDoc = await this.classModel.findById(classId);
+    if (!classDoc) {
+       throw new NotFoundException('Class not found');
+    }
+    
+    if (classDoc.classTeacherId && classDoc.classTeacherId.toString() !== teacherId) {
+       const existingTeacher = await this.teacherModel.findById(classDoc.classTeacherId);
+       if (existingTeacher) {
+          throw new ConflictException(`This class is already assigned to ${existingTeacher.name} (${existingTeacher.teacherId})`);
+       }
+    }
+
+    // Assign the teacher to this class
+    await this.classModel.findByIdAndUpdate(classId, { classTeacherId: teacherId });
+
+    return this.teacherModel.findById(teacherId).exec();
   }
 
   async remove(id: string) {
@@ -165,12 +228,11 @@ export class TeachersService {
       throw new NotFoundException('Teacher not found');
     }
 
-    // If teacher is assigned to a class, clear the classTeacherId from that class
-    if (teacher.assignedClassId) {
-      await this.classModel.findByIdAndUpdate(teacher.assignedClassId, {
-        $unset: { classTeacherId: '' },
-      });
-    }
+    // If teacher is assigned to any distinct classes, clear the classTeacherId from those classes
+    await this.classModel.updateMany(
+      { classTeacherId: teacher._id },
+      { $unset: { classTeacherId: '' } }
+    );
 
     // Delete associated user account
     await this.userModel.findOneAndDelete({

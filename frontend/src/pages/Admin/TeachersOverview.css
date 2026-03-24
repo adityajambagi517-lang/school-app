@@ -3,153 +3,275 @@
 
 .dashboard-container {
     min-height: 100vh;
-    background: linear-gradient(160deg, #f0f4ff 0%, #e8ecf8 100%);
+    background: linear-gradient(160deg, var(--bg-page) 0%, var(--bg-page-2) 100%);
 }
 
-/* ── Teacher cards grid ── */
-.teachers-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 14px;
-}
-
-.teacher-card {
+/* ── Form Card ── */
+.form-card {
     background: white;
     border-radius: var(--radius-lg);
-    padding: 18px;
+    padding: 24px;
+    margin-bottom: 24px;
     box-shadow: var(--shadow-sm);
-    border: 2px solid transparent;
+    border: 1px solid var(--gray-200);
+    animation: fadeInDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.form-card h3 {
+    margin: 0 0 20px 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gray-800);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.teacher-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-600);
+}
+
+.form-control {
+    padding: 10px 14px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 10px;
+    font-size: 14px;
+    transition: all 0.2s;
+    background: var(--gray-50);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.form-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
+.btn-submit {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-end));
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+.btn-submit:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(99, 102, 241, 0.3);
+}
+
+.btn-submit:disabled {
+    opacity: 0.7;
+    cursor: forget;
+}
+
+/* ── Accordion List ── */
+.teachers-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.teacher-accordion-item {
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-200);
+    overflow: hidden;
     transition: var(--transition);
 }
 
-.teacher-card:active {
-    border-color: rgba(102,126,234,0.3);
-    transform: scale(0.99);
+.teacher-accordion-item.expanded {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-md);
 }
 
-.teacher-header {
+.accordion-header {
     display: flex;
-    gap: 14px;
-    margin-bottom: 16px;
-    padding-bottom: 14px;
-    border-bottom: 1px solid var(--gray-100);
     align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    cursor: pointer;
+    user-select: none;
+    background: transparent;
+    transition: background 0.2s;
 }
 
-.teacher-avatar {
-    width: 52px;
-    height: 52px;
+.accordion-header:hover {
+    background: var(--gray-50);
+}
+
+.accordion-avatar {
+    width: 44px;
+    height: 44px;
     border-radius: 12px;
     background: linear-gradient(135deg, var(--primary), var(--primary-end));
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
     flex-shrink: 0;
 }
 
-.teacher-info { flex: 1; min-width: 0; }
+.accordion-info {
+    flex: 1;
+    min-width: 0;
+}
 
-.teacher-info h3 {
-    font-size: 17px;
+.accordion-info h3 {
+    margin: 0 0 4px;
+    font-size: 16px;
     font-weight: 700;
     color: var(--gray-800);
-    margin: 0 0 3px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.teacher-id {
-    font-size: 12px;
+.accordion-info p {
+    margin: 0;
+    font-size: 13px;
     color: var(--gray-500);
-    margin: 0 0 3px;
     font-family: 'SF Mono', monospace;
 }
 
-.teacher-subject {
-    font-size: 13px;
-    color: var(--primary);
-    font-weight: 600;
-    margin: 0;
+.accordion-class {
+    display: flex;
+    align-items: center;
 }
 
-.btn-delete-icon {
-    background: none;
-    border: none;
-    font-size: 18px;
-    cursor: pointer;
-    padding: 8px;
-    border-radius: 8px;
-    transition: all 0.2s;
-    opacity: 0.6;
+.badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badge-assigned {
+    background: rgba(102,126,234,0.1);
+    color: var(--primary);
+}
+
+.badge-unassigned {
+    background: var(--gray-100);
+    color: var(--gray-500);
+}
+
+.accordion-icon {
     display: flex;
     align-items: center;
     justify-content: center;
+    color: var(--gray-400);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.btn-delete-icon:hover {
-    background: #fff1f2;
-    opacity: 1;
-    transform: scale(1.1);
+.expanded .accordion-icon {
+    transform: rotate(180deg);
+    color: var(--primary);
 }
 
-.teacher-contact {
-    background: var(--gray-50);
-    padding: 10px 12px;
+.accordion-body {
+    padding: 20px;
+    border-top: 1px solid var(--gray-100);
+    background: #fafbfe;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.accordion-actions-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.teacher-contact p { margin: 4px 0; font-size: 14px; color: var(--gray-700); }
+
+.admin-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-action {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
     border-radius: var(--radius-sm);
-    margin-bottom: 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
 }
 
-.teacher-contact p { margin: 4px 0; font-size: 13px; color: var(--gray-700); }
+.btn-reset {
+    background: #fffbeb;
+    color: #b45309;
+}
 
+.btn-reset:hover { background: #fef3c7; }
+
+.btn-delete {
+    background: #fff1f2;
+    color: #e11d48;
+}
+
+.btn-delete:hover { background: #ffe4e6; }
+
+/* In-body class assignment */
 .class-assignment {
-    margin-bottom: 16px;
-    padding: 14px;
-    background: linear-gradient(135deg, rgba(102,126,234,0.05), rgba(118,75,162,0.05));
+    background: white;
+    padding: 16px;
     border-radius: var(--radius-md);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    margin-bottom: 20px;
+    border: 1px solid var(--gray-200);
 }
 
 .class-assignment h4 {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--gray-500);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin: 0 0 8px;
-}
-
-.class-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 14px;
-    background: linear-gradient(135deg, var(--primary), var(--primary-end));
-    color: white;
-    border-radius: var(--radius-sm);
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 14px;
-}
-
-.academic-year {
-    font-size: 11px;
-    color: var(--gray-500);
-    margin: 4px 0 0;
-}
-
-.assign-class-section { margin-top: 12px; }
-
-.assign-class-section label {
-    display: block;
-    font-size: 12px;
-    font-weight: 600;
+    margin: 0 0 12px;
+    font-size: 13px;
     color: var(--gray-600);
-    margin-bottom: 8px;
     text-transform: uppercase;
-    letter-spacing: 0.4px;
 }
 
 .class-select {
@@ -157,7 +279,7 @@
     padding: 12px 14px;
     border: 2px solid var(--gray-200);
     border-radius: var(--radius-sm);
-    font-size: 16px; /* iOS zoom prevention */
+    font-size: 16px;
     background: white;
     cursor: pointer;
     transition: border-color 0.2s;
@@ -178,38 +300,42 @@
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-bottom: 14px;
+    gap: 12px;
+    margin-bottom: 16px;
 }
 
 .stat-item {
-    background: var(--gray-50);
-    padding: 10px 8px;
-    border-radius: var(--radius-sm);
+    background: white;
+    padding: 12px 8px;
+    border-radius: var(--radius-md);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    border: 1px solid var(--gray-200);
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 4px;
+    gap: 6px;
 }
 
-.stat-icon > span, .stat-icon { font-size: 18px; }
-.stat-value { font-size: 18px; font-weight: 700; color: var(--gray-800); line-height: 1; }
-.stat-label { font-size: 10px; color: var(--gray-500); font-weight: 600; text-transform: uppercase; }
+.stat-value { font-size: 20px; font-weight: 700; color: var(--gray-800); line-height: 1; }
+.stat-label { font-size: 11px; color: var(--gray-500); font-weight: 600; text-transform: uppercase; }
 
 .performance-indicator {
     text-align: center;
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px solid var(--gray-100);
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--gray-300);
 }
 
 .badge-success { background: linear-gradient(135deg, var(--success), #276749); color: white; }
 .badge-warning { background: linear-gradient(135deg, var(--warning), #c05621); color: white; }
 .badge-info    { background: linear-gradient(135deg, var(--info), #2b6cb0); color: white; }
 
-@media (min-width: 640px) {
-    .teachers-grid { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
-    .teacher-card { padding: 24px; }
-    .teacher-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--primary); }
+@media (max-width: 640px) {
+    .mobile-hidden { display: none; }
+    .accordion-actions-bar { flex-direction: column; align-items: flex-start; }
+    .admin-actions { width: 100%; }
+    .btn-action { flex: 1; justify-content: center; }
+    .teacher-form { grid-template-columns: 1fr; }
+    .page-header { flex-direction: column; align-items: stretch !important; }
 }

@@ -12,8 +12,7 @@ import {
   UploadedFile,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { memoryStorage } from 'multer';
 import { StudentsService } from './students.service';
 import { CreateStudentDto } from './dto/create-student.dto';
 import { RegisterStudentDto } from './dto/register-student.dto';
@@ -54,16 +53,7 @@ export class StudentsController {
   @Roles(UserRole.ADMIN, UserRole.TEACHER)
   @UseInterceptors(
     FileInterceptor('image', {
-      storage: diskStorage({
-        destination: './uploads/profiles',
-        filename: (req, file, cb) => {
-          const randomName = Array(32)
-            .fill(null)
-            .map(() => Math.round(Math.random() * 16).toString(16))
-            .join('');
-          cb(null, `${randomName}${extname(file.originalname)}`);
-        },
-      }),
+      storage: memoryStorage(),
       limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
       fileFilter: (req, file, cb) => {
         if (!file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
@@ -77,7 +67,8 @@ export class StudentsController {
     @UploadedFile() file: Express.Multer.File,
     @Body('studentId') studentId: string,
   ) {
-    const imageUrl = `/uploads/profiles/${file.filename}`;
+    const base64 = file.buffer.toString('base64');
+    const imageUrl = `data:${file.mimetype};base64,${base64}`;
     return this.studentsService.updateProfileImage(studentId, imageUrl);
   }
 

@@ -89,12 +89,17 @@ export class UsersService {
     return { message: 'User deleted successfully' };
   }
 
-  async resetPassword(id: string) {
+  async resetPassword(userId: string) {
     const defaultPassword = 'password123';
     const hashedPassword = await bcrypt.hash(defaultPassword, 10);
 
+    // Accept either userId (S001/T001) or MongoDB _id
+    const query = Types.ObjectId.isValid(userId)
+      ? { $or: [{ _id: userId }, { userId }] }
+      : { userId };
+
     const user = await this.userModel
-      .findByIdAndUpdate(id, { password: hashedPassword }, { new: true })
+      .findOneAndUpdate(query, { password: hashedPassword }, { new: true })
       .select('-password');
 
     if (!user) {

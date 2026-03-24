@@ -11,8 +11,7 @@ import {
   UploadedFile,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { memoryStorage } from 'multer';
 import { NoticesService } from './notices.service';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { RolesGuard } from '../../guards/roles.guard';
@@ -32,26 +31,25 @@ export class NoticesController {
   @Roles(UserRole.ADMIN)
   @UseInterceptors(
     FileInterceptor('image', {
-      storage: diskStorage({
-        destination: './uploads/notices',
-        filename: (req, file, cb) => {
-          const randomName = Array(32)
-            .fill(null)
-            .map(() => Math.round(Math.random() * 16).toString(16))
-            .join('');
-          cb(null, `${randomName}${extname(file.originalname)}`);
-        },
-      }),
+      storage: memoryStorage(),
       limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
     }),
   )
   async create(@UploadedFile() file: Express.Multer.File, @Body() body: any) {
     const targetRoles = JSON.parse(body.targetRoles || '[]');
+
+    // Convert buffer to Base64 data URI — stored directly in MongoDB Atlas
+    let imageUrl: string | undefined;
+    if (file) {
+      const base64 = file.buffer.toString('base64');
+      imageUrl = `data:${file.mimetype};base64,${base64}`;
+    }
+
     const noticeData = {
       title: body.title,
       content: body.content,
       targetRoles,
-      imageUrl: file ? `/uploads/notices/${file.filename}` : undefined,
+      imageUrl,
     };
     return this.noticesService.create(noticeData);
   }

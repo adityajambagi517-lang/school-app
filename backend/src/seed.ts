@@ -1,32 +1,18 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { Model } from 'mongoose';
 import { getModelToken } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
 import { User, UserRole } from './schemas/user.schema';
-import { Student } from './schemas/student.schema';
-import { Teacher } from './schemas/teacher.schema';
-import { Class } from './schemas/class.schema';
 
 async function seed() {
   const app = await NestFactory.createApplicationContext(AppModule);
 
   const userModel = app.get(getModelToken(User.name));
-  const studentModel = app.get(getModelToken(Student.name));
-  const teacherModel = app.get(getModelToken(Teacher.name));
-  const classModel = app.get(getModelToken(Class.name));
 
-  console.log('🌱 Starting production database seed...');
+  console.log('🌱 Starting seed...');
 
-  // Clear existing data
-  await Promise.all([
-    userModel.deleteMany({}),
-    studentModel.deleteMany({}),
-    teacherModel.deleteMany({}),
-    classModel.deleteMany({}),
-  ]);
-
-  console.log('✅ Cleared all existing data');
+  // Remove any existing admin to avoid duplicate key errors
+  await userModel.deleteMany({ role: UserRole.ADMIN });
 
   // Create Admin User Account
   const hashedPassword = await bcrypt.hash('password123', 10);
@@ -41,14 +27,11 @@ async function seed() {
     isActive: true,
   });
 
-  console.log('✅ Created production admin user');
-  console.log('\n🎉 Production seed completed successfully!');
+  console.log('✅ Admin user created!');
   console.log('📝 Login credentials:');
-  console.log('   Admin: userId=admin, password=password123');
-  console.log(
-    '⚠️  IMPORTANT: Please change the admin password after your first login.',
-  );
-  console.log('\n');
+  console.log('   userId  : admin');
+  console.log('   password: password123');
+  console.log('⚠️  Change the password after first login.\n');
 
   await app.close();
 }

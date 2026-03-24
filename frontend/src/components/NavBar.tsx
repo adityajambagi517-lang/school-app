@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService } from '../services/api';
+import { authService, searchService } from '../services/api';
 import { useTheme } from '../hooks/useTheme';
 import './NavBar.css';
 
@@ -15,10 +15,12 @@ interface NavBarProps {
     role: 'admin' | 'teacher' | 'student';
     userName?: string;
     onLogout: () => void;
-    backTo?: string;       // optional "Back to Dashboard" link
+    backTo?: string;
     backLabel?: string;
-    links?: NavLink[];     // optional extra nav links in drawer
+    links?: NavLink[];
 }
+
+type SearchResult = { _id: string; name: string; type: 'student' | 'teacher' | 'class'; subtitle: string; refId: string };
 
 function NavBar({
     title = 'School Management',
@@ -33,14 +35,74 @@ function NavBar({
     const [theme, toggleTheme] = useTheme();
     const navigate = useNavigate();
 
+    // Search state
+    const [query, setQuery] = useState('');
+    const [results, setResults] = useState<SearchResult[]>([]);
+    const [searching, setSearching] = useState(false);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [activeIndex, setActiveIndex] = useState(-1);
+    const searchRef = useRef<HTMLDivElement>(null);
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
     const close = () => setOpen(false);
 
     const user = authService.getCurrentUser();
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-    
-    const profilePicUrl = user?.profilePicture 
-        ? (user.profilePicture.startsWith('http') ? user.profilePicture : `${API_URL}${user.profilePicture}`)
+
+    const profilePicUrl = user?.profilePicture
+        ? (user.profilePicture.startsWith('http') || user.profilePicture.startsWith('data:') ? user.profilePicture : `${API_URL}${user.profilePicture}`)
         : '/default-avatar.png';
+
+    // Debounced search
+    const doSearch = useCallback(async (q: string) => {
+        if (!q.trim() || q.length < 2) { setResults([]); setShowDropdown(false); return; }
+        setSearching(true);
+        try {
+            const data = await searchService.unified(q);
+            setResults(data);
+            setShowDropdown(true);
+            setActiveIndex(-1);
+        } catch {
+            setResults([]);
+        } finally {
+            setSearching(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => doSearch(query), 300);
+        return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+    }, [query, doSearch]);
+
+    // Close dropdown on outside click
+    useEffect(() => {
+        const handler = (e: MouseEvent) => {
+            if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+                setShowDropdown(false);
+            }
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
+
+    const handleSelect = (result: any) => {
+        setQuery('');
+        setShowDropdown(false);
+        if (result.type === 'class') {
+            navigate('/admin/classes');
+        } else {
+            navigate(`/admin/${result.type}s/${result.refId}`);
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (!showDropdown || results.length === 0) return;
+        if (e.key === 'ArrowDown') { e.preventDefault(); setActiveIndex(i => Math.min(i + 1, results.length - 1)); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIndex(i => Math.max(i - 1, -1)); }
+        else if (e.key === 'Enter' && activeIndex >= 0) { e.preventDefault(); handleSelect(results[activeIndex]); }
+        else if (e.key === 'Escape') { setShowDropdown(false); setQuery(''); }
+    };
 
     return (
         <>
@@ -65,8 +127,8 @@ function NavBar({
 
             {/* Theme toggle + Search + Hamburger */}
                 <div className="navbar-actions">
-                    <div 
-                        className="navbar-user" 
+                    <div
+                        className="navbar-user"
                         onClick={() => navigate(`/${role}/profile`)}
                         title="View Profile"
                     >
@@ -76,25 +138,49 @@ function NavBar({
                         <span className="navbar-user-name desktop-only">{userName}</span>
                     </div>
 
-                    <div className="navbar-search-compact">
-                        <svg className="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                        </svg>
-                        <input 
-                            type="text" 
-                            placeholder="Search..." 
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                    const val = (e.target as HTMLInputElement).value;
-                                    if (val) {
-                                        const searchPath = role === 'admin' ? '/admin/search' : '/teacher/search';
-                                        navigate(`${searchPath}?q=${val}`);
-                                    }
-                                }
-                            }}
-                        />
-                    </div>
+                    {/* Live Search — admin only */}
+                    {role === 'admin' && (
+                        <div className="navbar-search-compact" ref={searchRef}>
+                            <svg className="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input
+                                type="text"
+                                placeholder="Search students & teachers..."
+                                value={query}
+                                onChange={e => setQuery(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                onFocus={() => { if (results.length > 0) setShowDropdown(true); }}
+                                autoComplete="off"
+                            />
+                            {/* Dropdown */}
+                            {showDropdown && (
+                                <div className="search-dropdown">
+                                    {searching && <div className="search-dropdown-loading">Searching...</div>}
+                                    {!searching && results.length === 0 && query.length >= 2 && (
+                                        <div className="search-dropdown-empty">No results for "{query}"</div>
+                                    )}
+                                    {!searching && results.map((r, i) => (
+                                        <div
+                                            key={r._id}
+                                            className={`search-dropdown-item${i === activeIndex ? ' active' : ''}`}
+                                            onMouseDown={() => handleSelect(r)}
+                                            onMouseEnter={() => setActiveIndex(i)}
+                                        >
+                                            <span className={`search-type-badge search-type-${r.type}`}>
+                                                {r.type === 'student' ? '🎓' : r.type === 'teacher' ? '👨‍🏫' : '🏫'}
+                                            </span>
+                                            <div className="search-item-info">
+                                                <span className="search-item-name">{r.name}</span>
+                                                <span className="search-item-sub">{r.subtitle}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     <button
                         className="theme-toggle-btn"
@@ -104,7 +190,7 @@ function NavBar({
                     >
                         {theme === 'light' ? '🌙' : '☀️'}
                     </button>
-                    
+
                     <button
                         className={`hamburger-btn${open ? ' open' : ''}`}
                         onClick={() => setOpen(o => !o)}
@@ -123,7 +209,7 @@ function NavBar({
             {/* Drawer */}
             <aside className={`nav-drawer${open ? ' drawer-open' : ''}`}>
                 {/* User profile header */}
-                <div 
+                <div
                     className="drawer-header"
                     onClick={() => { close(); navigate(`/${role}/profile`); }}
                     style={{ cursor: 'pointer' }}
@@ -187,3 +273,4 @@ function NavBar({
 }
 
 export default NavBar;
+

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Users, GraduationCap, School, BarChart3,
-    UserPlus, BookUser, CheckSquare, DollarSign, Search, Megaphone, ShieldCheck
+    UserPlus, BookUser, CheckSquare, DollarSign, Search, Megaphone, ShieldCheck, HeadphonesIcon
 } from 'lucide-react';
 import { authService, approvalsService } from '../../services/api';
 import api from '../../services/api';
@@ -61,6 +61,7 @@ function AdminDashboard() {
         { icon: <Users size={22} color="white" />, label: 'User Mgmt', path: '/admin/users', style: 't-indigo' },
         { icon: <ShieldCheck size={22} color="white" />, label: 'Password', path: '/admin/change-password', style: 't-red' },
         { icon: <DollarSign size={22} color="white" />, label: 'Fees', path: '/admin/dashboard', style: 't-lime' },
+        { icon: <HeadphonesIcon size={22} color="white" />, label: 'Support', path: '/admin/support', style: 't-teal' },
     ];
 
     return (
@@ -79,6 +80,7 @@ function AdminDashboard() {
                     { icon: '🔍', label: 'Student Search', path: '/admin/search' },
                     { icon: '👥', label: 'User Management', path: '/admin/users' },
                     { icon: '🔐', label: 'Change Password', path: '/admin/change-password' },
+                    { icon: '🛠️', label: 'Support Issues', path: '/admin/support' },
                 ]}
             />
 

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     BarChart3, CheckSquare, BookOpen, Calendar,
-    DollarSign, Lock, TrendingUp, Megaphone
+    DollarSign, Lock, TrendingUp, Megaphone, AlertCircle
 } from 'lucide-react';
 import { authService, analyticsService, notificationsService } from '../../services/api';
 import NavBar from '../../components/NavBar';
@@ -68,6 +68,7 @@ function StudentDashboard() {
         { icon: <DollarSign size={22} color="white" />, label: 'Fees', path: '/student/fees', cls: 't-red' },
         { icon: <Megaphone size={22} color="white" />, label: 'Notices', path: '/student/notices', cls: 't-indigo', badge: unreadNoticesCount > 0 ? unreadNoticesCount : undefined },
         { icon: <Lock size={22} color="white" />, label: 'Password', path: '/student/change-password', cls: 't-orange' },
+        { icon: <AlertCircle size={22} color="white" />, label: 'Report Problem', path: '/student/report-problem', cls: 't-red' },
     ];
 
     return (
@@ -76,7 +77,10 @@ function StudentDashboard() {
                 role="student"
                 userName={user?.name}
                 onLogout={handleLogout}
-                links={actions.map(a => ({ icon: '→', label: a.label, path: a.path }))}
+                links={[
+                    ...actions.map(a => ({ icon: '→', label: a.label, path: a.path })),
+                    { icon: '🛠️', label: 'Report a Problem', path: '/student/report-problem' },
+                ]}
             />
 
             <div className="dash-scroll">

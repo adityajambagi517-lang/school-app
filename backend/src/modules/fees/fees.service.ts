@@ -45,11 +45,12 @@ export class FeesService {
 
     // For teachers, verify they manage this student's class
     if (userRole === UserRole.TEACHER) {
-      const teacher = await this.teacherModel.findById(referenceId);
-      if (!teacher) {
-        throw new NotFoundException('Teacher not found');
-      }
-      if (teacher.assignedClassId.toString() !== student.classId.toString()) {
+      const classModel = this.teacherModel.db.model('Class');
+      const isAssigned = await classModel.exists({
+        _id: student.classId,
+        classTeacherId: referenceId
+      });
+      if (!isAssigned) {
         throw new ForbiddenException(
           'You can only manage fees for students in your assigned class',
         );
@@ -204,8 +205,12 @@ export class FeesService {
    */
   async getFeesByClass(classId: string, userRole: string, referenceId: string) {
     if (userRole === UserRole.TEACHER) {
-      const teacher = await this.teacherModel.findById(referenceId);
-      if (!teacher || teacher.assignedClassId.toString() !== classId) {
+      const classModel = this.teacherModel.db.model('Class');
+      const isAssigned = await classModel.exists({
+        _id: classId,
+        classTeacherId: referenceId
+      });
+      if (!isAssigned) {
         throw new ForbiddenException('Access denied');
       }
     }

@@ -7,7 +7,13 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { TeachersService } from './teachers.service';
 import { RegisterTeacherDto } from './dto/register-teacher.dto';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
@@ -24,6 +30,12 @@ export class TeachersController {
   @Roles(UserRole.ADMIN)
   findAllWithStats() {
     return this.teachersService.findAllWithStats();
+  }
+
+  @Get('search')
+  @Roles(UserRole.ADMIN)
+  search(@Query('q') query: string) {
+    return this.teachersService.search(query);
   }
 
   @Get()
@@ -48,6 +60,38 @@ export class TeachersController {
   @Roles(UserRole.ADMIN)
   update(@Param('id') id: string, @Body() updateTeacherDto: any) {
     return this.teachersService.update(id, updateTeacherDto);
+  }
+
+  @Post('upload-image')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: memoryStorage(),
+      limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+      fileFilter: (req, file, cb) => {
+        if (!file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
+          return cb(new Error('Only image files are allowed!'), false);
+        }
+        cb(null, true);
+      },
+    }),
+  )
+  async uploadImage(
+    @UploadedFile() file: Express.Multer.File,
+    @Body('teacherId') teacherId: string,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No image file provided');
+    }
+
+    if (!teacherId) {
+      throw new BadRequestException('Teacher ID is required');
+    }
+
+    // Convert file buffer buffer to Base64 string
+    const base64Image = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+
+    return this.teachersService.updateProfileImage(teacherId, base64Image);
   }
 
   @Patch(':id/assign-class')

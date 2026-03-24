@@ -178,6 +178,49 @@ export const studentsService = {
     },
 };
 
+export const searchService = {
+    // Searches students + teachers + classes simultaneously, returns merged results
+    unified: async (query: string): Promise<{ _id: string; name: string; type: 'student' | 'teacher' | 'class'; subtitle: string; refId: string }[]> => {
+        const [studentsRes, teachersRes, classesRes] = await Promise.allSettled([
+            api.get(`/students/search?q=${query}`),
+            api.get(`/teachers/search?q=${query}`),
+            api.get(`/classes/search?q=${query}`),
+        ]);
+
+        const students = studentsRes.status === 'fulfilled'
+            ? (studentsRes.value.data?.students || studentsRes.value.data || []).slice(0, 5).map((s: any) => ({
+                _id: s._id,
+                name: s.name,
+                type: 'student' as const,
+                subtitle: `Student · ${s.studentId || ''}`,
+                refId: s._id,
+            }))
+            : [];
+
+        const teachers = teachersRes.status === 'fulfilled'
+            ? (teachersRes.value.data || []).slice(0, 5).map((t: any) => ({
+                _id: t._id,
+                name: t.name,
+                type: 'teacher' as const,
+                subtitle: `Teacher · ${t.teacherId || ''}`,
+                refId: t._id,
+            }))
+            : [];
+
+        const classes = classesRes.status === 'fulfilled'
+            ? (classesRes.value.data || []).slice(0, 5).map((c: any) => ({
+                _id: c._id,
+                name: `${c.className} ${c.section}`,
+                type: 'class' as const,
+                subtitle: `Class · Year ${c.academicYear}`,
+                refId: c._id,
+            }))
+            : [];
+
+        return [...students, ...teachers, ...classes];
+    },
+};
+
 export const classesService = {
     create: async (data: any) => {
         const response = await api.post('/classes', data);
@@ -185,6 +228,10 @@ export const classesService = {
     },
     getAll: async () => {
         const response = await api.get('/classes');
+        return response.data;
+    },
+    search: async (query: string) => {
+        const response = await api.get(`/classes/search?q=${query}`);
         return response.data;
     },
     getByStudent: async (studentId: string) => {
@@ -203,7 +250,11 @@ export const classesService = {
 
 export const teachersService = {
     getAll: async () => {
-        const response = await api.get('/teachers');
+        const response = await api.get('/teachers/with-stats');
+        return response.data;
+    },
+    register: async (data: any) => {
+        const response = await api.post('/teachers/register', data);
         return response.data;
     },
     delete: async (id: string) => {
@@ -367,3 +418,44 @@ export const noticesService = {
 };
 
 export default api;
+
+export const forgotPasswordService = {
+    sendOtp: async (userId: string) => {
+        const response = await api.post('/auth/forgot-password', { userId });
+        return response.data;
+    },
+    verifyOtp: async (userId: string, otp: string) => {
+        const response = await api.post('/auth/verify-otp', { userId, otp });
+        return response.data;
+    },
+    resetPassword: async (resetToken: string, newPassword: string) => {
+        const response = await api.post('/auth/reset-password-otp', { resetToken, newPassword });
+        return response.data;
+    },
+};
+
+export const supportService = {
+    create: async (data: { title: string; description: string; category: string; screenshot?: string }) => {
+        const response = await api.post('/support', data);
+        return response.data;
+    },
+    getAll: async () => {
+        const response = await api.get('/support');
+        return response.data;
+    },
+    resolve: async (id: string, adminNotes?: string) => {
+        const response = await api.patch(`/support/${id}/resolve`, { adminNotes });
+        return response.data;
+    },
+    remove: async (id: string) => {
+        const response = await api.delete(`/support/${id}`);
+        return response.data;
+    },
+};
+
+export const adminResetService = {
+    resetUserPassword: async (userId: string) => {
+        const response = await api.patch(`/users/${userId}/reset-password`);
+        return response.data;
+    },
+};

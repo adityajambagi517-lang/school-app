@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../../services/api';
 import api from '../../services/api';
@@ -40,6 +40,8 @@ function RegisterTeacher() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [classes, setClasses] = useState<Class[]>([]);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
     useEffect(() => {
         fetchClasses();
@@ -60,6 +62,18 @@ function RegisterTeacher() {
             ...formData,
             [e.target.name]: e.target.value,
         });
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            if (file.size > 5 * 1024 * 1024) {
+                setError('Image must be less than 5MB');
+                return;
+            }
+            setSelectedFile(file);
+            setPreviewUrl(URL.createObjectURL(file));
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -83,6 +97,16 @@ function RegisterTeacher() {
                 password: formData.password,
             });
 
+            if (selectedFile && response.data.teacher?._id) {
+                const uploadData = new FormData();
+                uploadData.append('image', selectedFile);
+                uploadData.append('teacherId', response.data.teacher._id);
+
+                await api.post('/teachers/upload-image', uploadData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
+            }
+
             console.log('Teacher registered successfully:', response.data);
             setSuccess(`✅ Teacher ${formData.name} registered successfully! Login ID: ${formData.teacherId}, Password: ${formData.password}`);
 
@@ -96,6 +120,9 @@ function RegisterTeacher() {
                 assignedClassId: '',
                 password: 'password123',
             });
+            setSelectedFile(null);
+            if (previewUrl) URL.revokeObjectURL(previewUrl);
+            setPreviewUrl(null);
 
             // Auto-redirect after 5 seconds
             setTimeout(() => navigate('/admin/teachers'), 5000);
@@ -132,6 +159,39 @@ function RegisterTeacher() {
                         {/* Teacher Information */}
                         <div className="form-section">
                             <h3>Teacher Information</h3>
+                            
+                            <div className="profile-upload-section" style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '20px' }}>
+                                <div 
+                                    className="profile-preview" 
+                                    style={{ 
+                                        width: '100px', 
+                                        height: '100px', 
+                                        borderRadius: '50%', 
+                                        background: previewUrl ? `url(${previewUrl}) center/cover` : 'var(--gray-200)',
+                                        border: '4px solid white',
+                                        boxShadow: 'var(--shadow-sm)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        overflow: 'hidden'
+                                    }}
+                                >
+                                    {!previewUrl && <span style={{ fontSize: '2rem' }}>👨‍🏫</span>}
+                                </div>
+                                <div className="upload-controls">
+                                    <label className="btn btn-secondary" style={{ cursor: 'pointer' }}>
+                                        Upload Profile Picture
+                                        <input 
+                                            type="file" 
+                                            accept="image/*" 
+                                            onChange={handleFileChange}
+                                            style={{ display: 'none' }}
+                                        />
+                                    </label>
+                                    <p style={{ fontSize: '13px', color: 'var(--gray-500)', marginTop: '8px', marginBottom: 0 }}>Optional. Max size: 5MB</p>
+                                </div>
+                            </div>
+
                             <div className="form-grid">
                                 <div className="form-group">
                                     <label>Teacher ID *</label>

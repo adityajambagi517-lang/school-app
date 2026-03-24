@@ -11,8 +11,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { memoryStorage } from 'multer';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { UpdateUserDto } from '../users/dto/update-user.dto';
@@ -35,15 +34,7 @@ export class ProfileController {
   @Post('upload-picture')
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './uploads/profiles',
-        filename: (req, file, callback) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          const ext = extname(file.originalname);
-          callback(null, `profile-${uniqueSuffix}${ext}`);
-        },
-      }),
+      storage: memoryStorage(),
       fileFilter: (req, file, callback) => {
         if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
           return callback(
@@ -66,7 +57,10 @@ export class ProfileController {
       throw new BadRequestException('File is required');
     }
 
-    const pictureUrl = `/uploads/profiles/${file.filename}`;
+    // Convert buffer to Base64 data URI — stored directly in MongoDB Atlas
+    const base64 = file.buffer.toString('base64');
+    const pictureUrl = `data:${file.mimetype};base64,${base64}`;
+
     await this.authService.updateProfile(req.user.userId, {
       profilePicture: pictureUrl,
     });

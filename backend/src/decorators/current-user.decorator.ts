@@ -4,6 +4,7 @@ export interface CurrentUserData {
   userId: string;
   _id: string;
   role: string;
+  name?: string;
   referenceId?: string;
 }
 

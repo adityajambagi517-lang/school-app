@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService, classesService, teachersService } from '../../services/api';
 import NavBar from '../../components/NavBar';
+import SortDropdown from '../../components/SortDropdown';
 import { getCurrentAcademicYear } from '../../utils/dateUtils';
 import './ManageClasses.css';
 
@@ -40,6 +41,7 @@ function ManageClasses() {
     const [showForm, setShowForm] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [assigningTeacher, setAssigningTeacher] = useState<string | null>(null);
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | 'newest' | 'oldest'>('asc');
 
     const [formData, setFormData] = useState<ClassFormData>({
         className: '',
@@ -139,6 +141,20 @@ function ManageClasses() {
         return <div className="dashboard-container"><div className="loading">Loading classes...</div></div>;
     }
 
+    const sortedClasses = [...classes].sort((a, b) => {
+        if (sortOrder === 'newest' || sortOrder === 'oldest') {
+            const timeA = (a as any).updatedAt ? new Date((a as any).updatedAt).getTime() : parseInt(a._id.substring(0,8), 16);
+            const timeB = (b as any).updatedAt ? new Date((b as any).updatedAt).getTime() : parseInt(b._id.substring(0,8), 16);
+            if (sortOrder === 'newest') return timeB - timeA;
+            return timeA - timeB;
+        }
+        
+        const nameA = `${a.className}-${a.section}`;
+        const nameB = `${b.className}-${b.section}`;
+        if (sortOrder === 'asc') return nameA.localeCompare(nameB, undefined, { numeric: true, sensitivity: 'base' });
+        return nameB.localeCompare(nameA, undefined, { numeric: true, sensitivity: 'base' });
+    });
+
     return (
         <div className="dashboard-container">
             <NavBar role="admin" userName={user?.name} onLogout={handleLogout} backTo="/admin/dashboard" backLabel="Dashboard" />
@@ -157,23 +173,21 @@ function ManageClasses() {
                         </h1>
                         <p>Create, view, and manage all classes and sections</p>
                     </div>
-                    <button onClick={() => setShowForm(!showForm)} className="btn btn-primary">
-                        {showForm ? (
-                            <>
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                                </svg>
-                                Cancel
-                            </>
-                        ) : (
-                            <>
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-                                </svg>
-                                Add New Class
-                            </>
-                        )}
-                    </button>
+                    <div className="header-actions" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                        <SortDropdown
+                            value={sortOrder}
+                            onChange={(val) => setSortOrder(val as 'asc' | 'desc' | 'newest' | 'oldest')}
+                            options={[
+                                { label: 'Class (A-Z)', value: 'asc' },
+                                { label: 'Class (Z-A)', value: 'desc' },
+                                { label: 'Latest Updated', value: 'newest' },
+                                { label: 'Oldest First', value: 'oldest' }
+                            ]}
+                        />
+                        <button onClick={() => setShowForm(!showForm)} className="btn btn-primary" style={{ padding: '10px 20px', borderRadius: '10px' }}>
+                            {showForm ? '× Cancel' : '+ Add New Class'}
+                        </button>
+                    </div>
                 </div>
 
                 {error && <div className="alert alert-error">{error}</div>}
@@ -237,76 +251,65 @@ function ManageClasses() {
 
                 <div className="classes-table-container">
                     <header>Active Classes</header>
-                    <div className="table-responsive">
-                    <table className="classes-table">
-                        <thead>
-                            <tr>
-                                <th>Class Name</th>
-                                <th>Section</th>
-                                <th>Academic Year</th>
-                                <th>Class Teacher</th>
-                                <th style={{ textAlign: 'center' }}>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {classes.map((cls) => (
-                                <tr key={cls._id}>
-                                    <td className="class-name">{cls.className}</td>
-                                    <td><span className="section-badge">Section {cls.section}</span></td>
-                                    <td>{cls.academicYear}</td>
-                                    <td>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                            {cls.classTeacherId?.name ? (
-                                                <span className="teacher-assigned">{cls.classTeacherId.name}</span>
-                                            ) : (
-                                                <span className="not-assigned">Not Assigned</span>
-                                            )}
-                                            <select
-                                                value=""
-                                                onChange={(e) => handleAssignTeacher(cls._id, e.target.value)}
-                                                disabled={assigningTeacher === cls._id}
-                                                className="assign-teacher-select"
-                                                title="Assign or change teacher"
-                                            >
-                                                <option value="">{cls.classTeacherId?.name ? 'Change...' : 'Assign...'}</option>
-                                                {teachers
-                                                    .map(teacher => {
-                                                        const isCurrentlyAssigned = teacher.assignedClassId &&
-                                                            (typeof teacher.assignedClassId === 'string'
-                                                                ? teacher.assignedClassId !== cls._id
-                                                                : (teacher.assignedClassId as any)._id !== cls._id);
+                    <div className="classes-grid">
+                        {sortedClasses.map((cls) => (
+                            <div key={cls._id} className="class-card">
+                                <div className="class-card-header">
+                                    <div className="class-info">
+                                        <h3 className="class-name">{cls.className}</h3>
+                                        <span className="section-badge">Section {cls.section}</span>
+                                        <span className="academic-year-badge">{cls.academicYear}</span>
+                                    </div>
+                                    <button
+                                        onClick={() => handleDelete(cls._id, cls.className, cls.section)}
+                                        className="btn-delete-icon"
+                                        title="Delete class"
+                                    >
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div className="class-card-teacher">
+                                    <div className="teacher-status">
+                                        <span className="teacher-label">Class Teacher:</span>
+                                        {cls.classTeacherId?.name ? (
+                                            <span className="teacher-assigned">{cls.classTeacherId.name}</span>
+                                        ) : (
+                                            <span className="not-assigned">Not Assigned</span>
+                                        )}
+                                    </div>
+                                    <select
+                                        value=""
+                                        onChange={(e) => handleAssignTeacher(cls._id, e.target.value)}
+                                        disabled={assigningTeacher === cls._id}
+                                        className="assign-teacher-select"
+                                        title="Assign or change teacher"
+                                    >
+                                        <option value="">{cls.classTeacherId?.name ? 'Change...' : 'Assign Teacher'}</option>
+                                        {teachers.map(teacher => {
+                                            const isCurrentlyAssigned = teacher.assignedClassId &&
+                                                (typeof teacher.assignedClassId === 'string'
+                                                    ? teacher.assignedClassId !== cls._id
+                                                    : (teacher.assignedClassId as any)._id !== cls._id);
 
-                                                        return (
-                                                            <option
-                                                                key={teacher._id}
-                                                                value={teacher._id}
-                                                                disabled={Boolean(isCurrentlyAssigned)}
-                                                            >
-                                                                {teacher.name} {isCurrentlyAssigned ? '(Assigned elsewhere)' : ''}
-                                                            </option>
-                                                        );
-                                                    })}
-                                            </select>
-                                        </div>
-                                    </td>
-                                    <td style={{ textAlign: 'center' }}>
-                                        <button
-                                            onClick={() => handleDelete(cls._id, cls.className, cls.section)}
-                                            className="btn-delete"
-                                            title="Delete class"
-                                        >
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                                            </svg>
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                                            return (
+                                                <option
+                                                    key={teacher._id}
+                                                    value={teacher._id}
+                                                    disabled={Boolean(isCurrentlyAssigned)}
+                                                >
+                                                    {teacher.name} {isCurrentlyAssigned ? '(Assigned elsewhere)' : ''}
+                                                </option>
+                                            );
+                                        })}
+                                    </select>
+                                </div>
+                            </div>
+                        ))}
                     </div>
 
-                    {classes.length === 0 && !loading && (
+                    {sortedClasses.length === 0 && !loading && (
                         <div className="empty-state">
                             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--gray-300)', marginBottom: '16px' }}>
                                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />

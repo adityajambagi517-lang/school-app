@@ -12,8 +12,8 @@ export class Teacher {
   @Prop({ required: true })
   name: string;
 
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Class', index: true })
-  assignedClassId?: Types.ObjectId;
+  @Prop()
+  profilePicture?: string;
 
   @Prop()
   subject?: string;

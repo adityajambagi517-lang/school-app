@@ -1,0 +1,208 @@
+/* Support Tickets — Admin Page */
+.st-page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.st-loading, .st-empty {
+    text-align: center;
+    padding: 48px;
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.st-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.st-header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0 0 4px;
+}
+
+.st-header p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.st-filters {
+    display: flex;
+    gap: 8px;
+}
+
+.st-filter-btn {
+    padding: 8px 18px;
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    background: var(--bg-card);
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+}
+.st-filter-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+.st-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.st-card {
+    background: var(--bg-card);
+    border-radius: 14px;
+    border: 1.5px solid var(--border);
+    overflow: hidden;
+    transition: box-shadow 0.15s;
+}
+.st-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+.st-card.resolved { opacity: 0.7; }
+
+.st-card-head {
+    padding: 16px 18px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.st-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.st-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 20px;
+}
+.st-badge-open { background: rgba(239,68,68,0.1); color: #ef4444; }
+.st-badge-resolved { background: rgba(16,185,129,0.1); color: #10b981; }
+
+.st-category {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.st-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.st-submitter {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.st-role {
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.st-role.teacher { background: rgba(16,185,129,0.15); color: #10b981; }
+.st-role.student { background: rgba(99,102,241,0.15); color: var(--primary); }
+
+.st-expanded {
+    padding: 0 18px 18px;
+    border-top: 1px solid var(--border);
+    margin-top: -1px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.st-description {
+    font-size: 14px;
+    color: var(--text-main);
+    line-height: 1.6;
+    white-space: pre-wrap;
+    margin: 12px 0 0;
+}
+
+.st-screenshot {
+    width: 100%;
+    max-height: 300px;
+    object-fit: contain;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+}
+
+.st-admin-notes {
+    background: var(--bg-page);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.st-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.st-notes-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-page);
+    color: var(--text-main);
+    font-size: 13px;
+    font-family: inherit;
+    resize: vertical;
+    outline: none;
+    box-sizing: border-box;
+}
+.st-notes-input:focus { border-color: var(--primary); }
+
+.st-resolve-btn {
+    padding: 10px 18px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    align-self: flex-start;
+}
+.st-resolve-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.st-delete-btn {
+    background: none;
+    border: 1px solid rgba(239,68,68,0.3);
+    color: #ef4444;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    align-self: flex-start;
+}

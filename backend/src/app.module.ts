@@ -17,6 +17,7 @@ import { TeachersModule } from './modules/teachers/teachers.module';
 import { SubjectsModule } from './modules/subjects/subjects.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { NoticesModule } from './modules/notices/notices.module';
+import { SupportModule } from './modules/support/support.module';
 
 @Module({
   imports: [
@@ -63,6 +64,7 @@ import { NoticesModule } from './modules/notices/notices.module';
     SubjectsModule,
     NotificationsModule,
     NoticesModule,
+    SupportModule,
   ],
   controllers: [AppController],
   providers: [AppService],

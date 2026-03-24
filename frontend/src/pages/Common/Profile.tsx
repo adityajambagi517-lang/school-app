@@ -52,11 +52,25 @@ function Profile() {
         setError('');
         setSuccess('');
         setSaving(true);
-        
+
+        // Detect what changed
+        const changed = (
+            formData.name  !== (user?.name  || '') ||
+            formData.email !== (user?.email || '') ||
+            formData.phone !== (user?.phone || '')
+        );
+
+        if (!changed) {
+            setSuccess('No changes were made.');
+            setTimeout(() => setSuccess(''), 3000);
+            setSaving(false);
+            return;
+        }
+
         try {
             const updatedUser = await authService.updateProfile(formData);
             setUser(updatedUser);
-            setSuccess('Profile updated successfully!');
+            setSuccess('Profile information updated successfully!');
             setTimeout(() => setSuccess(''), 3000);
         } catch (err: any) {
             setError(err.response?.data?.message || 'Failed to update profile');
@@ -134,7 +148,7 @@ function Profile() {
     if (loading) return <div className="loading-container">Loading...</div>;
 
     const profilePicUrl = user?.profilePicture 
-        ? (user.profilePicture.startsWith('http') ? user.profilePicture : `${API_URL}${user.profilePicture}`)
+        ? (user.profilePicture.startsWith('http') || user.profilePicture.startsWith('data:') ? user.profilePicture : `${API_URL}${user.profilePicture}`)
         : '/default-avatar.png';
 
     return (

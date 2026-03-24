@@ -27,6 +27,8 @@ import TimetableView from './pages/Student/TimetableView';
 import FeesView from './pages/Student/FeesView';
 import NoticesView from './pages/Common/NoticesView';
 import Profile from './pages/Common/Profile';
+import ReportProblem from './pages/Common/ReportProblem';
+import SupportTickets from './pages/Admin/SupportTickets';
 import ChangePassword from './components/ChangePassword';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
@@ -115,6 +117,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['admin']}>
               <ChangePassword role="admin" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/support"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <SupportTickets />
             </ProtectedRoute>
           }
         />
@@ -209,6 +219,14 @@ function App() {
           }
         />
         <Route
+          path="/teacher/report-problem"
+          element={
+            <ProtectedRoute allowedRoles={['teacher']}>
+              <ReportProblem />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/teacher/notices"
           element={
             <ProtectedRoute allowedRoles={['teacher']}>
@@ -271,6 +289,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['student']}>
               <ChangePassword role="student" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/report-problem"
+          element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <ReportProblem />
             </ProtectedRoute>
           }
         />

@@ -29,7 +29,10 @@ export class SubjectsService {
       throw new NotFoundException('Teacher not found');
     }
 
-    if (!teacher.assignedClassId) {
+    const classModel = this.teacherModel.db.model('Class');
+    const assignedClasses = await classModel.find({ classTeacherId: teacher._id }).lean().exec();
+
+    if (!assignedClasses || assignedClasses.length === 0) {
       throw new ForbiddenException(
         'You must have an assigned class to create subjects',
       );
@@ -38,7 +41,7 @@ export class SubjectsService {
     const subject = new this.subjectModel({
       ...createSubjectDto,
       teacherId: new Types.ObjectId(referenceId),
-      classId: teacher.assignedClassId,
+      classId: assignedClasses[0]._id,
     });
 
     return subject.save();
@@ -53,10 +56,14 @@ export class SubjectsService {
 
       // If teacher is assigned to a class, let them see all subjects for that class
       // This is needed for bulk marks entry where class teacher enters marks for all subjects
-      if (teacher.assignedClassId) {
+      const classModel = this.teacherModel.db.model('Class');
+      const assignedClasses = await classModel.find({ classTeacherId: teacher._id }).lean().exec();
+      
+      if (assignedClasses && assignedClasses.length > 0) {
+        const classIds = assignedClasses.map(c => c._id as Types.ObjectId);
         return this.subjectModel
           .find({
-            classId: teacher.assignedClassId,
+            classId: { $in: classIds },
             isActive: true,
           })
           .sort({ name: 1 })

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Class, ClassDocument } from '../../schemas/class.schema';
@@ -13,17 +13,20 @@ export class ClassesService {
   ) {}
 
   async create(createClassDto: CreateClassDto) {
-    const classDoc = new this.classModel(createClassDto);
-    const savedClass = await classDoc.save();
+    try {
+      const classDoc = new this.classModel(createClassDto);
+      const savedClass = await classDoc.save();
 
-    // If teacher is assigned during creation, update teacher record
-    if (createClassDto.classTeacherId) {
-      await this.teacherModel.findByIdAndUpdate(createClassDto.classTeacherId, {
-        assignedClassId: savedClass._id,
-      });
+      // Since we rely entirely on classTeacherId, saving the class is enough!
+      // The teacher will automatically be associated in queries.
+
+      return savedClass;
+    } catch (error: any) {
+      if (error.code === 11000) {
+        throw new ConflictException(`Class ${createClassDto.className} Section ${createClassDto.section} already exists in this academic year.`);
+      }
+      throw error;
     }
-
-    return savedClass;
   }
 
   async findAll() {
@@ -31,6 +34,22 @@ export class ClassesService {
       .find()
       .populate('classTeacherId', 'name')
       .sort({ className: 1, section: 1 })
+      .exec();
+  }
+
+  async search(query: string) {
+    if (!query || query.trim() === '') return [];
+    
+    // Search by class name (e.g. "Class 10") or section (e.g. "A")
+    return this.classModel
+      .find({
+        $or: [
+          { className: { $regex: query, $options: 'i' } },
+          { section: { $regex: query, $options: 'i' } },
+        ]
+      })
+      .populate('classTeacherId', 'name')
+      .limit(10)
       .exec();
   }
 
@@ -61,28 +80,10 @@ export class ClassesService {
       if (!teacher) {
         throw new NotFoundException('Teacher not found');
       }
-
-      // If teacher is already assigned to another class, unassign from old class
-      if (
-        teacher.assignedClassId &&
-        teacher.assignedClassId.toString() !== classId
-      ) {
-        await this.classModel.findByIdAndUpdate(teacher.assignedClassId, {
-          $unset: { classTeacherId: '' },
-        });
-      }
-
-      // Update teacher's assignedClassId
-      teacher.assignedClassId = classDoc._id as any;
-      await teacher.save();
     }
 
-    // If class already has a teacher, remove that teacher's assignment
-    if (classDoc.classTeacherId) {
-      await this.teacherModel.findByIdAndUpdate(classDoc.classTeacherId, {
-        $unset: { assignedClassId: '' },
-      });
-    }
+    // If class already has a teacher, we do nothing to the old teacher because 
+    // we no longer store assignedClassId on the teacher document.
 
     // Update class's classTeacherId
     if (teacherId) {
@@ -105,12 +106,7 @@ export class ClassesService {
       throw new NotFoundException('Class not found');
     }
 
-    // If class has a teacher, clear that teacher's assignment
-    if (classDoc.classTeacherId) {
-      await this.teacherModel.findByIdAndUpdate(classDoc.classTeacherId, {
-        $unset: { assignedClassId: '' },
-      });
-    }
+    // We no longer need to update the Teacher document because the foreign key was removed.
 
     const result = await this.classModel.findByIdAndDelete(id);
     return { message: 'Class deleted successfully', class: result };

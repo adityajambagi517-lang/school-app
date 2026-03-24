@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService, classesService, studentsService, teachersService } from '../../services/api';
+import { authService, classesService, studentsService, teachersService, adminResetService } from '../../services/api';
 import type { StudentWithDetails } from '../../types/student';
 import NavBar from '../../components/NavBar';
+import SortDropdown from '../../components/SortDropdown';
 import './StudentSearch.css';
 
 function StudentSearch() {
@@ -13,12 +14,14 @@ function StudentSearch() {
     const [loading, setLoading] = useState(false);
     const [results, setResults] = useState<StudentWithDetails[]>([]);
     const [teacherResults, setTeacherResults] = useState<any[]>([]);
+    const [classResults, setClassResults] = useState<any[]>([]);
     const [error, setError] = useState('');
     const [selectedStudent, setSelectedStudent] = useState<StudentWithDetails | null>(null);
     const [selectedTeacher, setSelectedTeacher] = useState<any | null>(null);
     const [classes, setClasses] = useState<any[]>([]);
     const [selectedClassId, setSelectedClassId] = useState('');
     const [searchMode, setSearchMode] = useState<'text' | 'class'>('text');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | 'newest' | 'oldest'>('asc');
 
     useEffect(() => {
         fetchClasses();
@@ -41,15 +44,21 @@ function StudentSearch() {
         setError('');
         setResults([]);
         setTeacherResults([]);
+        setClassResults([]);
         setSelectedStudent(null);
         setSelectedTeacher(null);
 
         try {
-            const response = await studentsService.search(query);
+            const [response, classesData] = await Promise.all([
+                studentsService.search(query),
+                classesService.search(query)
+            ]);
+            
             setResults(response.students || []);
             setTeacherResults(response.teachers || []);
+            setClassResults(classesData || []);
             
-            if (response.students.length === 0 && (!response.teachers || response.teachers.length === 0)) {
+            if (response.students.length === 0 && (!response.teachers || response.teachers.length === 0) && (!classesData || classesData.length === 0)) {
                 setError('No results found matching your search.');
             }
         } catch (err: any) {
@@ -66,6 +75,7 @@ function StudentSearch() {
         setError('');
         setResults([]);
         setTeacherResults([]);
+        setClassResults([]);
         setSelectedStudent(null);
         setSelectedTeacher(null);
         setSelectedClassId(classId);
@@ -133,21 +143,76 @@ function StudentSearch() {
         }
     };
 
+    const handleResetStudentPassword = async (studentId: string, name: string) => {
+        if (!window.confirm(`Reset password for ${name} to "password123"?`)) return;
+        try {
+            await adminResetService.resetUserPassword(studentId);
+            alert(`✅ Password for ${name} reset to "password123"`);
+        } catch (err: any) {
+            setError(`Failed to reset password: ${err.response?.data?.message || err.message}`);
+        }
+    };
+
+    const handleResetTeacherPassword = async (teacherId: string, name: string) => {
+        if (!window.confirm(`Reset password for ${name} to "password123"?`)) return;
+        try {
+            await adminResetService.resetUserPassword(teacherId);
+            alert(`✅ Password for ${name} reset to "password123"`);
+        } catch (err: any) {
+            setError(`Failed to reset password: ${err.response?.data?.message || err.message}`);
+        }
+    };
+
+    const sortByTime = (a: any, b: any) => {
+        const timeA = a.updatedAt ? new Date(a.updatedAt).getTime() : parseInt(a._id.substring(0,8), 16);
+        const timeB = b.updatedAt ? new Date(b.updatedAt).getTime() : parseInt(b._id.substring(0,8), 16);
+        return sortOrder === 'newest' ? timeB - timeA : timeA - timeB;
+    };
+
+    const sortedStudents = [...results].sort((a, b) => {
+        if (sortOrder === 'newest' || sortOrder === 'oldest') return sortByTime(a, b);
+        return sortOrder === 'asc' ? a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }) : b.name.localeCompare(a.name, undefined, { numeric: true, sensitivity: 'base' });
+    });
+    const sortedTeachers = [...teacherResults].sort((a, b) => {
+        if (sortOrder === 'newest' || sortOrder === 'oldest') return sortByTime(a, b);
+        return sortOrder === 'asc' ? a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }) : b.name.localeCompare(a.name, undefined, { numeric: true, sensitivity: 'base' });
+    });
+    const sortedClasses = [...classResults].sort((a, b) => {
+        if (sortOrder === 'newest' || sortOrder === 'oldest') return sortByTime(a, b);
+        return sortOrder === 'asc' ? a.className.localeCompare(b.className, undefined, { numeric: true, sensitivity: 'base' }) : b.className.localeCompare(a.className, undefined, { numeric: true, sensitivity: 'base' });
+    });
+
     return (
         <div className="search-container">
             <NavBar role="admin" userName={user?.name} onLogout={handleLogout} backTo="/admin/dashboard" backLabel="Dashboard" />
 
             <div className="search-content">
                 <div className="search-header">
-                    <h1>
-                        <span className="heading-icon">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-                            </svg>
-                        </span> 
-                        Unified Search Engine
-                    </h1>
-                    <p>Search students and teachers or browse by class</p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+                        <div>
+                            <h1>
+                                <span className="heading-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                                    </svg>
+                                </span> 
+                                Unified Search Engine
+                            </h1>
+                            <p>Search students and teachers or browse by class</p>
+                        </div>
+                        <div className="sort-control">
+                            <SortDropdown
+                                value={sortOrder}
+                                onChange={(val) => setSortOrder(val as any)}
+                                options={[
+                                    { label: 'Name (A-Z)', value: 'asc' },
+                                    { label: 'Name (Z-A)', value: 'desc' },
+                                    { label: 'Latest Updated', value: 'newest' },
+                                    { label: 'Oldest First', value: 'oldest' }
+                                ]}
+                            />
+                        </div>
+                    </div>
 
                     <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', marginBottom: '1.5rem', justifyContent: 'center' }}>
                         <button
@@ -159,7 +224,7 @@ function StudentSearch() {
                         </button>
                         <button
                             className={`btn ${searchMode === 'class' ? 'btn-primary' : 'btn-secondary'}`}
-                            onClick={() => { setSearchMode('class'); setQuery(''); setResults([]); setTeacherResults([]); }}
+                            onClick={() => { setSearchMode('class'); setQuery(''); setResults([]); setTeacherResults([]); setClassResults([]); }}
                             type="button"
                         >
                             Browse by Class
@@ -207,14 +272,14 @@ function StudentSearch() {
                 {error && <div className="alert alert-error">{error}</div>}
 
                 <div className="results-grid">
-                    {(results.length > 0 || teacherResults.length > 0) && !selectedStudent && !selectedTeacher && (
+                    {(results.length > 0 || teacherResults.length > 0 || classResults.length > 0) && !selectedStudent && !selectedTeacher && (
                         <div className="results-list">
-                            <h3>Combined Results ({results.length + teacherResults.length})</h3>
+                            <h3>Combined Results ({results.length + teacherResults.length + classResults.length})</h3>
                             
                             {teacherResults.length > 0 && (
                                 <div className="result-section">
                                     <h4 style={{ margin: '1rem 0 0.5rem', color: 'var(--accent-primary)' }}>Teachers ({teacherResults.length})</h4>
-                                    {teacherResults.map(teacher => (
+                                    {sortedTeachers.map(teacher => (
                                         <div
                                             key={teacher._id}
                                             className="result-item teacher-result"
@@ -231,10 +296,30 @@ function StudentSearch() {
                                 </div>
                             )}
 
+                            {classResults.length > 0 && (
+                                <div className="result-section">
+                                    <h4 style={{ margin: '1rem 0 0.5rem', color: '#10b981' }}>Classes ({classResults.length})</h4>
+                                    {sortedClasses.map(cls => (
+                                        <div
+                                            key={cls._id}
+                                            className="result-item"
+                                            onClick={() => navigate('/admin/classes')}
+                                            style={{ borderLeft: '4px solid #10b981', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', marginBottom: '8px', cursor: 'pointer', borderRadius: '8px', backgroundColor: 'rgba(255,255,255,0.05)' }}
+                                        >
+                                            <div className="student-main" style={{ display: 'flex', flexDirection: 'column' }}>
+                                                <strong>Class {cls.className} - {cls.section}</strong>
+                                                <span style={{ fontSize: '0.85rem', opacity: 0.8 }}>Academic Year: {cls.academicYear} | Class Teacher: {cls.classTeacherId?.name || 'Not assigned'}</span>
+                                            </div>
+                                            <button className="btn btn-sm" style={{ backgroundColor: '#10b981', color: 'white' }}>Manage Classes</button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
                             {results.length > 0 && (
                                 <div className="result-section">
                                     <h4 style={{ margin: '1rem 0 0.5rem', color: 'var(--accent-secondary)' }}>Students ({results.length})</h4>
-                                    {results.map(student => (
+                                    {sortedStudents.map(student => (
                                         <div
                                             key={student._id}
                                             className="result-item"
@@ -271,6 +356,13 @@ function StudentSearch() {
                                     style={{ backgroundColor: '#ff4d4d', color: 'white' }}
                                 >
                                     🗑️ Delete Student
+                                </button>
+                                <button
+                                    className="btn btn-sm"
+                                    onClick={() => handleResetStudentPassword(selectedStudent.studentId, selectedStudent.name)}
+                                    style={{ backgroundColor: '#f59e0b', color: 'white' }}
+                                >
+                                    🔑 Reset Password
                                 </button>
                             </div>
 
@@ -386,6 +478,13 @@ function StudentSearch() {
                                     style={{ backgroundColor: '#ff4d4d', color: 'white' }}
                                 >
                                     🗑️ Delete Teacher
+                                </button>
+                                <button
+                                    className="btn btn-sm"
+                                    onClick={() => handleResetTeacherPassword(selectedTeacher.teacherId, selectedTeacher.name)}
+                                    style={{ backgroundColor: '#f59e0b', color: 'white' }}
+                                >
+                                    🔑 Reset Password
                                 </button>
                             </div>
 

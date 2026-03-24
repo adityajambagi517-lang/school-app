@@ -106,12 +106,13 @@ export class HomeworkService {
   }
 
   private async verifyTeacherAccess(teacherId: string, classId: string) {
-    const teacher = await this.teacherModel.findById(teacherId);
-    if (!teacher) {
-      throw new NotFoundException('Teacher not found');
-    }
+    const classModel = this.teacherModel.db.model('Class');
+    const isAssigned = await classModel.exists({
+      _id: classId,
+      classTeacherId: teacherId
+    });
 
-    if (teacher.assignedClassId.toString() !== classId) {
+    if (!isAssigned) {
       throw new ForbiddenException(
         'You can only manage homework for your assigned class',
       );
