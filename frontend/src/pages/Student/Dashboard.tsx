@@ -21,6 +21,8 @@ function StudentDashboard() {
     const [performance, setPerformance] = useState<any>(null);
     const [attendanceRate, setAttendanceRate] = useState<any>(null);
     const [unreadNoticesCount, setUnreadNoticesCount] = useState(0);
+    const [newHomeworkCount, setNewHomeworkCount] = useState(0);
+    const [unpaidFeesCount, setUnpaidFeesCount] = useState(0);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => { 
@@ -49,6 +51,30 @@ function StudentDashboard() {
                 const today = new Date().toISOString();
                 const att = await analyticsService.getStudentAttendanceRate(studentId, start, today);
                 setAttendanceRate(att);
+
+                // Check for unpaid fees
+                try {
+                    const { feesService } = await import('../../services/api');
+                    const feeData = await feesService.getStudentFees(studentId);
+                    const unpaid = feeData.filter((f: any) => f.status === 'PUBLISHED' && (f.amount - (f.paidAmount || 0)) > 0);
+                    setUnpaidFeesCount(unpaid.length);
+                } catch { /* silent */ }
+            }
+            
+            // Homework read-receipt check
+            if (userData?.studentDetails?.classId?._id) {
+                const classId = userData.studentDetails.classId._id;
+                const { homeworkService } = await import('../../services/api');
+                const hwData = await homeworkService.getByClass(classId);
+                const lastViewedStr = localStorage.getItem('lastHomeworkView');
+                const lastViewedTime = lastViewedStr ? parseInt(lastViewedStr, 10) : 0;
+                
+                const now = new Date().getTime();
+                const newHw = hwData.filter((hw: any) => {
+                    const hwTime = new Date(hw.createdAt).getTime();
+                    return hwTime > lastViewedTime && (now - hwTime < 48 * 60 * 60 * 1000);
+                });
+                setNewHomeworkCount(newHw.length);
             }
         } catch { /* silent */ } finally {
             setLoading(false);
@@ -63,9 +89,9 @@ function StudentDashboard() {
     const actions = [
         { icon: <BarChart3 size={22} color="white" />, label: 'My Marks', path: '/student/marks', cls: 't-indigo' },
         { icon: <CheckSquare size={22} color="white" />, label: 'Attendance', path: '/student/attendance', cls: 't-green' },
-        { icon: <BookOpen size={22} color="white" />, label: 'Homework', path: '/student/homework', cls: 't-orange' },
+        { icon: <BookOpen size={22} color="white" />, label: 'Homework', path: '/student/homework', cls: 't-orange', badge: newHomeworkCount > 0 ? newHomeworkCount : undefined },
         { icon: <Calendar size={22} color="white" />, label: 'Timetable', path: '/student/timetable', cls: 't-teal' },
-        { icon: <DollarSign size={22} color="white" />, label: 'Fees', path: '/student/fees', cls: 't-red' },
+        { icon: <DollarSign size={22} color="white" />, label: 'Fees', path: '/student/fees', cls: 't-red', badge: unpaidFeesCount > 0 ? unpaidFeesCount : undefined },
         { icon: <Megaphone size={22} color="white" />, label: 'Notices', path: '/student/notices', cls: 't-indigo', badge: unreadNoticesCount > 0 ? unreadNoticesCount : undefined },
         { icon: <Lock size={22} color="white" />, label: 'Password', path: '/student/change-password', cls: 't-orange' },
         { icon: <AlertCircle size={22} color="white" />, label: 'Report Problem', path: '/student/report-problem', cls: 't-red' },

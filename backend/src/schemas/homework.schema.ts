@@ -45,3 +45,6 @@ export const HomeworkSchema = SchemaFactory.createForClass(Homework);
 // Index for efficient class-based queries
 HomeworkSchema.index({ classId: 1, dueDate: 1 });
 HomeworkSchema.index({ studentId: 1, dueDate: 1 });
+
+// Automatically delete homework 48 hours (172800 seconds) after creation 
+HomeworkSchema.index({ createdAt: 1 }, { expireAfterSeconds: 172800 });

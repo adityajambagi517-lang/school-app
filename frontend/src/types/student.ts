@@ -41,4 +41,6 @@ export interface StudentWithDetails {
         academicYear: string;
     };
     academicData: AcademicData;
+    profileImage?: string;
+    profilePicture?: string;
 }

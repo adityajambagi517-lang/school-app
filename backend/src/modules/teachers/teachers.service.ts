@@ -47,6 +47,9 @@ export class TeachersService {
     if (registerDto.subject) {
       teacherData.subject = registerDto.subject;
     }
+    if (registerDto.profilePicture) {
+      teacherData.profilePicture = registerDto.profilePicture;
+    }
     
     if (registerDto.assignedClassId) {
       // Check if the class is already assigned to ANY teacher
@@ -73,6 +76,7 @@ export class TeachersService {
         role: 'teacher',
         email: registerDto.email,
         name: registerDto.name,
+        profilePicture: registerDto.profilePicture,
         referenceId: savedTeacher._id,
         referenceModel: 'Teacher',
         isActive: true,

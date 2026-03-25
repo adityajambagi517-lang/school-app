@@ -65,8 +65,6 @@ function TeacherDashboard() {
                 onLogout={handleLogout}
                 links={[
                     ...actions.map(a => ({ icon: '→', label: a.label, path: a.path })),
-                    { icon: '🔍', label: 'Search Students', path: '/teacher/search' },
-                    { icon: '🛠️', label: 'Report a Problem', path: '/teacher/report-problem' },
                 ]}
             />
 

@@ -70,6 +70,47 @@ export class FeesService {
   }
 
   /**
+   * Update DRAFT fee record
+   */
+  async update(id: string, updateData: any, userRole: string, referenceId: string) {
+    const fee = await this.feeModel.findById(id);
+    if (!fee) throw new NotFoundException('Fee not found');
+    if (fee.status !== FeeStatus.DRAFT) throw new BadRequestException('Only DRAFT fees can be edited');
+
+    if (userRole === UserRole.TEACHER && fee.submittedBy.toString() !== referenceId) {
+      throw new ForbiddenException('You can only edit your own fee records');
+    }
+
+    Object.assign(fee, updateData);
+    if (updateData.dueDate) fee.dueDate = new Date(updateData.dueDate);
+    
+    // Automatically set paid status if upfront payment covers the full amount
+    if (fee.paidAmount && fee.paidAmount >= fee.amount) {
+      fee.isPaid = true;
+      fee.status = FeeStatus.PAID;
+      fee.paidAt = new Date();
+    }
+    
+    return fee.save();
+  }
+
+  /**
+   * Delete DRAFT fee record
+   */
+  async delete(id: string, userRole: string, referenceId: string) {
+    const fee = await this.feeModel.findById(id);
+    if (!fee) throw new NotFoundException('Fee not found');
+    if (fee.status !== FeeStatus.DRAFT) throw new BadRequestException('Only DRAFT fees can be deleted');
+
+    if (userRole === UserRole.TEACHER && fee.submittedBy.toString() !== referenceId) {
+      throw new ForbiddenException('You can only delete your own fee records');
+    }
+
+    await this.feeModel.findByIdAndDelete(id);
+    return { success: true };
+  }
+
+  /**
    * SUBMITTED: Submit fee for admin approval
    */
   async submitForApproval(id: string, userRole: string, referenceId: string) {
@@ -158,7 +199,7 @@ export class FeesService {
   }
 
   /**
-   * Mark fee as paid
+   * Mark fee as paid (Legacy full payment override)
    */
   async markAsPaid(id: string) {
     const fee = await this.feeModel.findById(id);
@@ -167,7 +208,28 @@ export class FeesService {
     }
 
     fee.isPaid = true;
+    fee.status = FeeStatus.PAID;
+    fee.paidAmount = fee.amount;
     fee.paidAt = new Date();
+    return fee.save();
+  }
+
+  /**
+   * Record partial or full payment
+   */
+  async recordPayment(id: string, amountPaid: number) {
+    const fee = await this.feeModel.findById(id);
+    if (!fee) {
+      throw new NotFoundException('Fee not found');
+    }
+
+    fee.paidAmount = (fee.paidAmount || 0) + Number(amountPaid);
+    if (fee.paidAmount >= fee.amount) {
+      fee.isPaid = true;
+      fee.status = FeeStatus.PAID;
+      fee.paidAt = new Date();
+    }
+    
     return fee.save();
   }
 

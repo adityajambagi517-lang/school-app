@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService, homeworkService, subjectsService, studentsService } from '../../services/api';
 import NavBar from '../../components/NavBar';
@@ -208,29 +208,29 @@ function ManageHomework() {
 
                     <div className="form-group">
                         <label>Assignment Type *</label>
-                        <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-                            <label style={{ display: 'flex', alignItems: 'center' }}>
-                                <input
-                                    type="radio"
-                                    name="assignmentType"
-                                    value="ALL_STUDENTS"
-                                    checked={formData.assignmentType === 'ALL_STUDENTS'}
-                                    onChange={(e) => setFormData({ ...formData, assignmentType: e.target.value, studentId: '' })}
-                                    style={{ marginRight: '0.5rem' }}
-                                />
+                        <div style={{ display: 'inline-flex', background: 'var(--border)', padding: '5px', borderRadius: '12px', gap: '5px', marginTop: '0.5rem' }}>
+                            <button
+                                type="button"
+                                onClick={() => setFormData({ ...formData, assignmentType: 'ALL_STUDENTS', studentId: '' })}
+                                style={{
+                                    border: 'none', padding: '10px 20px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
+                                    background: formData.assignmentType === 'ALL_STUDENTS' ? 'var(--primary)' : 'transparent',
+                                    color: formData.assignmentType === 'ALL_STUDENTS' ? 'white' : 'var(--text-muted)'
+                                }}
+                            >
                                 All Students
-                            </label>
-                            <label style={{ display: 'flex', alignItems: 'center' }}>
-                                <input
-                                    type="radio"
-                                    name="assignmentType"
-                                    value="INDIVIDUAL"
-                                    checked={formData.assignmentType === 'INDIVIDUAL'}
-                                    onChange={(e) => setFormData({ ...formData, assignmentType: e.target.value })}
-                                    style={{ marginRight: '0.5rem' }}
-                                />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setFormData({ ...formData, assignmentType: 'INDIVIDUAL' })}
+                                style={{
+                                    border: 'none', padding: '10px 20px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
+                                    background: formData.assignmentType === 'INDIVIDUAL' ? 'var(--primary)' : 'transparent',
+                                    color: formData.assignmentType === 'INDIVIDUAL' ? 'white' : 'var(--text-muted)'
+                                }}
+                            >
                                 Specific Student
-                            </label>
+                            </button>
                         </div>
                     </div>
 

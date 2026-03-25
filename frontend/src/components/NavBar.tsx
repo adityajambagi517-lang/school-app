@@ -23,7 +23,7 @@ interface NavBarProps {
 type SearchResult = { _id: string; name: string; type: 'student' | 'teacher' | 'class'; subtitle: string; refId: string };
 
 function NavBar({
-    title = 'School Management',
+    title = 'SRPU School, Horti',
     role,
     userName,
     onLogout,
@@ -89,11 +89,7 @@ function NavBar({
     const handleSelect = (result: any) => {
         setQuery('');
         setShowDropdown(false);
-        if (result.type === 'class') {
-            navigate('/admin/classes');
-        } else {
-            navigate(`/admin/${result.type}s/${result.refId}`);
-        }
+        navigate(`/admin/${result.type === 'class' ? 'classes' : result.type + 's'}/${result.refId}`);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

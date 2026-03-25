@@ -129,8 +129,32 @@ export const feesService = {
         const response = await api.post('/fees', data);
         return response.data;
     },
+    update: async (id: string, data: any) => {
+        const response = await api.patch(`/fees/${id}`, data);
+        return response.data;
+    },
+    delete: async (id: string) => {
+        const response = await api.delete(`/fees/${id}`);
+        return response.data;
+    },
+    recordPayment: async (id: string, amountPaid: number) => {
+        const response = await api.patch(`/fees/${id}/payment`, { amountPaid });
+        return response.data;
+    },
     submit: async (id: string) => {
         const response = await api.patch(`/fees/${id}/submit`);
+        return response.data;
+    },
+    getPendingApprovals: async () => {
+        const response = await api.get('/fees/pending-approvals');
+        return response.data;
+    },
+    approve: async (id: string, comments?: string) => {
+        const response = await api.patch(`/fees/edit-request/${id}/approve`, { comments });
+        return response.data;
+    },
+    publish: async (id: string) => {
+        const response = await api.patch(`/fees/${id}/publish`);
         return response.data;
     },
     getByClass: async (classId: string) => {
@@ -171,6 +195,24 @@ export const studentsService = {
     search: async (query: string) => {
         const response = await api.get(`/students/search?q=${query}`);
         return response.data;
+    },
+    getById: async (id: string) => {
+        const response = await api.get(`/students/${id}`);
+        return response.data;
+    },
+    getStudentFull: async (id: string) => {
+        // Fetch student details with marks, attendance, fees together
+        const [studentRes, marksRes, feesRes, attendanceRes] = await Promise.allSettled([
+            api.get(`/students/${id}`),
+            api.get(`/markcards/student/${id}`),
+            api.get(`/fees/student/${id}`),
+            api.get(`/attendance/student/${id}`),
+        ]);
+        const student = studentRes.status === 'fulfilled' ? studentRes.value.data : null;
+        const marks = marksRes.status === 'fulfilled' ? marksRes.value.data : [];
+        const fees = feesRes.status === 'fulfilled' ? feesRes.value.data : [];
+        const attendance = attendanceRes.status === 'fulfilled' ? attendanceRes.value.data : [];
+        return { student, marks, fees, attendance };
     },
     delete: async (id: string) => {
         const response = await api.delete(`/students/${id}`);
@@ -230,6 +272,10 @@ export const classesService = {
         const response = await api.get('/classes');
         return response.data;
     },
+    getById: async (id: string) => {
+        const response = await api.get(`/classes/${id}`);
+        return response.data;
+    },
     search: async (query: string) => {
         const response = await api.get(`/classes/search?q=${query}`);
         return response.data;
@@ -251,6 +297,10 @@ export const classesService = {
 export const teachersService = {
     getAll: async () => {
         const response = await api.get('/teachers/with-stats');
+        return response.data;
+    },
+    getById: async (id: string) => {
+        const response = await api.get(`/teachers/${id}`);
         return response.data;
     },
     register: async (data: any) => {

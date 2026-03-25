@@ -4,7 +4,7 @@ import {
     Users, GraduationCap, School, BarChart3,
     UserPlus, BookUser, CheckSquare, DollarSign, Search, Megaphone, ShieldCheck, HeadphonesIcon
 } from 'lucide-react';
-import { authService, approvalsService } from '../../services/api';
+import { authService, approvalsService, feesService } from '../../services/api';
 import api from '../../services/api';
 import NavBar from '../../components/NavBar';
 import './Dashboard.css';
@@ -31,8 +31,11 @@ function AdminDashboard() {
 
     const loadPendingApprovalsCount = async () => {
         try {
-            const data = await approvalsService.getPending();
-            setPendingApprovalsCount(data.length);
+            const [marksData, feesData] = await Promise.all([
+                approvalsService.getPending(),
+                feesService.getPendingApprovals()
+            ]);
+            setPendingApprovalsCount(marksData.length + feesData.length);
         } catch { /* silent */ }
     };
 
@@ -56,11 +59,12 @@ function AdminDashboard() {
         { icon: <Users size={22} color="white" />, label: 'Teachers', path: '/admin/teachers', style: 't-teal' },
         { icon: <School size={22} color="white" />, label: 'Classes', path: '/admin/classes', style: 't-orange' },
         { icon: <CheckSquare size={22} color="white" />, label: 'Approvals', path: '/admin/approvals', style: 't-red', badge: pendingApprovalsCount > 0 ? pendingApprovalsCount : undefined },
+        { icon: <DollarSign size={22} color="white" />, label: 'Fee Approvals', path: '/admin/fee-approvals', style: 't-lime' },
         { icon: <Search size={22} color="white" />, label: 'Search', path: '/admin/search', style: 't-blue' },
         { icon: <Megaphone size={22} color="white" />, label: 'Notices', path: '/admin/notices', style: 't-violet' },
         { icon: <Users size={22} color="white" />, label: 'User Mgmt', path: '/admin/users', style: 't-indigo' },
         { icon: <ShieldCheck size={22} color="white" />, label: 'Password', path: '/admin/change-password', style: 't-red' },
-        { icon: <DollarSign size={22} color="white" />, label: 'Fees', path: '/admin/dashboard', style: 't-lime' },
+        { icon: <DollarSign size={22} color="white" />, label: 'Fees', path: '/admin/fee-approvals', style: 't-lime' },
         { icon: <HeadphonesIcon size={22} color="white" />, label: 'Support', path: '/admin/support', style: 't-teal' },
     ];
 
@@ -76,7 +80,8 @@ function AdminDashboard() {
                     { icon: '➕', label: 'Register Teacher', path: '/admin/register-teacher' },
                     { icon: '🏫', label: 'Manage Classes', path: '/admin/classes' },
                     { icon: '📣', label: 'School Notices', path: '/admin/notices' },
-                    { icon: '✅', label: `Approvals${pendingApprovalsCount > 0 ? ` (${pendingApprovalsCount})` : ''}`, path: '/admin/approvals' },
+                    { icon: '✅', label: `Fee Approvals`, path: '/admin/fee-approvals' },
+                    { icon: '✅', label: `Mark Approvals${pendingApprovalsCount > 0 ? ` (${pendingApprovalsCount})` : ''}`, path: '/admin/approvals' },
                     { icon: '🔍', label: 'Student Search', path: '/admin/search' },
                     { icon: '👥', label: 'User Management', path: '/admin/users' },
                     { icon: '🔐', label: 'Change Password', path: '/admin/change-password' },

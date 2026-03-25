@@ -170,3 +170,98 @@
     .section-header, .activity-card { padding-left:24px; padding-right:24px; }
     .activity-card { margin:0 24px 32px; }
 }
+
+/* ── Exam Results ── */
+.exam-section {
+    animation: fadeUp 0.5s ease both;
+    margin-bottom: 32px;
+}
+
+.exam-section .dashboard-card {
+    border: none;
+    box-shadow: var(--shadow-md);
+    transition: transform 0.3s ease;
+    padding: 0;
+    overflow: hidden;
+}
+
+.performance-banner {
+    padding: 24px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.performance-banner.pass {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.performance-banner.fail {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.performance-stat {
+    display: flex;
+    gap: 32px;
+}
+
+.stat-group p {
+    font-size: 11px;
+    text-transform: uppercase;
+    opacity: 0.8;
+    margin: 0 0 4px 0;
+    letter-spacing: 0.8px;
+    font-weight: 700;
+}
+
+.stat-group h3 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 800;
+    color: white;
+}
+
+.percentage-box {
+    text-align: center;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background: rgba(255,255,255,0.18);
+    padding: 12px 28px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.2);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+.percentage-box p {
+    font-size: 11px;
+    text-transform: uppercase;
+    opacity: 0.95;
+    margin: 0 0 2px 0;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+
+.percentage-box h2 {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 900;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+@media (max-width: 480px) {
+    .performance-banner {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+    .performance-stat {
+        justify-content: space-around;
+    }
+    .percentage-box {
+        width: 100%;
+    }
+}

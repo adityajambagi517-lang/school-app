@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService, teachersService, adminResetService } from '../../services/api';
+import { authService, teachersService } from '../../services/api';
 import api from '../../services/api';
 import NavBar from '../../components/NavBar';
 import SortDropdown from '../../components/SortDropdown';
 import './TeachersOverview.css';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 interface TeacherStats {
     _id: string;
@@ -22,25 +24,17 @@ interface TeacherStats {
     };
 }
 
-interface Class {
-    _id: string;
-    className: string;
-    section: string;
-    academicYear: string;
-}
-
 function TeachersOverview() {
     const navigate = useNavigate();
     const user = authService.getCurrentUser();
     const [teachers, setTeachers] = useState<TeacherStats[]>([]);
-    const [classes, setClasses] = useState<Class[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
-    const [expandedTeacherId, setExpandedTeacherId] = useState<string | null>(null);
+    const [classes, setClasses] = useState<{ _id: string; className: string; section: string; academicYear: string }[]>([]);
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | 'newest' | 'oldest'>('asc');
     const [showForm, setShowForm] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
     const [formData, setFormData] = useState({
         name: '',
         teacherId: '',
@@ -53,9 +47,6 @@ function TeachersOverview() {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-    const toggleTeacher = (id: string) => {
-        setExpandedTeacherId(prev => prev === id ? null : id);
-    };
 
     useEffect(() => {
         fetchTeachers();
@@ -80,62 +71,6 @@ function TeachersOverview() {
             setClasses(response.data);
         } catch (err: any) {
             console.error('Failed to fetch classes:', err);
-        }
-    };
-
-    const handleAssignClass = async (teacherId: string, classId: string) => {
-        try {
-            setError('');
-            await api.patch(`/teachers/${teacherId}/assign-class`, { classId });
-            setSuccess('Class assigned successfully!');
-            fetchTeachers(); // Refresh list to get updated class associations
-            setTimeout(() => setSuccess(''), 3000);
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to assign class');
-            setTimeout(() => setError(''), 5000);
-        }
-    };
-
-    const handleUnassignClass = async (classId: string) => {
-        if (!window.confirm('Are you sure you want to unassign this class from the teacher?')) return;
-        try {
-            // Unassigning is simply stripping the classTeacherId from the Class document
-            await api.patch(`/classes/${classId}/assign-teacher`, { teacherId: '' });
-            setSuccess('Class unassigned successfully!');
-            fetchTeachers();
-            setTimeout(() => setSuccess(''), 3000);
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to unassign class');
-            setTimeout(() => setError(''), 5000);
-        }
-    };
-
-    const handleDeleteTeacher = async (id: string, name: string) => {
-        if (!window.confirm(`⚠️ Are you sure you want to PERMANENTLY delete teacher ${name} and their login account? This action cannot be undone.`)) {
-            return;
-        }
-
-        try {
-            setLoading(true);
-            await teachersService.delete(id);
-            setSuccess(`✅ Teacher ${name} deleted successfully`);
-            await fetchTeachers();
-            setTimeout(() => setSuccess(''), 3000);
-        } catch (err: any) {
-            setError(`❌ ${err.response?.data?.message || 'Failed to delete teacher'}`);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleResetPassword = async (teacherId: string, name: string) => {
-        if (!window.confirm(`Reset password for ${name} to "password123"?`)) return;
-        try {
-            await adminResetService.resetUserPassword(teacherId);
-            setSuccess(`✅ Password for ${name} reset to "password123"`);
-            setTimeout(() => setSuccess(''), 4000);
-        } catch (err: any) {
-            setError(`❌ ${err.response?.data?.message || 'Failed to reset password'}`);
         }
     };
 
@@ -338,21 +273,23 @@ function TeachersOverview() {
                                 <small style={{ fontSize: '11px', color: 'var(--gray-500)' }}>Initial password for account</small>
                             </div>
                             <div className="form-group">
-                                <label>Subject (Optional)</label>
+                                <label>Subject Taught*</label>
                                 <input 
                                     type="text" 
                                     className="form-control" 
                                     placeholder="e.g. Mathematics"
+                                    required
                                     value={formData.subject}
                                     onChange={e => setFormData({...formData, subject: e.target.value})}
                                 />
                             </div>
                             <div className="form-group">
-                                <label>Phone Number (Optional)</label>
+                                <label>Phone Number*</label>
                                 <input 
                                     type="text" 
                                     className="form-control" 
                                     placeholder="e.g. +91 9876543210"
+                                    required
                                     value={formData.phone}
                                     onChange={e => setFormData({...formData, phone: e.target.value})}
                                 />
@@ -383,11 +320,19 @@ function TeachersOverview() {
 
                 <div className="teachers-list">
                     {sortedTeachers.map((teacher) => (
-                        <div key={teacher._id} className={`teacher-accordion-item ${expandedTeacherId === teacher._id ? 'expanded' : ''}`}>
-                            <div className="accordion-header" onClick={() => toggleTeacher(teacher._id)}>
-                                <div className="accordion-avatar" style={teacher.profilePicture ? { background: `url(${teacher.profilePicture}) center/cover` } : {}}>
-                                    {!teacher.profilePicture && <span>{teacher.name.charAt(0)}</span>}
-                                </div>
+                        <div key={teacher._id} className="teacher-accordion-item">
+                            <div className="accordion-header" style={{ cursor: 'pointer' }}
+                                onClick={() => navigate(`/admin/teachers/${teacher._id}`)}
+                            >
+                                {(() => {
+                                    const pic = teacher.profilePicture;
+                                    const resolvedPic = pic ? (pic.startsWith('http') || pic.startsWith('data:') ? pic : `${API_URL}${pic.startsWith('/') ? '' : '/'}${pic}`) : null;
+                                    return (
+                                        <div className="accordion-avatar" style={resolvedPic ? { background: `url(${resolvedPic}) center/cover` } : {}}>
+                                            {!resolvedPic && <span>{teacher.name.charAt(0)}</span>}
+                                        </div>
+                                    );
+                                })()}
                                 <div className="accordion-info">
                                     <h3>{teacher.name}</h3>
                                     <p>ID: {teacher.teacherId} <span className="mobile-hidden">{teacher.subject ? `• ${teacher.subject}` : ''}</span></p>
@@ -410,112 +355,7 @@ function TeachersOverview() {
                                 </div>
                             </div>
 
-                            {expandedTeacherId === teacher._id && (
-                                <div className="accordion-body">
-                                    <div className="accordion-actions-bar">
-                                        <div className="teacher-contact">
-                                            <p>📧 {teacher.email}</p>
-                                            {teacher.phone && <p>📞 {teacher.phone}</p>}
-                                        </div>
-                                        <div className="admin-actions">
-                                            <button 
-                                                className="btn-action btn-reset"
-                                                onClick={() => handleResetPassword(teacher.teacherId, teacher.name)}
-                                                title="Reset Password to password123"
-                                            >
-                                                🔑 Reset Password
-                                            </button>
-                                            <button 
-                                                className="btn-action btn-delete" 
-                                                onClick={() => handleDeleteTeacher(teacher._id, teacher.name)}
-                                                title="Delete Teacher"
-                                            >
-                                                🗑️ Delete
-                                            </button>
-                                        </div>
-                                    </div>
 
-                                    <div className="class-assignment">
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                                            <h4>Class Management</h4>
-                                            <span style={{ fontSize: '12px', color: 'var(--gray-500)' }}>A teacher can manage multiple classes</span>
-                                        </div>
-                                        
-                                        {teacher.assignedClasses && teacher.assignedClasses.length > 0 && (
-                                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
-                                                {teacher.assignedClasses.map(cls => (
-                                                    <span key={cls._id} className="badge badge-assigned" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', padding: '6px 12px' }}>
-                                                        {cls.className}-{cls.section}
-                                                        <button 
-                                                            onClick={() => handleUnassignClass(cls._id)} 
-                                                            style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: '0 2px', color: 'inherit', fontWeight: 'bold' }}
-                                                            title="Unassign Class"
-                                                        >×</button>
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
-
-                                        <div className="assign-class-section">
-                                            <label>Assign to Another Class:</label>
-                                            <select
-                                                value=""
-                                                onChange={(e) => {
-                                                    if (e.target.value) handleAssignClass(teacher._id, e.target.value);
-                                                }}
-                                                className="class-select"
-                                            >
-                                                <option value="">-- Select Class --</option>
-                                                {classes.filter(cls => !teacher.assignedClasses.some(ac => ac._id === cls._id)).map((cls) => (
-                                                    <option key={cls._id} value={cls._id}>
-                                                        {cls.className} - Section {cls.section} ({cls.academicYear})
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    {teacher.assignedClasses && teacher.assignedClasses.length > 0 && (
-                                        <>
-                                            <div className="stats-grid">
-                                                <div className="stat-item">
-                                                    <div className="stat-icon">👥</div>
-                                                    <div className="stat-details">
-                                                        <div className="stat-value">{teacher.stats.studentCount}</div>
-                                                        <div className="stat-label">Students</div>
-                                                    </div>
-                                                </div>
-
-                                                <div className="stat-item">
-                                                    <div className="stat-icon">📊</div>
-                                                    <div className="stat-details">
-                                                        <div className="stat-value">{teacher.stats.averageMarks}%</div>
-                                                        <div className="stat-label">Avg Marks</div>
-                                                    </div>
-                                                </div>
-
-                                                <div className="stat-item">
-                                                    <div className="stat-icon">✅</div>
-                                                    <div className="stat-details">
-                                                        <div className="stat-value">{teacher.stats.attendanceRate}%</div>
-                                                        <div className="stat-label">Attendance</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="performance-indicator">
-                                                {teacher.stats.averageMarks >= 75 && teacher.stats.attendanceRate >= 80 ? (
-                                                    <span className="badge badge-success">✨ Excellent Performance</span>
-                                                ) : teacher.stats.averageMarks >= 60 && teacher.stats.attendanceRate >= 70 ? (
-                                                    <span className="badge badge-warning">👍 Good Performance</span>
-                                                ) : (
-                                                    <span className="badge badge-info">📈 Room for Improvement</span>
-                                                )}
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-                            )}
                         </div>
                     ))}
                 </div>

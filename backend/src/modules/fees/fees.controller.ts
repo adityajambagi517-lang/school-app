@@ -5,6 +5,7 @@ import {
   Body,
   Patch,
   Param,
+  Delete,
   UseGuards,
   Query,
 } from '@nestjs/common';
@@ -36,6 +37,27 @@ export class FeesController {
       user.role,
       user.referenceId || '',
     );
+  }
+
+  // Teacher/Admin updates a fee (DRAFT only)
+  @Patch(':id')
+  @Roles(UserRole.TEACHER, UserRole.ADMIN)
+  update(
+    @Param('id') id: string,
+    @Body() updateFeeDto: any,
+    @CurrentUser() user: CurrentUserData,
+  ) {
+    return this.feesService.update(id, updateFeeDto, user.role, user.referenceId || '');
+  }
+
+  // Teacher/Admin deletes a fee (DRAFT only)
+  @Delete(':id')
+  @Roles(UserRole.TEACHER, UserRole.ADMIN)
+  delete(
+    @Param('id') id: string,
+    @CurrentUser() user: CurrentUserData,
+  ) {
+    return this.feesService.delete(id, user.role, user.referenceId || '');
   }
 
   // Teacher submits fee for approval (DRAFT → SUBMITTED)
@@ -75,6 +97,16 @@ export class FeesController {
   @Roles(UserRole.ADMIN)
   markAsPaid(@Param('id') id: string) {
     return this.feesService.markAsPaid(id);
+  }
+
+  // Record partial or full payment
+  @Patch(':id/payment')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  recordPayment(
+    @Param('id') id: string,
+    @Body() body: { amountPaid: number },
+  ) {
+    return this.feesService.recordPayment(id, body.amountPaid);
   }
 
   // Student views their own published fees

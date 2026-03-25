@@ -1,5 +1,7 @@
-import { useState, useRef } from 'react';
-import { supportService } from '../../services/api';
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supportService, authService } from '../../services/api';
+import NavBar from '../../components/NavBar';
 import './ReportProblem.css';
 
 const CATEGORIES = [
@@ -9,6 +11,8 @@ const CATEGORIES = [
 ];
 
 export default function ReportProblem() {
+    const navigate = useNavigate();
+    const [user, setUser] = useState<any>(null);
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [category, setCategory] = useState('other');
@@ -17,6 +21,12 @@ export default function ReportProblem() {
     const [success, setSuccess] = useState('');
     const [error, setError] = useState('');
     const fileRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        const u = authService.getCurrentUser();
+        if (!u) navigate('/login');
+        setUser(u);
+    }, [navigate]);
 
     const handleScreenshot = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -48,6 +58,13 @@ export default function ReportProblem() {
 
     return (
         <div className="report-page">
+            <NavBar 
+                role={user?.role} 
+                userName={user?.name} 
+                onLogout={() => { authService.logout(); navigate('/login'); }} 
+                backTo={`/${user?.role}/dashboard`}
+                backLabel="← Back"
+            />
             <div className="report-card">
                 <div className="report-header">
                     <h1>🛠️ Report a Problem</h1>

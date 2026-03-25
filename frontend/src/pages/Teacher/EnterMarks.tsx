@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService, markcardsService, studentsService, subjectsService } from '../../services/api';
 import NavBar from '../../components/NavBar';
@@ -105,8 +105,10 @@ function EnterMarks() {
             }
         });
 
+        // Round totalMarks to 2 decimal places to avoid floating point errors
+        const cleanTotalMarks = Number(totalMarks.toFixed(2));
         const percentage = totalMaxMarks > 0 ? ((totalMarks / totalMaxMarks) * 100).toFixed(2) : '0.00';
-        return { totalMarks, totalMaxMarks, percentage, count };
+        return { totalMarks: cleanTotalMarks, totalMaxMarks, percentage, count };
     };
 
     const handleSubmit = async (e: React.FormEvent) => {

@@ -265,13 +265,14 @@ function RegisterStudent() {
                                 </div>
 
                                 <div className="form-group">
-                                    <label>Phone (Optional)</label>
+                                    <label>Phone *</label>
                                     <input
                                         type="tel"
                                         name="phone"
                                         value={formData.phone}
                                         onChange={handleChange}
                                         placeholder="+91 1234567890"
+                                        required
                                     />
                                 </div>
                             </div>

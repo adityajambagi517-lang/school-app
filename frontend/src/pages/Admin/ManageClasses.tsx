@@ -253,7 +253,7 @@ function ManageClasses() {
                     <header>Active Classes</header>
                     <div className="classes-grid">
                         {sortedClasses.map((cls) => (
-                            <div key={cls._id} className="class-card">
+                            <div key={cls._id} className="class-card" style={{ cursor: 'pointer' }} onClick={() => navigate(`/admin/classes/${cls._id}`)}>
                                 <div className="class-card-header">
                                     <div className="class-info">
                                         <h3 className="class-name">{cls.className}</h3>

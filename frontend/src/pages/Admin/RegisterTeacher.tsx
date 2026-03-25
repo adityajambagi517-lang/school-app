@@ -231,24 +231,26 @@ function RegisterTeacher() {
                                 </div>
 
                                 <div className="form-group">
-                                    <label>Phone</label>
+                                    <label>Phone *</label>
                                     <input
                                         type="tel"
                                         name="phone"
                                         value={formData.phone}
                                         onChange={handleChange}
                                         placeholder="+91 1234567890"
+                                        required
                                     />
                                 </div>
 
                                 <div className="form-group">
-                                    <label>Subject/Specialization</label>
+                                    <label>Subject/Specialization *</label>
                                     <input
                                         type="text"
                                         name="subject"
                                         value={formData.subject}
                                         onChange={handleChange}
                                         placeholder="e.g., Mathematics, Science"
+                                        required
                                     />
                                 </div>
                             </div>

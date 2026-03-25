@@ -74,6 +74,7 @@ export class StudentsService {
       guardianName: registerDto.guardianName,
       guardianPhone: registerDto.guardianPhone,
       address: registerDto.address,
+      profileImage: registerDto.profileImage,
       isActive: true,
     });
     const savedStudent = await student.save();
@@ -87,6 +88,7 @@ export class StudentsService {
         role: 'student',
         email: registerDto.email,
         name: registerDto.name,
+        profilePicture: registerDto.profileImage,
         referenceId: savedStudent._id,
         referenceModel: 'Student',
         isActive: true,
@@ -247,6 +249,7 @@ export class StudentsService {
 
         return {
           ...student.toObject(),
+          profileImage: student.profileImage || (student as any).profilePicture,
           academicData: {
             marks: marks.map((m) => ({
               subject: m.subject,
@@ -295,7 +298,11 @@ export class StudentsService {
       query,
       count: studentsWithDetails.length + teachers.length,
       students: studentsWithDetails,
-      teachers: teachers,
+      teachers: teachers.map(t => ({
+        ...t.toObject ? t.toObject() : t,
+        profilePicture: t.profilePicture || (t as any).profileImage,
+        profileImage: t.profileImage || (t as any).profilePicture,
+      })),
     };
   }
 
@@ -342,6 +349,13 @@ export class StudentsService {
     if (!student) {
       throw new NotFoundException('Student not found');
     }
+
+    // Sync to the linked user account
+    await this.userModel.findOneAndUpdate(
+      { userId: student.studentId, role: 'student' },
+      { profilePicture: imageUrl },
+    );
+
     return student;
   }
 

@@ -22,9 +22,8 @@ export class CreateStudentDto {
   @IsString()
   gender: string;
 
-  @IsOptional()
   @IsString()
-  phone?: string;
+  phone: string;
 
   @IsString()
   guardianName: string;

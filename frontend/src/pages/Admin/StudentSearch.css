@@ -119,6 +119,37 @@
     font-size: 13px;
 }
 
+/* ── Avatars ── */
+.search-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+    color: white;
+    flex-shrink: 0;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    border: 2px solid rgba(255,255,255,0.1);
+}
+
+.search-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.student-avatar {
+    background: linear-gradient(135deg, var(--accent-secondary), var(--primary-end));
+}
+
+.teacher-avatar {
+    background: linear-gradient(135deg, var(--accent-primary), var(--primary));
+}
+
 /* Result item arrow */
 .result-item::after {
     content: '›';
@@ -142,9 +173,44 @@
     box-shadow: var(--shadow-sm);
     margin-bottom: 16px;
     display: flex;
-    flex-direction: column;
-    gap: 16px;
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
     border: 1px solid var(--border);
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    border: 3px solid rgba(255,255,255,0.1);
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.student-avatar-large {
+    background: linear-gradient(135deg, var(--accent-secondary), var(--primary-end));
+}
+
+.teacher-avatar-large {
+    background: linear-gradient(135deg, var(--accent-primary), var(--primary));
+}
+
+.profile-main {
+    flex: 1;
 }
 
 .profile-main h2 {

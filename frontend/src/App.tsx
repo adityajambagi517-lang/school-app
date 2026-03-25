@@ -8,7 +8,11 @@ import TeachersOverview from './pages/Admin/TeachersOverview';
 import ManageClasses from './pages/Admin/ManageClasses';
 import StudentSearch from './pages/Admin/StudentSearch';
 import ViewApprovals from './pages/Admin/ViewApprovals';
+import FeeApprovals from './pages/Admin/FeeApprovals';
 import UserManagement from './pages/Admin/UserManagement';
+import ClassDetailPage from './pages/Admin/ClassDetailPage';
+import TeacherDetailPage from './pages/Admin/TeacherDetailPage';
+import StudentDetailPage from './pages/Admin/StudentDetailPage';
 import TeacherDashboard from './pages/Teacher/Dashboard';
 import TeacherRegisterStudent from './pages/Teacher/RegisterStudent';
 import ViewStudents from './pages/Teacher/ViewStudents';
@@ -97,6 +101,14 @@ function App() {
           }
         />
         <Route
+          path="/admin/fee-approvals"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <FeeApprovals />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/admin/notices"
           element={
             <ProtectedRoute allowedRoles={['admin']}>
@@ -125,6 +137,30 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['admin']}>
               <SupportTickets />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/classes/:id"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <ClassDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/teachers/:id"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <TeacherDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/students/:id"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <StudentDetailPage />
             </ProtectedRoute>
           }
         />

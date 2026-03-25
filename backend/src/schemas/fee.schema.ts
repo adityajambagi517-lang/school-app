@@ -9,6 +9,7 @@ export enum FeeStatus {
   SUBMITTED = 'SUBMITTED',
   APPROVED = 'APPROVED',
   PUBLISHED = 'PUBLISHED',
+  PAID = 'PAID',
 }
 
 @Schema({ timestamps: true })
@@ -20,7 +21,7 @@ export class Fee {
   academicYear: string;
 
   @Prop({ required: true })
-  termName: string; // e.g., "Term 1", "Term 2"
+  termName: string;
 
   @Prop({ required: true })
   amount: number;
@@ -51,6 +52,9 @@ export class Fee {
 
   @Prop({ default: false })
   isPaid: boolean;
+
+  @Prop({ default: 0 })
+  paidAmount: number;
 
   @Prop()
   paidAt: Date;

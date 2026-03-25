@@ -171,6 +171,13 @@ function Profile() {
                     {error && <div className="alert alert-error">❌ {error}</div>}
                     {success && <div className="alert alert-success">✅ {success}</div>}
 
+                    {user?.role === 'student' && (
+                        <div className="alert alert-info" style={{ marginBottom: '16px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span>ℹ️</span>
+                            <span>Students can only update their profile picture. To change your Name, Email, or Phone, please contact your Class Teacher.</span>
+                        </div>
+                    )}
+
                     <div className="profile-main">
                         <div className="profile-picture-section">
                             <div className="profile-image-container">
@@ -214,6 +221,7 @@ function Profile() {
                                     value={formData.name} 
                                     onChange={handleInputChange} 
                                     required 
+                                    disabled={user?.role === 'student'}
                                 />
                             </div>
 
@@ -225,6 +233,7 @@ function Profile() {
                                     value={formData.email} 
                                     onChange={handleInputChange} 
                                     required 
+                                    disabled={user?.role === 'student'}
                                 />
                             </div>
 
@@ -236,10 +245,11 @@ function Profile() {
                                     value={formData.phone} 
                                     onChange={handleInputChange} 
                                     placeholder="e.g. 9999999999"
+                                    disabled={user?.role === 'student'}
                                 />
                             </div>
 
-                            <button type="submit" className="btn btn-primary btn-save" disabled={saving}>
+                            <button type="submit" className="btn btn-primary btn-save" disabled={saving || user?.role === 'student'}>
                                 {saving ? 'Saving...' : '💾 Save Changes'}
                             </button>
                         </form>

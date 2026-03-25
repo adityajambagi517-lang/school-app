@@ -11,6 +11,7 @@ interface FeeRecord {
     academicYear: string;
     termName: string;
     amount: number;
+    paidAmount?: number;
     dueDate: string;
     status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'PUBLISHED' | 'PAID';
 }
@@ -49,22 +50,6 @@ function FeesView() {
         navigate('/login');
     };
 
-    const getStatusIcon = (status: string) => {
-        switch (status) {
-            case 'PAID': return <CheckCircle2 size={16} className="text-success" />;
-            case 'PUBLISHED': return <Clock size={16} className="text-warning" />;
-            default: return <AlertCircle size={16} className="text-muted" />;
-        }
-    };
-
-    const getStatusClass = (status: string) => {
-        switch (status) {
-            case 'PAID': return 'status-paid';
-            case 'PUBLISHED': return 'status-pending';
-            default: return 'status-draft';
-        }
-    };
-
     if (loading) return <div className="dash-root"><NavBar role="student" userName={user?.name} onLogout={handleLogout} /><div className="dash-scroll">Loading fees...</div></div>;
 
     return (
@@ -96,23 +81,33 @@ function FeesView() {
                     </div>
                 ) : (
                     <div className="fee-list">
-                        {fees.map(fee => (
-                            <div key={fee._id} className="activity-card fee-card">
-                                <div className="fee-header">
-                                    <div className="fee-info">
-                                        <h3>{fee.termName} ({fee.academicYear})</h3>
-                                        <p className="fee-date">Due: {new Date(fee.dueDate).toLocaleDateString()}</p>
+                        {fees.map(fee => {
+                            const remaining = fee.amount - (fee.paidAmount || 0);
+                            const isPaid = fee.status === 'PAID' || remaining <= 0;
+                            return (
+                                <div key={fee._id} className="activity-card fee-card">
+                                    <div className="fee-header">
+                                        <div className="fee-info">
+                                            <h3>{fee.termName} ({fee.academicYear})</h3>
+                                            <p className="fee-date">Due: {new Date(fee.dueDate).toLocaleDateString()}</p>
+                                        </div>
                                     </div>
-                                    <div className="fee-amount">
-                                        ₹{fee.amount.toLocaleString()}
+                                    
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', fontSize: '0.95rem', color: '#4a5568', background: isPaid ? '#f0fff4' : '#fffaf0', padding: '0.75rem', borderRadius: '8px' }}>
+                                        <div><strong>Total:</strong> ₹{fee.amount.toLocaleString()}</div>
+                                        <div style={{ color: '#2f855a' }}><strong>Paid:</strong> ₹{(fee.paidAmount || 0).toLocaleString()}</div>
+                                        <div style={{ color: remaining > 0 ? '#e53e3e' : '#2f855a' }}><strong>Remaining:</strong> ₹{remaining.toLocaleString()}</div>
+                                    </div>
+
+                                    <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}>
+                                        <div className={`fee-status ${isPaid ? 'status-paid' : 'status-pending'}`}>
+                                            {isPaid ? <CheckCircle2 size={16} /> : <Clock size={16} />}
+                                            <span>{isPaid ? 'TERM COMPLETED' : 'PENDING PAYMENT'}</span>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className={`fee-status ${getStatusClass(fee.status)}`}>
-                                    {getStatusIcon(fee.status)}
-                                    <span>{fee.status === 'PUBLISHED' ? 'PENDING PAYMENT' : fee.status}</span>
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
 

@@ -247,6 +247,13 @@ button, input, select, textarea {
 }
 
 /* ── Dashboard content area ── */
+/* Adds top padding globally to account for the fixed navbar (52px mobile, 56px desktop) */
+.dashboard-container,
+.register-container,
+.page-container {
+    padding-top: 52px;
+}
+
 .dashboard-content {
     max-width: 1400px;
     margin: 0 auto;

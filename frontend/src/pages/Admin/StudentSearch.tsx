@@ -4,7 +4,10 @@ import { authService, classesService, studentsService, teachersService, adminRes
 import type { StudentWithDetails } from '../../types/student';
 import NavBar from '../../components/NavBar';
 import SortDropdown from '../../components/SortDropdown';
+import StudentCharts from '../../components/StudentCharts';
 import './StudentSearch.css';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 function StudentSearch() {
     const navigate = useNavigate();
@@ -22,6 +25,7 @@ function StudentSearch() {
     const [selectedClassId, setSelectedClassId] = useState('');
     const [searchMode, setSearchMode] = useState<'text' | 'class'>('text');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | 'newest' | 'oldest'>('asc');
+    const [selectedExamType, setSelectedExamType] = useState<string>('');
 
     useEffect(() => {
         fetchClasses();
@@ -182,6 +186,15 @@ function StudentSearch() {
         return sortOrder === 'asc' ? a.className.localeCompare(b.className, undefined, { numeric: true, sensitivity: 'base' }) : b.className.localeCompare(a.className, undefined, { numeric: true, sensitivity: 'base' });
     });
 
+    const getProfilePic = (person: any, type: 'student' | 'teacher') => {
+        const pic = type === 'student' ? person.profileImage || person.profilePicture : person.profilePicture || person.profileImage;
+        if (!pic) return null;
+        if (pic.startsWith('http') || pic.startsWith('data:')) return pic;
+        // Handle relative paths from server
+        const cleanPath = pic.startsWith('/') ? pic : `/${pic}`;
+        return `${API_URL}${cleanPath}`;
+    };
+
     return (
         <div className="search-container">
             <NavBar role="admin" userName={user?.name} onLogout={handleLogout} backTo="/admin/dashboard" backLabel="Dashboard" />
@@ -279,20 +292,28 @@ function StudentSearch() {
                             {teacherResults.length > 0 && (
                                 <div className="result-section">
                                     <h4 style={{ margin: '1rem 0 0.5rem', color: 'var(--accent-primary)' }}>Teachers ({teacherResults.length})</h4>
-                                    {sortedTeachers.map(teacher => (
-                                        <div
-                                            key={teacher._id}
-                                            className="result-item teacher-result"
-                                            onClick={() => setSelectedTeacher(teacher)}
-                                            style={{ borderLeft: '4px solid var(--accent-primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', marginBottom: '8px', cursor: 'pointer', borderRadius: '8px', backgroundColor: 'rgba(255,255,255,0.05)' }}
-                                        >
-                                            <div className="student-main" style={{ display: 'flex', flexDirection: 'column' }}>
-                                                <strong>{teacher.name} ({teacher.teacherId})</strong>
-                                                <span style={{ fontSize: '0.85rem', opacity: 0.8 }}>{teacher.subject || 'All Subjects'} | {teacher.assignedClassId ? `Class ${teacher.assignedClassId.className}-${teacher.assignedClassId.section}` : 'No Class Assigned'}</span>
+                                    {sortedTeachers.map(teacher => {
+                                        const pic = getProfilePic(teacher, 'teacher');
+                                        return (
+                                            <div
+                                                key={teacher._id}
+                                                className="result-item teacher-result"
+                                                onClick={() => setSelectedTeacher(teacher)}
+                                                style={{ borderLeft: '4px solid var(--accent-primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', marginBottom: '8px', cursor: 'pointer', borderRadius: '8px', backgroundColor: 'rgba(255,255,255,0.05)' }}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                                                    <div className="search-avatar teacher-avatar">
+                                                        {pic ? <img src={pic} alt={teacher.name} /> : (teacher.name?.charAt(0) || 'T')}
+                                                    </div>
+                                                    <div className="student-main" style={{ display: 'flex', flexDirection: 'column' }}>
+                                                        <strong>{teacher.name} ({teacher.teacherId})</strong>
+                                                        <span style={{ fontSize: '0.85rem', opacity: 0.8 }}>{teacher.subject || 'All Subjects'} | {teacher.assignedClassId ? `Class ${teacher.assignedClassId.className}-${teacher.assignedClassId.section}` : 'No Class Assigned'}</span>
+                                                    </div>
+                                                </div>
+                                                <button className="btn btn-sm btn-primary">View Profile</button>
                                             </div>
-                                            <button className="btn btn-sm btn-primary">View Profile</button>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             )}
 
@@ -303,14 +324,14 @@ function StudentSearch() {
                                         <div
                                             key={cls._id}
                                             className="result-item"
-                                            onClick={() => navigate('/admin/classes')}
+                                            onClick={() => navigate(`/admin/classes/${cls._id}`)}
                                             style={{ borderLeft: '4px solid #10b981', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', marginBottom: '8px', cursor: 'pointer', borderRadius: '8px', backgroundColor: 'rgba(255,255,255,0.05)' }}
                                         >
                                             <div className="student-main" style={{ display: 'flex', flexDirection: 'column' }}>
                                                 <strong>Class {cls.className} - {cls.section}</strong>
                                                 <span style={{ fontSize: '0.85rem', opacity: 0.8 }}>Academic Year: {cls.academicYear} | Class Teacher: {cls.classTeacherId?.name || 'Not assigned'}</span>
                                             </div>
-                                            <button className="btn btn-sm" style={{ backgroundColor: '#10b981', color: 'white' }}>Manage Classes</button>
+                                            <button className="btn btn-sm" style={{ backgroundColor: '#10b981', color: 'white' }}>View Class</button>
                                         </div>
                                     ))}
                                 </div>
@@ -319,23 +340,31 @@ function StudentSearch() {
                             {results.length > 0 && (
                                 <div className="result-section">
                                     <h4 style={{ margin: '1rem 0 0.5rem', color: 'var(--accent-secondary)' }}>Students ({results.length})</h4>
-                                    {sortedStudents.map(student => (
-                                        <div
-                                            key={student._id}
-                                            className="result-item"
-                                            onClick={() => setSelectedStudent(student)}
-                                        >
-                                            <div className="student-main">
-                                                <strong>{student.name || 'Unknown Student'} ({student.studentId || 'No ID'})</strong>
-                                                {student.classId ? (
-                                                    <span>Class {student.classId.className || 'N/A'} - {student.classId.section || 'N/A'}</span>
-                                                ) : (
-                                                    <span className="not-assigned">No Class Assigned</span>
-                                                )}
+                                    {sortedStudents.map(student => {
+                                        const pic = getProfilePic(student, 'student');
+                                        return (
+                                            <div
+                                                key={student._id}
+                                                className="result-item"
+                                                onClick={() => setSelectedStudent(student)}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                                                    <div className="search-avatar student-avatar">
+                                                        {pic ? <img src={pic} alt={student.name} /> : (student.name?.charAt(0) || 'S')}
+                                                    </div>
+                                                    <div className="student-main">
+                                                        <strong>{student.name || 'Unknown Student'} ({student.studentId || 'No ID'})</strong>
+                                                        {student.classId ? (
+                                                            <span>Class {student.classId.className || 'N/A'} - {student.classId.section || 'N/A'}</span>
+                                                        ) : (
+                                                            <span className="not-assigned">No Class Assigned</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <button className="btn btn-sm btn-secondary">View Profile</button>
                                             </div>
-                                            <button className="btn btn-sm btn-secondary">View Profile</button>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>
@@ -366,7 +395,13 @@ function StudentSearch() {
                                 </button>
                             </div>
 
-                            <div className="profile-header">
+                            <div className="profile-header" style={{ flexDirection: 'column', textAlign: 'center', padding: '30px 20px' }}>
+                                <div className="profile-avatar student-avatar-large">
+                                    {(() => {
+                                        const pic = getProfilePic(selectedStudent, 'student');
+                                        return pic ? <img src={pic} alt={selectedStudent.name} /> : (selectedStudent.name?.charAt(0) || 'S');
+                                    })()}
+                                </div>
                                 <div className="profile-main">
                                     <h2>{selectedStudent.name || 'Unknown'}</h2>
                                     <span className="id-badge">{selectedStudent.studentId || 'No ID'}</span>
@@ -382,37 +417,56 @@ function StudentSearch() {
                                 </div>
                             </div>
 
-                            <div className="profile-grid">
+                            <div className="profile-grid" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                 <div className="profile-card">
                                     <h3>Academic Performance</h3>
-                                    <div className="marks-table">
-                                        <table>
-                                            <thead>
-                                                <tr>
-                                                    <th>Subject</th>
-                                                    <th>Exam</th>
-                                                    <th>Marks</th>
-                                                    <th>%</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {selectedStudent.academicData.marks.length > 0 ? (
-                                                    selectedStudent.academicData.marks.map((m, idx) => (
-                                                        <tr key={idx}>
-                                                            <td>{m.subject}</td>
-                                                            <td>{m.examType}</td>
-                                                            <td>{m.marks}/{m.maxMarks}</td>
-                                                            <td className={m.percentage > 40 ? 'pass' : 'fail'}>
-                                                                {m.percentage}%
-                                                            </td>
-                                                        </tr>
-                                                    ))
-                                                ) : (
-                                                    <tr><td colSpan={4} style={{ textAlign: 'center', padding: '20px' }}>No marks recorded yet</td></tr>
-                                                )}
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                    {selectedStudent.academicData.marks.length > 0 ? (() => {
+                                        const allMarks = selectedStudent.academicData.marks;
+                                        const examTypes = Array.from(new Set(allMarks.map((m: any) => m.examType)));
+                                        const activeType = selectedExamType || examTypes[0] || '';
+                                        const filtered = allMarks.filter((m: any) => m.examType === activeType);
+                                        const totalMarks = filtered.reduce((s: number, m: any) => s + Number(m.marks), 0);
+                                        const totalMax = filtered.reduce((s: number, m: any) => s + Number(m.maxMarks), 0);
+                                        const avgPct = totalMax > 0 ? Number(((totalMarks / totalMax) * 100).toFixed(2)) : 0;
+                                        return (
+                                            <>
+                                                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                                                    {examTypes.map((type: string) => (
+                                                        <button key={type} onClick={() => setSelectedExamType(type)}
+                                                            style={{ padding: '6px 16px', borderRadius: '20px', border: activeType === type ? '2px solid var(--primary)' : '1px solid var(--border)', background: activeType === type ? 'var(--primary)' : 'var(--bg-page)', color: activeType === type ? 'white' : 'var(--text-main)', fontWeight: 600, fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s' }}>
+                                                            {type}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                <div className="marks-table">
+                                                    <table>
+                                                        <thead><tr><th>Subject</th><th>Marks</th><th>Max</th><th>%</th></tr></thead>
+                                                        <tbody>
+                                                            {filtered.map((m: any, idx: number) => {
+                                                                const pct = m.maxMarks > 0 ? Number(((m.marks / m.maxMarks) * 100).toFixed(2)) : 0;
+                                                                return (
+                                                                    <tr key={idx}>
+                                                                        <td>{m.subject}</td>
+                                                                        <td>{Number(Number(m.marks).toFixed(2))}</td>
+                                                                        <td>{m.maxMarks}</td>
+                                                                        <td className={pct > 40 ? 'pass' : 'fail'}>{pct}%</td>
+                                                                    </tr>
+                                                                );
+                                                            })}
+                                                            <tr style={{ fontWeight: 700, background: 'var(--bg-page)' }}>
+                                                                <td>Total / Avg</td>
+                                                                <td style={{ color: 'var(--primary)' }}>{Number(totalMarks.toFixed(2))}</td>
+                                                                <td>{totalMax}</td>
+                                                                <td className={avgPct >= 40 ? 'pass' : 'fail'}>{avgPct}%</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </>
+                                        );
+                                    })() : (
+                                        <p style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>No marks recorded yet</p>
+                                    )}
                                 </div>
 
                                 <div className="profile-card">
@@ -460,6 +514,14 @@ function StudentSearch() {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Performance Graphs */}
+                            <StudentCharts
+                                marks={selectedStudent.academicData?.marks || []}
+                                studentId={selectedStudent._id}
+                                classId={(selectedStudent.classId as any)?._id || selectedStudent.classId}
+                                studentName={selectedStudent.name}
+                            />
                         </div>
                     )}
 
@@ -488,7 +550,13 @@ function StudentSearch() {
                                 </button>
                             </div>
 
-                            <div className="profile-header" style={{ borderBottomColor: 'var(--accent-primary)' }}>
+                            <div className="profile-header" style={{ borderBottomColor: 'var(--accent-primary)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', textAlign: 'center', padding: '30px 20px' }}>
+                                <div className="profile-avatar teacher-avatar-large">
+                                    {(() => {
+                                        const pic = getProfilePic(selectedTeacher, 'teacher');
+                                        return pic ? <img src={pic} alt={selectedTeacher.name} /> : (selectedTeacher.name?.charAt(0) || 'T');
+                                    })()}
+                                </div>
                                 <div className="profile-main">
                                     <h2 style={{ color: 'var(--accent-primary)' }}>{selectedTeacher.name}</h2>
                                     <span className="id-badge" style={{ backgroundColor: 'var(--accent-primary)' }}>{selectedTeacher.teacherId}</span>
@@ -496,7 +564,7 @@ function StudentSearch() {
                                 </div>
                             </div>
 
-                            <div className="profile-grid">
+                            <div className="profile-grid" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                 <div className="profile-card">
                                     <h3>Employment Details</h3>
                                     <div className="stat-item">
