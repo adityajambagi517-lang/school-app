@@ -76,7 +76,9 @@ export class TeachersService {
         role: 'teacher',
         email: registerDto.email,
         name: registerDto.name,
+        phone: registerDto.phone,
         profilePicture: registerDto.profilePicture,
+        subject: registerDto.subject,
         referenceId: savedTeacher._id,
         referenceModel: 'Teacher',
         isActive: true,
@@ -166,7 +168,11 @@ export class TeachersService {
   }
 
   async findOne(id: string) {
-    return this.teacherModel.findById(id).populate('assignedClassId').exec();
+    const teacher = await this.teacherModel.findById(id).lean().exec();
+    if (!teacher) throw new NotFoundException('Teacher not found');
+
+    const assignedClasses = await this.classModel.find({ classTeacherId: teacher._id }).lean().exec();
+    return { ...teacher, assignedClasses };
   }
 
   async create(createTeacherDto: any) {
@@ -175,9 +181,23 @@ export class TeachersService {
   }
 
   async update(id: string, updateTeacherDto: any) {
-    return this.teacherModel
-      .findByIdAndUpdate(id, updateTeacherDto, { new: true })
-      .exec();
+    const teacher = await this.teacherModel.findByIdAndUpdate(id, updateTeacherDto, { new: true }).exec();
+    if (teacher) {
+      // Sync basic info to the linked user account
+      const syncFields: any = {};
+      if (updateTeacherDto.name) syncFields.name = updateTeacherDto.name;
+      if (updateTeacherDto.email) syncFields.email = updateTeacherDto.email;
+      if (updateTeacherDto.phone !== undefined) syncFields.phone = updateTeacherDto.phone;
+      if (updateTeacherDto.profilePicture) syncFields.profilePicture = updateTeacherDto.profilePicture;
+
+      if (Object.keys(syncFields).length > 0) {
+        await this.userModel.findOneAndUpdate(
+          { userId: teacher.teacherId, role: 'teacher' },
+          { $set: syncFields }
+        );
+      }
+    }
+    return teacher;
   }
 
   async updateProfileImage(id: string, imageUrl: string) {

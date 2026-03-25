@@ -1,4 +1,4 @@
-import { IsString, IsEmail, IsDateString, IsMongoId } from 'class-validator';
+import { IsString, IsEmail, IsDateString, IsMongoId, IsOptional } from 'class-validator';
 
 export class RegisterStudentDto {
   @IsString()
@@ -21,6 +21,10 @@ export class RegisterStudentDto {
 
   @IsString()
   guardianPhone: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
 
   @IsString()
   address: string;

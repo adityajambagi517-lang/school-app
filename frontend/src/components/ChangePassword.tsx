@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/api';
 import PasswordInput from './Common/PasswordInput';
+import NavBar from './NavBar';
 import '../pages/Teacher/Dashboard.css';
 
 interface ChangePasswordProps {
@@ -56,29 +57,17 @@ function ChangePassword({ role }: ChangePasswordProps) {
     };
 
     return (
-        <div className="dashboard-container">
-            <nav className="dashboard-nav">
-                <div className="nav-brand">
-                    <h2>School Management</h2>
-                    <span className={`badge badge-${role}`}>
-                        {role.charAt(0).toUpperCase() + role.slice(1)}
-                    </span>
-                </div>
-                <div className="nav-user">
-                    <button
-                        onClick={() => navigate(`/${role}/dashboard`)}
-                        className="btn btn-secondary"
-                    >
-                        ← Back
-                    </button>
-                    <span className="user-name">{user?.name}</span>
-                    <button onClick={handleLogout} className="btn btn-logout">
-                        Logout
-                    </button>
-                </div>
-            </nav>
-
-            <div className="dashboard-content">
+        <div className="dash-root">
+             <NavBar
+                role={role}
+                userName={user?.name || 'User'}
+                onLogout={handleLogout}
+                title="SREM School, Horti"
+                showBackRight={true}
+                backPath={`/${role}/dashboard`}
+            />
+            
+            <div className="dash-scroll">
                 <div className="page-header">
                     <h1>🔐 Change Password</h1>
                     <p>Update your account password</p>

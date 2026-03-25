@@ -88,6 +88,7 @@ export class StudentsService {
         role: 'student',
         email: registerDto.email,
         name: registerDto.name,
+        phone: registerDto.phone,
         profilePicture: registerDto.profileImage,
         referenceId: savedStudent._id,
         referenceModel: 'Student',
@@ -333,8 +334,20 @@ export class StudentsService {
       .findByIdAndUpdate(id, updateStudentDto, { new: true })
       .populate('classId', 'className section');
 
-    if (!student) {
-      throw new NotFoundException('Student not found');
+    if (student) {
+      // Sync basic info to the linked user account
+      const syncFields: any = {};
+      if (updateStudentDto.name) syncFields.name = updateStudentDto.name;
+      if (updateStudentDto.email) syncFields.email = updateStudentDto.email;
+      if (updateStudentDto.phone !== undefined) syncFields.phone = updateStudentDto.phone;
+      if (updateStudentDto.profileImage) syncFields.profilePicture = updateStudentDto.profileImage;
+
+      if (Object.keys(syncFields).length > 0) {
+        await this.userModel.findOneAndUpdate(
+          { userId: student.studentId, role: 'student' },
+          { $set: syncFields }
+        );
+      }
     }
     return student;
   }

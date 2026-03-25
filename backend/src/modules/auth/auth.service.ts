@@ -74,24 +74,26 @@ export class AuthService {
       const teacher = await this.teacherModel.findById(user.referenceId);
 
       if (teacher) {
+        userResponse.subject = teacher.subject;
         const assignedClasses = await this.classModel.find({ classTeacherId: teacher._id }).lean().exec();
         
         // Pass array of all classes for advanced components
         userResponse.assignedClasses = assignedClasses;
 
-        // Maintain backward compatibility with the Teacher Dashboard by elevating the primary class
+        // Calculate total students across all assigned classes
         if (assignedClasses.length > 0) {
+          const classIds = assignedClasses.map(c => c._id);
+          const studentCount = await this.studentModel.countDocuments({
+            classId: { $in: classIds },
+            isActive: true,
+          });
+          userResponse.totalStudents = studentCount;
+
+          // Maintain backward compatibility...
           const primaryClass = assignedClasses[0];
           userResponse.assignedClassId = primaryClass._id.toString();
           userResponse.className = primaryClass.className;
           userResponse.section = primaryClass.section;
-
-          // Get student count for this specific primary class
-          const studentCount = await this.studentModel.countDocuments({
-            classId: primaryClass._id,
-            isActive: true,
-          });
-          userResponse.totalStudents = studentCount;
         }
       }
     }
@@ -186,7 +188,8 @@ export class AuthService {
         const syncFields: any = {
           name: user.name,
           email: user.email,
-          phone: user.phone || ''
+          phone: user.phone || '',
+          subject: (user as any).subject || ''
         };
         
         if (user.profilePicture) {

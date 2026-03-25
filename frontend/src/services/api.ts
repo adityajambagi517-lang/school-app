@@ -218,6 +218,10 @@ export const studentsService = {
         const response = await api.delete(`/students/${id}`);
         return response.data;
     },
+    getAll: async (page = 1, limit = 100) => {
+        const response = await api.get('/students', { params: { page, limit } });
+        return response.data;
+    },
 };
 
 export const searchService = {

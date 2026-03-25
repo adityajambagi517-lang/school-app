@@ -250,7 +250,8 @@ button, input, select, textarea {
 /* Adds top padding globally to account for the fixed navbar (52px mobile, 56px desktop) */
 .dashboard-container,
 .register-container,
-.page-container {
+.page-container,
+.dash-root {
     padding-top: 52px;
 }
 

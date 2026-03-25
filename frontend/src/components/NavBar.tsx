@@ -17,18 +17,22 @@ interface NavBarProps {
     onLogout: () => void;
     backTo?: string;
     backLabel?: string;
+    showBackRight?: boolean;
+    backPath?: string;
     links?: NavLink[];
 }
 
 type SearchResult = { _id: string; name: string; type: 'student' | 'teacher' | 'class'; subtitle: string; refId: string };
 
 function NavBar({
-    title = 'SRPU School, Horti',
+    title = 'SREM School, Horti',
     role,
     userName,
     onLogout,
     backTo,
     backLabel = '← Back to Dashboard',
+    showBackRight = false,
+    backPath = '/',
     links = [],
 }: NavBarProps) {
     const [open, setOpen] = useState(false);
@@ -186,6 +190,20 @@ function NavBar({
                     >
                         {theme === 'light' ? '🌙' : '☀️'}
                     </button>
+                    
+                    {showBackRight && (
+                        <button 
+                            className="navbar-back-btn-right" 
+                            onClick={() => navigate(backPath)}
+                            title="Go Back"
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M9 14l-4-4 4-4" />
+                                <path d="M5 10h11a4 4 0 1 1 0 8h-1" />
+                            </svg>
+                            <span className="desktop-only" style={{ marginLeft: '4px', fontSize: '12px', fontWeight: 600 }}>Back</span>
+                        </button>
+                    )}
 
                     <button
                         className={`hamburger-btn${open ? ' open' : ''}`}

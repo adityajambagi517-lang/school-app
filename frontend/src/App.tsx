@@ -5,6 +5,7 @@ import ManageNotices from './pages/Admin/ManageNotices';
 import RegisterStudent from './pages/Admin/RegisterStudent';
 import RegisterTeacher from './pages/Admin/RegisterTeacher';
 import TeachersOverview from './pages/Admin/TeachersOverview';
+import StudentsOverview from './pages/Admin/StudentsOverview';
 import ManageClasses from './pages/Admin/ManageClasses';
 import StudentSearch from './pages/Admin/StudentSearch';
 import ViewApprovals from './pages/Admin/ViewApprovals';
@@ -73,6 +74,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['admin']}>
               <TeachersOverview />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/students"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <StudentsOverview />
             </ProtectedRoute>
           }
         />

@@ -101,6 +101,7 @@ function RegisterStudent() {
                 guardianName: formData.guardianName,
                 guardianPhone: formData.guardianPhone,
                 address: formData.address,
+                phone: formData.phone,
                 classId: formData.classId,
                 password: formData.password,
             });

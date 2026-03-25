@@ -24,6 +24,11 @@ function UserManagement() {
     const [success, setSuccess] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
+        admin: true,
+        teacher: false,
+        student: false
+    });
     const [newUser, setNewUser] = useState({
         userId: '',
         password: '',
@@ -115,11 +120,22 @@ function UserManagement() {
         navigate('/login');
     };
 
+    const toggleGroup = (group: string) => {
+        setExpandedGroups(prev => ({
+            ...prev,
+            [group]: !prev[group]
+        }));
+    };
+
     const filteredUsers = users.filter(user => 
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.userId.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const admins = filteredUsers.filter(u => u.role === 'admin');
+    const teachers = filteredUsers.filter(u => u.role === 'teacher');
+    const students = filteredUsers.filter(u => u.role === 'student');
 
     return (
         <div className="admin-container">
@@ -149,7 +165,7 @@ function UserManagement() {
                             className="btn btn-primary"
                             onClick={() => setShowCreateModal(true)}
                         >
-                            ➕ Create User
+                            ➕ Create Admin
                         </button>
                     </div>
                 </div>
@@ -157,24 +173,24 @@ function UserManagement() {
                 {error && <div className="alert alert-error">❌ {error}</div>}
                 {success && <div className="alert alert-success">✅ {success}</div>}
 
-                {/* Create User Modal */}
+                {/* Create Admin Modal */}
                 {showCreateModal && (
                     <div className="modal-overlay" onClick={(e) => { if(e.target === e.currentTarget) setShowCreateModal(false); }}>
                         <div className="modal-content">
-                            <h2>Create New User</h2>
+                            <h2>Create New Administrator</h2>
                             <form onSubmit={handleCreateUser} className="form-grid">
                                 <div className="form-group">
-                                    <label>User ID *</label>
+                                    <label>Admin User ID *</label>
                                     <input 
                                         type="text" 
                                         required 
                                         value={newUser.userId}
                                         onChange={e => setNewUser({...newUser, userId: e.target.value})}
-                                        placeholder="e.g. admin2"
+                                        placeholder="e.g. admin_jane"
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label>Name *</label>
+                                    <label>Full Name *</label>
                                     <input 
                                         type="text" 
                                         required 
@@ -202,102 +218,139 @@ function UserManagement() {
                                 </div>
                                 <div className="form-group">
                                     <PasswordInput
-                                        label="Password *"
+                                        label="Login Password *"
                                         required
                                         value={newUser.password}
                                         onChange={e => setNewUser({...newUser, password: e.target.value})}
                                     />
                                 </div>
-                                <div className="form-group">
-                                    <label>Role</label>
-                                    <select 
-                                        value={newUser.role}
-                                        onChange={e => setNewUser({...newUser, role: e.target.value})}
-                                    >
-                                        <option value="admin">Administrator</option>
-                                        <option value="teacher">Teacher</option>
-                                        <option value="student">Student</option>
-                                    </select>
-                                </div>
                                 <div className="modal-actions">
                                     <button type="button" className="btn btn-secondary" onClick={() => setShowCreateModal(false)}>Cancel</button>
-                                    <button type="submit" className="btn btn-primary">Create User</button>
+                                    <button type="submit" className="btn btn-primary">Complete Creation</button>
                                 </div>
                             </form>
                         </div>
                     </div>
                 )}
 
-                <div className="users-table-container">
+                <div className="user-groups-container">
                     {loading ? (
                         <div className="loading-state">Loading users...</div>
                     ) : (
-                        <table className="users-table">
-                            <thead>
-                                <tr>
-                                    <th>User ID</th>
-                                    <th>Name</th>
-                                    <th>Contact</th>
-                                    <th>Role</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredUsers.map(user => (
-                                    <tr key={user._id}>
-                                        <td><strong>{user.userId}</strong></td>
-                                        <td>{user.name}</td>
-                                        <td>
-                                            <div className="contact-info">
-                                                <span className="contact-email">{user.email}</span>
-                                                {user.phone && <span className="contact-phone">{user.phone}</span>}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span className={`role-badge role-${user.role}`}>
-                                                {user.role}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span className={`status-badge status-${user.isActive ? 'active' : 'inactive'}`}>
-                                                {user.isActive ? 'Active' : 'Inactive'}
-                                            </span>
-                                        </td>
-                                        <td className="actions-cell">
-                                            <button 
-                                                onClick={() => handleResetPassword(user._id, user.name)}
-                                                className="btn-action btn-reset"
-                                                title="Reset to default password"
-                                            >
-                                                🔑 Reset
-                                            </button>
-                                            <button 
-                                                onClick={() => handleToggleStatus(user._id, user.name, user.isActive)}
-                                                className={`btn-action ${user.isActive ? 'btn-deactivate' : 'btn-activate'}`}
-                                            >
-                                                {user.isActive ? '🚫 Deactivate' : '✔️ Activate'}
-                                            </button>
-                                            <button 
-                                                onClick={() => handleDeleteUser(user._id, user.name)}
-                                                className="btn-action btn-delete"
-                                                title="Delete User Permanently"
-                                            >
-                                                🗑️ Delete
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {filteredUsers.length === 0 && (
-                                    <tr>
-                                        <td colSpan={6} className="empty-state">No users found matching your search.</td>
-                                    </tr>
+                        <>
+                            {/* Administrators Group */}
+                            <div className={`user-group ${expandedGroups.admin ? 'expanded' : ''}`}>
+                                <div className="group-header" onClick={() => toggleGroup('admin')}>
+                                    <h3>👨‍💼 Administrators ({admins.length})</h3>
+                                    <span className="expand-icon">{expandedGroups.admin ? '−' : '+'}</span>
+                                </div>
+                                {expandedGroups.admin && (
+                                    <div className="group-content">
+                                        <UserTable users={admins} onResetPassword={handleResetPassword} onToggleStatus={handleToggleStatus} onDeleteUser={handleDeleteUser} />
+                                    </div>
                                 )}
-                            </tbody>
-                        </table>
+                            </div>
+
+                            {/* Teachers Group */}
+                            <div className={`user-group ${expandedGroups.teacher ? 'expanded' : ''}`}>
+                                <div className="group-header" onClick={() => toggleGroup('teacher')}>
+                                    <h3>👨‍🏫 Teachers ({teachers.length})</h3>
+                                    <span className="expand-icon">{expandedGroups.teacher ? '−' : '+'}</span>
+                                </div>
+                                {expandedGroups.teacher && (
+                                    <div className="group-content">
+                                        <UserTable users={teachers} onResetPassword={handleResetPassword} onToggleStatus={handleToggleStatus} onDeleteUser={handleDeleteUser} />
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Students Group */}
+                            <div className={`user-group ${expandedGroups.student ? 'expanded' : ''}`}>
+                                <div className="group-header" onClick={() => toggleGroup('student')}>
+                                    <h3>👥 Students ({students.length})</h3>
+                                    <span className="expand-icon">{expandedGroups.student ? '−' : '+'}</span>
+                                </div>
+                                {expandedGroups.student && (
+                                    <div className="group-content">
+                                        <UserTable users={students} onResetPassword={handleResetPassword} onToggleStatus={handleToggleStatus} onDeleteUser={handleDeleteUser} />
+                                    </div>
+                                )}
+                            </div>
+
+                            {filteredUsers.length === 0 && (
+                                <div className="empty-state">No users found matching your search.</div>
+                            )}
+                        </>
                     )}
                 </div>
             </div>
+        </div>
+    );
+}
+
+// Sub-component for User Table
+function UserTable({ users, onResetPassword, onToggleStatus, onDeleteUser }: { 
+    users: User[], 
+    onResetPassword: (id: string, name: string) => void, 
+    onToggleStatus: (id: string, name: string, status: boolean) => void,
+    onDeleteUser: (id: string, name: string) => void
+}) {
+    if (users.length === 0) return <div className="empty-group">No users in this category.</div>;
+    
+    return (
+        <div className="users-table-container">
+            <table className="users-table">
+                <thead>
+                    <tr>
+                        <th>User ID</th>
+                        <th>Name</th>
+                        <th>Contact</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {users.map(user => (
+                        <tr key={user._id}>
+                            <td><strong>{user.userId}</strong></td>
+                            <td>{user.name}</td>
+                            <td>
+                                <div className="contact-info">
+                                    <span className="contact-email">{user.email}</span>
+                                    {user.phone && <span className="contact-phone">{user.phone}</span>}
+                                </div>
+                            </td>
+                            <td>
+                                <span className={`status-badge status-${user.isActive ? 'active' : 'inactive'}`}>
+                                    {user.isActive ? 'Active' : 'Inactive'}
+                                </span>
+                            </td>
+                            <td className="actions-cell">
+                                <button 
+                                    onClick={() => onResetPassword(user._id, user.name)}
+                                    className="btn-action btn-reset"
+                                    title="Reset to default password"
+                                >
+                                    🔑 Reset
+                                </button>
+                                <button 
+                                    onClick={() => onToggleStatus(user._id, user.name, user.isActive)}
+                                    className={`btn-action ${user.isActive ? 'btn-deactivate' : 'btn-activate'}`}
+                                >
+                                    {user.isActive ? '🚫 Deactivate' : '✔️ Activate'}
+                                </button>
+                                <button 
+                                    onClick={() => onDeleteUser(user._id, user.name)}
+                                    className="btn-action btn-delete"
+                                    title="Delete User Permanently"
+                                >
+                                    🗑️ Delete
+                                </button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
     );
 }

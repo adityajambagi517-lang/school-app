@@ -18,7 +18,8 @@ function Profile() {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
-        phone: ''
+        phone: '',
+        subject: ''
     });
 
     // Camera/Upload state
@@ -37,7 +38,8 @@ function Profile() {
         setFormData({
             name: currentUser.name || '',
             email: currentUser.email || '',
-            phone: currentUser.phone || ''
+            phone: currentUser.phone || '',
+            subject: currentUser.subject || ''
         });
         setLoading(false);
     }, [navigate]);
@@ -55,9 +57,10 @@ function Profile() {
 
         // Detect what changed
         const changed = (
-            formData.name  !== (user?.name  || '') ||
-            formData.email !== (user?.email || '') ||
-            formData.phone !== (user?.phone || '')
+            formData.name    !== (user?.name    || '') ||
+            formData.email   !== (user?.email   || '') ||
+            formData.phone   !== (user?.phone   || '') ||
+            formData.subject !== (user?.subject || '')
         );
 
         if (!changed) {
@@ -238,16 +241,31 @@ function Profile() {
                             </div>
 
                             <div className="form-group">
-                                <label>Phone Number</label>
+                                <label>Phone Number{user?.role === 'teacher' && ' *'}</label>
                                 <input 
                                     type="tel" 
                                     name="phone" 
                                     value={formData.phone} 
                                     onChange={handleInputChange} 
                                     placeholder="e.g. 9999999999"
+                                    required={user?.role === 'teacher'}
                                     disabled={user?.role === 'student'}
                                 />
                             </div>
+
+                            {user?.role === 'teacher' && (
+                                <div className="form-group">
+                                    <label>Subject Taught *</label>
+                                    <input 
+                                        type="text" 
+                                        name="subject" 
+                                        value={formData.subject} 
+                                        onChange={handleInputChange} 
+                                        placeholder="e.g. Mathematics"
+                                        required
+                                    />
+                                </div>
+                            )}
 
                             <button type="submit" className="btn btn-primary btn-save" disabled={saving || user?.role === 'student'}>
                                 {saving ? 'Saving...' : '💾 Save Changes'}

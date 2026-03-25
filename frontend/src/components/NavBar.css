@@ -397,14 +397,18 @@
 
 .drawer-theme-btn:active { transform: scale(0.98); }
 
-/* ── Desktop ── */
-@media (min-width: 768px) {
+/* ── Desktop (Very Large Screens) ── */
+@media (min-width: 1200px) {
     .navbar {
-        height: 56px;
-        padding: 0 28px;
+        height: 64px;
+        padding: 0 40px;
+        background: var(--bg-nav);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border);
     }
 
-    .navbar-brand h2 { font-size: 16px; max-width: 220px; }
+    .navbar-brand h2 { font-size: 18px; max-width: 300px; }
 
     .hamburger-btn { display: none; }
 
@@ -426,26 +430,39 @@
     .nav-drawer.drawer-open { transform: none; }
 
     .drawer-header { display: none; }
-    .drawer-links  { display: none; }
+    .drawer-links  { display: none; } /* On desktop, we might want links in navbar, but current design uses drawer for all links */
 
     .drawer-footer {
         border: none;
         padding: 0;
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 16px;
     }
 
     .drawer-logout-btn {
-        padding: 8px 14px;
-        font-size: 13px;
-        min-height: 36px;
+        padding: 0 18px;
+        font-size: 14px;
+        height: 40px;
         width: auto;
         background: linear-gradient(135deg, #fc8181, var(--danger));
         color: white;
         border: none;
-        border-radius: var(--radius-sm);
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(245,101,101,0.2);
     }
+
+    .drawer-theme-btn {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        justify-content: center;
+        border-radius: var(--radius-md);
+    }
+    .drawer-theme-btn span:last-child { display: none; } /* Hide "Dark Mode" text on desktop */
 }
 .user-avatar-small {
     width: 32px;

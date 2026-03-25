@@ -105,16 +105,19 @@ function StudentDashboard() {
                 onLogout={handleLogout}
                 links={[
                     ...actions.map(a => ({ icon: '→', label: a.label, path: a.path })),
-                    { icon: '🛠️', label: 'Report a Problem', path: '/student/report-problem' },
                 ]}
             />
 
             <div className="dash-scroll">
                 {/* Hero */}
                 <div className="dash-hero">
-                    <p className="hero-greeting">{getGreeting()} 📚</p>
-                    <h1 className="hero-name">{user?.name?.split(' ')[0] || 'Student'}</h1>
-                    <span className="hero-role-badge">Student</span>
+                    <div className="hero-logo-box">
+                        <img src="/logo.jpg" alt="Logo" className="hero-logo" />
+                    </div>
+                    <div className="hero-content">
+                        <p className="hero-greeting">{getGreeting()} 📚</p>
+                        <h1 className="hero-name">{user?.name?.split(' ')[0] || 'Student'}</h1>
+                    </div>
                 </div>
 
                 {/* Stats */}
@@ -176,7 +179,7 @@ function StudentDashboard() {
                     </div>
                     <div className="info-row">
                         <span className="info-row-label">Student ID</span>
-                        <span className="info-row-value">{user?.referenceId || '—'}</span>
+                        <span className="info-row-value">{user?.userId || '—'}</span>
                     </div>
                     <div className="info-row">
                         <span className="info-row-label">Email</span>

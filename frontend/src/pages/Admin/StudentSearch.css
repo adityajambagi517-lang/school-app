@@ -2,6 +2,7 @@
 @import '../../styles/mobile.css';
 
 .search-container {
+    padding-top: 80px; /* Space for the fixed NavBar */
     min-height: 100vh;
     min-height: 100dvh;
     background: linear-gradient(160deg, var(--bg-page) 0%, var(--bg-page-2) 100%);

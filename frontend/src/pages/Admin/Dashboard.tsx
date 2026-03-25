@@ -57,6 +57,7 @@ function AdminDashboard() {
         { icon: <UserPlus size={22} color="white" />, label: 'Add Student', path: '/admin/register-student', style: 't-indigo' },
         { icon: <BookUser size={22} color="white" />, label: 'Add Teacher', path: '/admin/register-teacher', style: 't-green' },
         { icon: <Users size={22} color="white" />, label: 'Teachers', path: '/admin/teachers', style: 't-teal' },
+        { icon: <Users size={22} color="white" />, label: 'Students', path: '/admin/students', style: 't-indigo' },
         { icon: <School size={22} color="white" />, label: 'Classes', path: '/admin/classes', style: 't-orange' },
         { icon: <CheckSquare size={22} color="white" />, label: 'Approvals', path: '/admin/approvals', style: 't-red', badge: pendingApprovalsCount > 0 ? pendingApprovalsCount : undefined },
         { icon: <DollarSign size={22} color="white" />, label: 'Fee Approvals', path: '/admin/fee-approvals', style: 't-lime' },
@@ -64,7 +65,6 @@ function AdminDashboard() {
         { icon: <Megaphone size={22} color="white" />, label: 'Notices', path: '/admin/notices', style: 't-violet' },
         { icon: <Users size={22} color="white" />, label: 'User Mgmt', path: '/admin/users', style: 't-indigo' },
         { icon: <ShieldCheck size={22} color="white" />, label: 'Password', path: '/admin/change-password', style: 't-red' },
-        { icon: <DollarSign size={22} color="white" />, label: 'Fees', path: '/admin/fee-approvals', style: 't-lime' },
         { icon: <HeadphonesIcon size={22} color="white" />, label: 'Support', path: '/admin/support', style: 't-teal' },
     ];
 
@@ -76,6 +76,7 @@ function AdminDashboard() {
                 onLogout={handleLogout}
                 links={[
                     { icon: '📝', label: 'Register Student', path: '/admin/register-student' },
+                    { icon: '👥', label: 'View Students', path: '/admin/students' },
                     { icon: '👨‍🏫', label: 'View Teachers', path: '/admin/teachers' },
                     { icon: '➕', label: 'Register Teacher', path: '/admin/register-teacher' },
                     { icon: '🏫', label: 'Manage Classes', path: '/admin/classes' },
@@ -92,9 +93,13 @@ function AdminDashboard() {
             <div className="dash-scroll">
                 {/* Hero */}
                 <div className="dash-hero">
-                    <p className="hero-greeting">{getGreeting()} 👋</p>
-                    <h1 className="hero-name">{user?.name?.split(' ')[0] || 'Admin'}</h1>
-                    <span className="hero-role-badge">Administrator</span>
+                    <div className="hero-logo-box">
+                        <img src="/logo.jpg" alt="Logo" className="hero-logo" />
+                    </div>
+                    <div className="hero-content">
+                        <p className="hero-greeting">{getGreeting()} 👋</p>
+                        <h1 className="hero-name">{user?.name?.split(' ')[0] || 'Admin'}</h1>
+                    </div>
                 </div>
 
                 {/* Floating stat pills */}

@@ -2,6 +2,7 @@
 @import '../../styles/mobile.css';
 
 .approvals-container {
+    padding-top: 80px; /* Space for fixed NavBar */
     min-height: 100vh;
     min-height: 100dvh;
     background: linear-gradient(160deg, #f0f4ff 0%, #e8ecf8 100%);

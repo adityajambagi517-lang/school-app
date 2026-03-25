@@ -21,7 +21,11 @@ interface Teacher {
     _id: string;
     name: string;
     teacherId: string;
-    assignedClassId?: string;
+    assignedClasses?: Array<{
+        _id: string;
+        className: string;
+        section: string;
+    }>;
 }
 
 interface ClassFormData {
@@ -281,28 +285,24 @@ function ManageClasses() {
                                     </div>
                                     <select
                                         value=""
-                                        onChange={(e) => handleAssignTeacher(cls._id, e.target.value)}
+                                        onClick={(e) => e.stopPropagation()}
+                                        onChange={(e) => {
+                                            e.stopPropagation();
+                                            handleAssignTeacher(cls._id, e.target.value);
+                                        }}
                                         disabled={assigningTeacher === cls._id}
                                         className="assign-teacher-select"
                                         title="Assign or change teacher"
                                     >
                                         <option value="">{cls.classTeacherId?.name ? 'Change...' : 'Assign Teacher'}</option>
-                                        {teachers.map(teacher => {
-                                            const isCurrentlyAssigned = teacher.assignedClassId &&
-                                                (typeof teacher.assignedClassId === 'string'
-                                                    ? teacher.assignedClassId !== cls._id
-                                                    : (teacher.assignedClassId as any)._id !== cls._id);
-
-                                            return (
-                                                <option
-                                                    key={teacher._id}
-                                                    value={teacher._id}
-                                                    disabled={Boolean(isCurrentlyAssigned)}
-                                                >
-                                                    {teacher.name} {isCurrentlyAssigned ? '(Assigned elsewhere)' : ''}
-                                                </option>
-                                            );
-                                        })}
+                                        {teachers.map(teacher => (
+                                            <option
+                                                key={teacher._id}
+                                                value={teacher._id}
+                                            >
+                                                {teacher.name}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
                             </div>

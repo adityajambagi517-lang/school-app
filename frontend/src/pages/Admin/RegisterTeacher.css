@@ -2,6 +2,7 @@
 @import '../../styles/mobile.css';
 
 .register-container {
+    padding-top: 80px; /* Space for fixed NavBar */
     min-height: 100vh;
     min-height: 100dvh;
     background: linear-gradient(160deg, #f0fff4 0%, #c6f6d5 100%);

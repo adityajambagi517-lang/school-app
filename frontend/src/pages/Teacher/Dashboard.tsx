@@ -71,9 +71,13 @@ function TeacherDashboard() {
             <div className="dash-scroll">
                 {/* Hero */}
                 <div className="dash-hero">
-                    <p className="hero-greeting">{getGreeting()} 🎓</p>
-                    <h1 className="hero-name">{(user as any)?.name?.split(' ')[0] || 'Teacher'}</h1>
-                    <span className="hero-role-badge">Teacher</span>
+                    <div className="hero-logo-box">
+                        <img src="/logo.jpg" alt="Logo" className="hero-logo" />
+                    </div>
+                    <div className="hero-content">
+                        <p className="hero-greeting">{getGreeting()} 🎓</p>
+                        <h1 className="hero-name">{(user as any)?.name?.split(' ')[0] || 'Teacher'}</h1>
+                    </div>
                 </div>
 
                 {/* Stats */}
@@ -94,21 +98,27 @@ function TeacherDashboard() {
                             </div>
                         </div>
                         <div className="stat-pill-value">
-                            {(user as any)?.className ? `${(user as any).className}-${(user as any).section}` : '—'}
+                            {(user as any)?.assignedClasses?.length > 1 
+                                ? `${(user as any).assignedClasses.length} Classes`
+                                : (user as any)?.className ? `${(user as any).className}-${(user as any).section}` : '—'}
                         </div>
                         <div className="stat-pill-label">My Class</div>
                     </div>
                 </div>
 
-                {/* Class banner if assigned */}
-                {(user as any)?.assignedClassId && (
-                    <div className="class-feature-card">
-                        <div style={{ fontSize: 36 }}>🏫</div>
-                        <div className="class-feature-text">
-                            <h3>Assigned Class</h3>
-                            <p>{(user as any).className} — {(user as any).section}</p>
-                            <small>{(user as any).totalStudents || 0} students enrolled</small>
-                        </div>
+                {/* Class banner(s) if assigned */}
+                {(user as any)?.assignedClasses && (user as any).assignedClasses.length > 0 && (
+                    <div className="class-cards-container" style={{ display: 'flex', flexDirection: 'column', gap: '12px', margin: '0 20px 20px' }}>
+                        {(user as any).assignedClasses.map((cls: any, i: number) => (
+                            <div key={i} className="class-feature-card" style={{ margin: 0 }}>
+                                <div style={{ fontSize: 36 }}>🏫</div>
+                                <div className="class-feature-text">
+                                    <h3>Assigned Class</h3>
+                                    <p>{cls.className} — {cls.section}</p>
+                                    <small>Academic Year: {cls.academicYear || '—'}</small>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 )}
 
@@ -135,7 +145,7 @@ function TeacherDashboard() {
                 <div className="activity-card">
                     <div className="info-row">
                         <span className="info-row-label">Teacher ID</span>
-                        <span className="info-row-value">{(user as any)?.referenceId || '—'}</span>
+                        <span className="info-row-value">{(user as any)?.userId || '—'}</span>
                     </div>
                     <div className="info-row">
                         <span className="info-row-label">Email</span>

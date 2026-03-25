@@ -2,6 +2,7 @@
 @import '../../styles/mobile.css';
 
 .dashboard-container {
+    padding-top: 80px; /* Space for fixed NavBar */
     min-height: 100vh;
     background: linear-gradient(160deg, var(--bg-page) 0%, var(--bg-page-2) 100%);
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { authService, teachersService, adminResetService, studentsService } from '../../services/api';
+import { authService, teachersService, adminResetService, classesService } from '../../services/api';
 import api from '../../services/api';
 import NavBar from '../../components/NavBar';
 
@@ -14,7 +14,8 @@ function TeacherDetailPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [teacher, setTeacher] = useState<any>(null);
-    const [students, setStudents] = useState<any[]>([]);
+    const [allClasses, setAllClasses] = useState<any[]>([]);
+    const [assigningLoading, setAssigningLoading] = useState(false);
 
     const handleLogout = () => { authService.logout(); navigate('/login'); };
 
@@ -31,14 +32,11 @@ function TeacherDetailPage() {
             const found = statsRes.data.find((t: any) => t._id === id);
             setTeacher(found || null);
 
-            // Fetch students assigned to teacher's classes
-            if (found && found.assignedClasses && found.assignedClasses.length > 0) {
-                const classId = found.assignedClasses[0]._id;
-                try {
-                    const studs = await studentsService.getByClass(classId);
-                    setStudents(studs);
-                } catch { setStudents([]); }
-            }
+            // Also fetch all classes for assignment dropdown
+            try {
+                const ac = await classesService.getAll();
+                setAllClasses(ac || []);
+            } catch { /* ignore */ }
         } catch (err: any) {
             // fallback to simple getById
             try {
@@ -69,6 +67,33 @@ function TeacherDetailPage() {
             alert('✅ Password reset to "password123"');
         } catch (err: any) {
             setError(err.response?.data?.message || 'Reset failed');
+        }
+    };
+
+    const handleAssignClass = async (classId: string) => {
+        if (!classId) return;
+        try {
+            setAssigningLoading(true);
+            await classesService.assignTeacher(classId, id!);
+            await fetchData();
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Assignment failed');
+        } finally {
+            setAssigningLoading(false);
+        }
+    };
+
+    const handleRemoveClass = async (e: React.MouseEvent, classId: string) => {
+        e.stopPropagation();
+        if (!window.confirm('Remove teacher from this class?')) return;
+        try {
+            setAssigningLoading(true);
+            await classesService.assignTeacher(classId, '');
+            await fetchData();
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Removal failed');
+        } finally {
+            setAssigningLoading(false);
         }
     };
 
@@ -150,25 +175,67 @@ function TeacherDetailPage() {
 
                     {/* Assigned Classes */}
                     <div style={{ background: 'var(--bg-card)', borderRadius: '14px', padding: '20px', boxShadow: 'var(--shadow-sm)' }}>
-                        <h3 style={{ margin: '0 0 14px', fontSize: '16px', color: 'var(--text-main)' }}>🏫 Assigned Classes</h3>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                            <h3 style={{ margin: 0, fontSize: '16px', color: 'var(--text-main)' }}>🏫 Assigned Classes</h3>
+                            <span style={{ fontSize: '12px', background: 'var(--bg-page)', padding: '2px 8px', borderRadius: '10px', color: 'var(--text-muted)' }}>
+                                {teacher.assignedClasses?.length || 0} classes
+                            </span>
+                        </div>
+
                         {(!teacher.assignedClasses || teacher.assignedClasses.length === 0) ? (
-                            <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px 0' }}>No classes assigned</p>
+                            <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px 0', border: '1px dashed var(--border)', borderRadius: '12px' }}>No classes assigned</p>
                         ) : (
-                            teacher.assignedClasses.map((cls: any, i: number) => (
-                                <div key={i}
-                                    onClick={() => navigate(`/admin/classes/${cls._id}`)}
-                                    style={{ padding: '10px 12px', marginBottom: '8px', background: 'var(--bg-page)', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', transition: 'opacity 0.2s' }}
-                                    onMouseEnter={e => (e.currentTarget.style.opacity = '0.8')}
-                                    onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-                                >
-                                    <div>
-                                        <div style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '15px' }}>Class {cls.className} - {cls.section}</div>
-                                        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Academic Year: {cls.academicYear}</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                {teacher.assignedClasses.map((cls: any, i: number) => (
+                                    <div key={i}
+                                        onClick={() => navigate(`/admin/classes/${cls._id}`)}
+                                        style={{ padding: '12px', background: 'var(--bg-page)', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s', border: '1px solid var(--border)' }}
+                                        onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--primary)')}
+                                        onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}
+                                    >
+                                        <div>
+                                            <div style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '15px' }}>Class {cls.className} - {cls.section}</div>
+                                            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Academic Year: {cls.academicYear}</div>
+                                        </div>
+                                        <button 
+                                            onClick={(e) => handleRemoveClass(e, cls._id)}
+                                            style={{ background: 'none', border: 'none', color: 'var(--danger)', padding: '6px', cursor: 'pointer', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.1)')}
+                                            onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                                            title="Remove teacher from this class"
+                                            disabled={assigningLoading}
+                                        >
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                            </svg>
+                                        </button>
                                     </div>
-                                    <span style={{ color: 'var(--primary)', fontSize: '16px' }}>›</span>
-                                </div>
-                            ))
+                                ))}
+                            </div>
                         )}
+
+                        <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
+                            <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: 600 }}>Assign to Another Class:</label>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <select 
+                                    className="form-control"
+                                    onChange={(e) => handleAssignClass(e.target.value)}
+                                    value=""
+                                    disabled={assigningLoading}
+                                    style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid var(--border)', background: 'var(--bg-page)', color: 'var(--text-main)', fontSize: '14px' }}
+                                >
+                                    <option value="">-- Choose Class --</option>
+                                    {allClasses
+                                        .filter(c => !teacher.assignedClasses?.some((ac: any) => ac._id === c._id))
+                                        .map(c => (
+                                            <option key={c._id} value={c._id}>
+                                                {c.className} - {c.section} ({c.academicYear}) {c.classTeacherId?.name ? `(Curr: ${c.classTeacherId.name})` : '(No Teacher)'}
+                                            </option>
+                                        ))
+                                    }
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Students in first class */}

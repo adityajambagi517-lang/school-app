@@ -36,6 +36,9 @@ export class User {
   @Prop({ default: true })
   isActive: boolean;
 
+  @Prop({ required: false })
+  subject?: string;
+
   @Prop({ type: mongoose.Schema.Types.ObjectId, refPath: 'referenceModel' })
   referenceId: Types.ObjectId;
 
