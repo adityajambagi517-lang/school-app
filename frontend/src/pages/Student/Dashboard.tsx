@@ -122,7 +122,7 @@ function StudentDashboard() {
 
                 {/* Stats */}
                 <div className="stats-row">
-                    <div className="stat-pill pill-orange">
+                    <div className="stat-pill pill-orange" style={{ cursor: 'pointer' }} onClick={() => navigate('/student/marks')}>
                         <div className="stat-pill-top">
                             <div className="stat-pill-icon">
                                 <TrendingUp size={18} />
@@ -133,7 +133,7 @@ function StudentDashboard() {
                         </div>
                         <div className="stat-pill-label">Avg Score</div>
                     </div>
-                    <div className="stat-pill pill-green">
+                    <div className="stat-pill pill-green" style={{ cursor: 'pointer' }} onClick={() => navigate('/student/attendance')}>
                         <div className="stat-pill-top">
                             <div className="stat-pill-icon">
                                 <CheckSquare size={18} />

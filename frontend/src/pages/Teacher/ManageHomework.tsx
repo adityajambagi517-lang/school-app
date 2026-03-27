@@ -28,6 +28,10 @@ interface Homework {
 function ManageHomework() {
     const navigate = useNavigate();
     const user = authService.getCurrentUser();
+    const assignedClasses = (user as any)?.assignedClasses || [];
+    const [activeTab, setActiveTab] = useState<string>(
+        assignedClasses.length > 0 ? assignedClasses[0]._id : ''
+    );
     const [subjects, setSubjects] = useState<Subject[]>([]);
     const [students, setStudents] = useState<Student[]>([]);
     const [homework, setHomework] = useState<Homework[]>([]);
@@ -45,28 +49,34 @@ function ManageHomework() {
     });
 
     useEffect(() => {
-        loadData();
-    }, []);
+        if (activeTab) {
+            loadData(activeTab);
+        } else {
+            setLoading(false);
+        }
+    }, [activeTab]);
 
-    const loadData = async () => {
+    const loadData = async (classId: string) => {
+        setLoading(true);
         try {
-            if (!user?.assignedClassId) {
-                setMessage({ type: 'error', text: 'No class assigned to your account. Please contact admin.' });
-                setLoading(false);
-                return;
-            }
-
             const [subjectsData, studentsData, homeworkData] = await Promise.all([
                 subjectsService.getAll(),
-                studentsService.getByClass(user.assignedClassId),
-                homeworkService.getByClass(user.assignedClassId),
+                studentsService.getByClass(classId),
+                homeworkService.getByClass(classId),
             ]);
-            setSubjects(subjectsData);
+            
+            // Filter subjects explicitly assigned to this class
+            const classSubjects = subjectsData.filter((sub: any) => {
+                const subClassId = typeof sub.classId === 'object' ? sub.classId?._id : sub.classId;
+                return subClassId === classId;
+            });
+
+            setSubjects(classSubjects);
             setStudents(studentsData);
             setHomework(homeworkData);
             setLoading(false);
         } catch (error: any) {
-            setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to load data' });
+            setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to load data for this class' });
             setLoading(false);
         }
     };
@@ -77,14 +87,14 @@ function ManageHomework() {
         setMessage({ type: '', text: '' });
 
         try {
-            if (!user?.assignedClassId) {
-                setMessage({ type: 'error', text: 'No class assigned to your account' });
+            if (!activeTab) {
+                setMessage({ type: 'error', text: 'No class selected' });
                 setSubmitting(false);
                 return;
             }
 
             const payload: any = {
-                classId: user.assignedClassId,
+                classId: activeTab,
                 subject: formData.subject,
                 title: formData.title,
                 description: formData.description,
@@ -106,7 +116,7 @@ function ManageHomework() {
                 assignmentType: 'ALL_STUDENTS',
                 studentId: '',
             });
-            loadData();
+            loadData(activeTab);
         } catch (error: any) {
             setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to assign homework' });
         } finally {
@@ -122,7 +132,7 @@ function ManageHomework() {
         try {
             await homeworkService.delete(id);
             setMessage({ type: 'success', text: 'Homework deleted successfully!' });
-            loadData();
+            loadData(activeTab);
         } catch (error: any) {
             setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to delete homework' });
         }
@@ -151,6 +161,30 @@ function ManageHomework() {
                     <div className={`message message-${message.type}`}>
                         {message.text}
                     </div>
+                )}
+
+                {assignedClasses.length > 0 ? (
+                    <div style={{ marginBottom: '20px' }}>
+                        <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '10px' }}>
+                            {assignedClasses.map((cls: any) => (
+                                <button
+                                    key={cls._id}
+                                    className={`btn ${activeTab === cls._id ? 'btn-primary' : 'btn-secondary'}`}
+                                    onClick={() => setActiveTab(cls._id)}
+                                    style={{
+                                        borderRadius: '20px',
+                                        padding: '8px 16px',
+                                        fontWeight: activeTab === cls._id ? '700' : '500',
+                                        whiteSpace: 'nowrap'
+                                    }}
+                                >
+                                    Class {cls.className} - {cls.section}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                ) : (
+                    <div className="alert alert-error mb-4">No classes are currently assigned to you.</div>
                 )}
 
                 <form onSubmit={handleSubmit} className="form-container">

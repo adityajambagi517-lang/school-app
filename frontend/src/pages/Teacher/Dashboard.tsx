@@ -44,6 +44,7 @@ function TeacherDashboard() {
 
     const actions = [
         { icon: <BookOpen size={22} color="white" />, label: 'Subjects', path: '/teacher/manage-subjects', cls: 't-green' },
+        { icon: <BookMarked size={22} color="white" />, label: 'Classes', path: '/teacher/my-classes', cls: 't-teal' },
         { icon: <ClipboardList size={22} color="white" />, label: 'Homework', path: '/teacher/manage-homework', cls: 't-indigo' },
         { icon: <CheckSquare size={22} color="white" />, label: 'Attendance', path: '/teacher/mark-attendance', cls: 't-teal' },
         { icon: <BarChart3 size={22} color="white" />, label: 'Marks', path: '/teacher/enter-marks', cls: 't-orange' },
@@ -82,7 +83,7 @@ function TeacherDashboard() {
 
                 {/* Stats */}
                 <div className="stats-row">
-                    <div className="stat-pill pill-green">
+                    <div className="stat-pill pill-green" style={{ cursor: 'pointer' }} onClick={() => navigate('/teacher/view-students')}>
                         <div className="stat-pill-top">
                             <div className="stat-pill-icon">
                                 <Users size={18} />
@@ -91,7 +92,7 @@ function TeacherDashboard() {
                         <div className="stat-pill-value">{(user as any)?.totalStudents ?? 0}</div>
                         <div className="stat-pill-label">Students</div>
                     </div>
-                    <div className="stat-pill pill-teal">
+                    <div className="stat-pill pill-teal" style={{ cursor: 'pointer' }} onClick={() => navigate('/teacher/my-classes')}>
                         <div className="stat-pill-top">
                             <div className="stat-pill-icon">
                                 <BookMarked size={18} />
@@ -110,7 +111,7 @@ function TeacherDashboard() {
                 {(user as any)?.assignedClasses && (user as any).assignedClasses.length > 0 && (
                     <div className="class-cards-container" style={{ display: 'flex', flexDirection: 'column', gap: '12px', margin: '0 20px 20px' }}>
                         {(user as any).assignedClasses.map((cls: any, i: number) => (
-                            <div key={i} className="class-feature-card" style={{ margin: 0 }}>
+                            <div key={i} className="class-feature-card" style={{ margin: 0, cursor: 'pointer' }} onClick={() => navigate('/teacher/class/' + cls._id)}>
                                 <div style={{ fontSize: 36 }}>🏫</div>
                                 <div className="class-feature-text">
                                     <h3>Assigned Class</h3>

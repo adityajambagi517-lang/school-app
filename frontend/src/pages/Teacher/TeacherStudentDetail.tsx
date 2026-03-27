@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { authService, studentsService, adminResetService } from '../../services/api';
+import { authService, studentsService } from '../../services/api';
 import NavBar from '../../components/NavBar';
 import StudentCharts from '../../components/StudentCharts';
 import StudentAttendanceStats from '../../components/StudentAttendanceStats';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
-function StudentDetailPage() {
+function TeacherStudentDetail() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const user = authService.getCurrentUser();
@@ -31,6 +31,23 @@ function StudentDetailPage() {
         try {
             setLoading(true);
             const data = await studentsService.getStudentFull(id!);
+            
+            // SECURITY CHECK: Verify student belongs to Teacher's assigned classes
+            const studentClassId = data.student?.classId?._id || data.student?.classId;
+            const assignedClasses: any[] = user?.assignedClasses || [];
+            
+            // Safely serialize ObjectID objects to primitive strings for strict matching
+            const isAuthorized = assignedClasses.some(c => 
+                String(c._id || c) === String(studentClassId)
+            );
+
+            if (!isAuthorized && user?.role !== 'admin') {
+                console.error('Auth Check Failed', { studentClassId, assignedClasses });
+                setError('Unauthorized access: This student is not assigned to any of your classes.');
+                setLoading(false);
+                return;
+            }
+
             setStudent(data.student);
             setMarks(Array.isArray(data.marks) ? data.marks : []);
             setFees(Array.isArray(data.fees) ? data.fees : []);
@@ -39,26 +56,6 @@ function StudentDetailPage() {
             setError(err.response?.data?.message || 'Failed to load student data');
         } finally {
             setLoading(false);
-        }
-    };
-
-    const handleDelete = async () => {
-        if (!window.confirm(`⚠️ Permanently delete ${student?.name}? This cannot be undone.`)) return;
-        try {
-            await studentsService.delete(id!);
-            navigate(-1);
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Delete failed');
-        }
-    };
-
-    const handleResetPassword = async () => {
-        if (!window.confirm(`Reset password for ${student?.name} to "password123"?`)) return;
-        try {
-            await adminResetService.resetUserPassword(student.studentId);
-            alert('✅ Password reset to "password123"');
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Reset failed');
         }
     };
 
@@ -83,7 +80,7 @@ function StudentDetailPage() {
 
     if (loading) return (
         <div style={{ minHeight: '100vh', background: 'var(--bg-page)' }}>
-            <NavBar role="admin" userName={user?.name} onLogout={handleLogout} backTo={-1 as any} backLabel="Back" />
+            <NavBar role="teacher" userName={user?.name} onLogout={handleLogout} backTo={-1 as any} backLabel="Back" />
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh', fontSize: '18px', color: 'var(--text-muted)' }}>
                 Loading student data...
             </div>
@@ -92,8 +89,10 @@ function StudentDetailPage() {
 
     if (error || !student) return (
         <div style={{ minHeight: '100vh', background: 'var(--bg-page)' }}>
-            <NavBar role="admin" userName={user?.name} onLogout={handleLogout} backTo={-1 as any} backLabel="Back" />
-            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--danger)' }}>{error || 'Student not found'}</div>
+            <NavBar role="teacher" userName={user?.name} onLogout={handleLogout} backTo={-1 as any} backLabel="Back" />
+            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--danger)', fontWeight: 'bold', fontSize: '1.2rem', marginTop: '50px' }}>
+                ⛔ {error || 'Student not found'}
+            </div>
         </div>
     );
 
@@ -104,7 +103,7 @@ function StudentDetailPage() {
 
     return (
         <div style={{ minHeight: '100vh', background: 'var(--bg-page)', paddingTop: '52px' }}>
-            <NavBar role="admin" userName={user?.name} onLogout={handleLogout} backTo={-1 as any} backLabel="Back" />
+            <NavBar role="teacher" userName={user?.name} onLogout={handleLogout} backTo={-1 as any} backLabel="Back" />
             <div style={{ maxWidth: '900px', margin: '0 auto', padding: '24px 16px' }}>
                 {/* Header */}
                 <div style={{ background: 'var(--bg-card)', borderRadius: '16px', padding: '24px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap', justifyContent: 'space-between', boxShadow: 'var(--shadow-sm)' }}>
@@ -119,10 +118,6 @@ function StudentDetailPage() {
                                 {student.classId ? `Class ${student.classId.className} - Section ${student.classId.section} (${student.classId.academicYear})` : 'No class assigned'}
                             </p>
                         </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                        <button onClick={handleResetPassword} style={{ padding: '8px 14px', background: '#f59e0b', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}>🔑 Reset Password</button>
-                        <button onClick={handleDelete} style={{ padding: '8px 14px', background: 'var(--danger)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}>🗑️ Delete</button>
                     </div>
                 </div>
 
@@ -291,4 +286,4 @@ function StudentDetailPage() {
     );
 }
 
-export default StudentDetailPage;
+export default TeacherStudentDetail;

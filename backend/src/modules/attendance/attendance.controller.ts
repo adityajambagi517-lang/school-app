@@ -70,7 +70,7 @@ export class AttendanceController {
   }
 
   @Get('student/:studentId')
-  @Roles(UserRole.STUDENT, UserRole.ADMIN)
+  @Roles(UserRole.STUDENT, UserRole.ADMIN, UserRole.TEACHER)
   findByStudent(@Param('studentId') studentId: string) {
     return this.attendanceService.findByStudent(studentId);
   }

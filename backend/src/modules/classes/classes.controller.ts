@@ -36,8 +36,8 @@ export class ClassesController {
 
   @Get('search')
   @Roles(UserRole.ADMIN, UserRole.TEACHER)
-  search(@Query('q') q: string) {
-    return this.classesService.search(q);
+  search(@Query('q') q: string, @CurrentUser() user: any) {
+    return this.classesService.search(q, user);
   }
 
   @Get('my-classes')

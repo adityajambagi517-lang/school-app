@@ -14,6 +14,10 @@ interface Subject {
 function ManageSubjects() {
     const navigate = useNavigate();
     const user = authService.getCurrentUser();
+    const assignedClasses = (user as any)?.assignedClasses || [];
+    const [activeTab, setActiveTab] = useState<string>(
+        assignedClasses.length > 0 ? assignedClasses[0]._id : ''
+    );
     const [subjects, setSubjects] = useState<Subject[]>([]);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -51,8 +55,8 @@ function ManageSubjects() {
                 setMessage({ type: 'success', text: 'Subject updated successfully!' });
                 setEditingId(null);
             } else {
-                await subjectsService.create(formData);
-                setMessage({ type: 'success', text: 'Subject created successfully!' });
+                await subjectsService.create({ ...formData, classId: activeTab });
+                setMessage({ type: 'success', text: 'Subject created successfully in selected class!' });
             }
             setFormData({ name: '', description: '' });
             loadSubjects();
@@ -115,6 +119,28 @@ function ManageSubjects() {
                     </div>
                 )}
 
+                {assignedClasses.length > 0 && (
+                    <div style={{ marginBottom: '20px' }}>
+                        <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '10px' }}>
+                            {assignedClasses.map((cls: any) => (
+                                <button
+                                    key={cls._id}
+                                    className={`btn ${activeTab === cls._id ? 'btn-primary' : 'btn-secondary'}`}
+                                    onClick={() => setActiveTab(cls._id)}
+                                    style={{
+                                        borderRadius: '20px',
+                                        padding: '8px 16px',
+                                        fontWeight: activeTab === cls._id ? '700' : '500',
+                                        whiteSpace: 'nowrap'
+                                    }}
+                                >
+                                    Class {cls.className} - {cls.section}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
                     {/* Subject Form */}
                     <form onSubmit={handleSubmit} className="form-container">
@@ -158,12 +184,18 @@ function ManageSubjects() {
                     {/* Subjects List */}
                     <div>
                         <h3>Your Subjects</h3>
-                        {subjects.length === 0 ? (
-                            <p>No subjects created yet. Create your first subject!</p>
-                        ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                {subjects.map(subject => (
-                                    <div key={subject._id} className="card" style={{ padding: '1rem' }}>
+                        {(() => {
+                            const filteredSubjects = subjects.filter((sub: any) => {
+                                const subClassId = typeof sub.classId === 'object' ? sub.classId?._id : sub.classId;
+                                return subClassId === activeTab;
+                            });
+
+                            return filteredSubjects.length === 0 ? (
+                                <p>No subjects created yet for this class.</p>
+                            ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                    {filteredSubjects.map(subject => (
+                                        <div key={subject._id} className="card" style={{ padding: '1rem' }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                                             <div>
                                                 <h4 style={{ margin: '0 0 0.5rem 0' }}>{subject.name}</h4>
@@ -191,7 +223,8 @@ function ManageSubjects() {
                                     </div>
                                 ))}
                             </div>
-                        )}
+                            );
+                        })()}
                     </div>
                 </div>
             </div>

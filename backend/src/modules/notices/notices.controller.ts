@@ -50,6 +50,7 @@ export class NoticesController {
       content: body.content,
       targetRoles,
       imageUrl,
+      expiresAt: new Date(body.expiresAt),
     };
     return this.noticesService.create(noticeData);
   }

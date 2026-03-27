@@ -9,4 +9,8 @@ export class CreateSubjectDto {
   @IsOptional()
   @MaxLength(500)
   description?: string;
+
+  @IsString()
+  @IsOptional()
+  classId?: string;
 }

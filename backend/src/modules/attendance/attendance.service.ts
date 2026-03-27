@@ -39,7 +39,6 @@ export class AttendanceService {
       ...createAttendanceDto,
       classId: new Types.ObjectId(createAttendanceDto.classId),
       studentId: new Types.ObjectId(createAttendanceDto.studentId),
-      subjectId: new Types.ObjectId(createAttendanceDto.subjectId),
       markedBy: new Types.ObjectId(referenceId),
       date: new Date(createAttendanceDto.date),
     });
@@ -58,17 +57,25 @@ export class AttendanceService {
       await this.verifyTeacherAccess(referenceId, bulkDto.classId);
     }
 
-    const attendances = bulkDto.attendances.map((att) => ({
-      classId: new Types.ObjectId(bulkDto.classId),
-      studentId: new Types.ObjectId(att.studentId),
-      subjectId: new Types.ObjectId(bulkDto.subjectId),
-      date: new Date(bulkDto.date),
-      status: att.status,
-      remarks: att.remarks,
-      markedBy: new Types.ObjectId(referenceId),
+    const operations = bulkDto.attendances.map((att) => ({
+      updateOne: {
+        filter: {
+          classId: new Types.ObjectId(bulkDto.classId),
+          studentId: new Types.ObjectId(att.studentId),
+          date: new Date(bulkDto.date)
+        },
+        update: {
+          $set: {
+            status: att.status,
+            remarks: att.remarks,
+            markedBy: new Types.ObjectId(referenceId)
+          }
+        },
+        upsert: true
+      }
     }));
 
-    return this.attendanceModel.insertMany(attendances);
+    return this.attendanceModel.bulkWrite(operations);
   }
 
   async findByClass(
@@ -87,15 +94,13 @@ export class AttendanceService {
         classId: new Types.ObjectId(classId),
         date: new Date(date),
       })
-      .populate('studentId', 'name rollNumber')
-      .populate('subjectId', 'name')
+      .populate('studentId', 'name studentId')
       .exec();
   }
 
   async findByStudent(studentId: string) {
     return this.attendanceModel
       .find({ studentId: new Types.ObjectId(studentId) })
-      .populate('subjectId', 'name')
       .sort({ date: -1 })
       .limit(50)
       .exec();

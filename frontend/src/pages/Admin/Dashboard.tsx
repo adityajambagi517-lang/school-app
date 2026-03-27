@@ -104,33 +104,33 @@ function AdminDashboard() {
 
                 {/* Floating stat pills */}
                 <div className="stats-row">
-                    <div className="stat-pill pill-blue">
+                    <div className="stat-pill pill-blue" style={{ cursor: 'pointer' }} onClick={() => navigate('/admin/students')}>
                         <div className="stat-pill-top">
                             <div className="stat-pill-icon"><Users size={18} /></div>
                         </div>
                         <div className="stat-pill-value">{loading ? '…' : (stats?.totalStudents ?? 0)}</div>
                         <div className="stat-pill-label">Students</div>
                     </div>
-                    <div className="stat-pill pill-green">
+                    <div className="stat-pill pill-green" style={{ cursor: 'pointer' }} onClick={() => navigate('/admin/teachers')}>
                         <div className="stat-pill-top">
                             <div className="stat-pill-icon"><GraduationCap size={18} /></div>
                         </div>
                         <div className="stat-pill-value">{loading ? '…' : (stats?.totalTeachers ?? 0)}</div>
                         <div className="stat-pill-label">Teachers</div>
                     </div>
-                    <div className="stat-pill pill-orange">
+                    <div className="stat-pill pill-orange" style={{ cursor: 'pointer' }} onClick={() => navigate('/admin/classes')}>
                         <div className="stat-pill-top">
                             <div className="stat-pill-icon"><School size={18} /></div>
                         </div>
                         <div className="stat-pill-value">{loading ? '…' : (stats?.totalClasses ?? 0)}</div>
                         <div className="stat-pill-label">Classes</div>
                     </div>
-                    <div className="stat-pill pill-purple">
+                    <div className="stat-pill pill-purple" style={{ cursor: 'pointer' }} onClick={() => navigate('/admin/users')}>
                         <div className="stat-pill-top">
-                            <div className="stat-pill-icon"><BarChart3 size={18} /></div>
+                            <div className="stat-pill-icon"><ShieldCheck size={18} /></div>
                         </div>
-                        <div className="stat-pill-value">{loading ? '…' : `${stats?.attendanceToday?.rate ?? 0}%`}</div>
-                        <div className="stat-pill-label">Attendance</div>
+                        <div className="stat-pill-value">{loading ? '…' : (stats?.totalAdmins ?? 0)}</div>
+                        <div className="stat-pill-label">Total Admins</div>
                     </div>
                 </div>
 

@@ -38,10 +38,19 @@ export class SubjectsService {
       );
     }
 
+    let targetClassId = assignedClasses[0]._id;
+    if (createSubjectDto.classId) {
+       const isValid = assignedClasses.some(c => c._id.toString() === createSubjectDto.classId);
+       if (!isValid) throw new ForbiddenException('Invalid class assigned');
+       targetClassId = new Types.ObjectId(createSubjectDto.classId);
+    }
+
+    const { classId, ...dtoWithoutClassId } = createSubjectDto as any;
+
     const subject = new this.subjectModel({
-      ...createSubjectDto,
+      ...dtoWithoutClassId,
       teacherId: new Types.ObjectId(referenceId),
-      classId: assignedClasses[0]._id,
+      classId: targetClassId,
     });
 
     return subject.save();

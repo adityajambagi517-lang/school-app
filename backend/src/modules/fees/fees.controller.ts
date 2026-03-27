@@ -109,15 +109,15 @@ export class FeesController {
     return this.feesService.recordPayment(id, body.amountPaid);
   }
 
-  // Student views their own published fees
+  // Student views their own fees; Teacher/Admin can view any student's fees
   @Get('student/:studentId')
-  @Roles(UserRole.STUDENT)
+  @Roles(UserRole.STUDENT, UserRole.TEACHER, UserRole.ADMIN)
   getStudentFees(
     @Param('studentId') studentId: string,
     @CurrentUser() user: CurrentUserData,
   ) {
-    // Verify student can only see their own fees
-    if (user.referenceId !== studentId) {
+    // Students can only see their own fees
+    if (user.role === UserRole.STUDENT && user.referenceId !== studentId) {
       throw new Error('Access denied');
     }
     return this.feesService.getStudentFees(studentId);

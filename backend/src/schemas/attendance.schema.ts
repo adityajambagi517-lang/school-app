@@ -27,9 +27,6 @@ export class Attendance {
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Teacher', required: true })
   markedBy: Types.ObjectId;
 
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Subject', required: true })
-  subjectId: Types.ObjectId;
-
   @Prop()
   remarks: string;
 }

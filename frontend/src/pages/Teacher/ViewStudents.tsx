@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService, studentsService } from '../../services/api';
 import NavBar from '../../components/NavBar';
@@ -17,6 +17,7 @@ interface Student {
         className: string;
         section: string;
         academicYear: string;
+        _id?: string;
     };
 }
 
@@ -27,7 +28,8 @@ function ViewStudents() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+    const [assignedClasses, setAssignedClasses] = useState<any[]>([]);
+    const [activeTab, setActiveTab] = useState<string>('');
 
     useEffect(() => {
         loadStudents();
@@ -35,14 +37,24 @@ function ViewStudents() {
 
     const loadStudents = async () => {
         try {
-            if (!user?.assignedClassId) {
+            const classes = user?.assignedClasses || [];
+            setAssignedClasses(classes);
+
+            if (classes.length === 0) {
                 setError('No class assigned to your account');
                 setLoading(false);
                 return;
             }
 
-            const studentsData = await studentsService.getByClass(user.assignedClassId);
-            setStudents(studentsData);
+            setActiveTab(classes[0]._id);
+
+            let allStudents: any[] = [];
+            for (const cls of classes) {
+                const studentsData = await studentsService.getByClass(cls._id);
+                allStudents = [...allStudents, ...studentsData];
+            }
+            
+            setStudents(allStudents);
             setLoading(false);
         } catch (err: any) {
             setError(err.response?.data?.message || 'Failed to load students');
@@ -55,7 +67,9 @@ function ViewStudents() {
         navigate('/login');
     };
 
-    const filteredStudents = students.filter(student =>
+    const studentsForActiveTab = students.filter(s => s.classId._id === activeTab || String(s.classId) === activeTab);
+    
+    const filteredStudents = studentsForActiveTab.filter(student =>
         student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         student.studentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
         student.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -71,9 +85,9 @@ function ViewStudents() {
 
             <div className="dashboard-content">
                 <div className="page-header">
-                    <h1>👥 My Students</h1>
+                    <h1>👥 Assigned Students</h1>
                     <p>
-                        Class {user?.className} - Section {user?.section} | Total Students: {students.length}
+                        Total Assigned Students: {students.length}
                     </p>
                 </div>
 
@@ -83,8 +97,34 @@ function ViewStudents() {
                     </div>
                 )}
 
+                {/* Class Tabs */}
+                {assignedClasses.length > 0 && (
+                    <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', borderBottom: '1px solid #eee', paddingBottom: '0.75rem', overflowX: 'auto' }}>
+                        {assignedClasses.map(cls => (
+                            <button
+                                key={cls._id}
+                                onClick={() => setActiveTab(cls._id)}
+                                style={{
+                                    padding: '0.6rem 1.25rem',
+                                    border: 'none',
+                                    background: activeTab === cls._id ? 'var(--primary)' : '#f0f0f0',
+                                    color: activeTab === cls._id ? 'white' : '#555',
+                                    borderRadius: '8px',
+                                    cursor: 'pointer',
+                                    fontWeight: activeTab === cls._id ? 'bold' : 'normal',
+                                    whiteSpace: 'nowrap',
+                                    transition: 'all 0.2s',
+                                    boxShadow: activeTab === cls._id ? '0 2px 4px rgba(0,0,0,0.1)' : 'none'
+                                }}
+                            >
+                                Class {cls.className} - {cls.section}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
                 {/* Search Bar */}
-                <div style={{ marginBottom: '1.5rem' }}>
+                <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <input
                         type="text"
                         placeholder="Search by name, student ID, or email..."
@@ -93,6 +133,9 @@ function ViewStudents() {
                         className="form-input"
                         style={{ width: '100%', maxWidth: '500px' }}
                     />
+                    <div style={{ background: '#e3f2fd', color: '#1976d2', padding: '6px 16px', borderRadius: '16px', fontWeight: 'bold', fontSize: '0.9rem' }}>
+                        {filteredStudents.length} matches
+                    </div>
                 </div>
 
                 {/* Quick Actions */}
@@ -117,63 +160,33 @@ function ViewStudents() {
                     </button>
                 </div>
 
-                {/* Student Cards or Table */}
-                {selectedStudent ? (
-                    <div className="dashboard-card">
-                        <button
-                            className="btn btn-secondary"
-                            onClick={() => setSelectedStudent(null)}
-                            style={{ marginBottom: '1rem' }}
-                        >
-                            ← Back to List
-                        </button>
-
-                        <h3>Student Details</h3>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
-                            <div>
-                                <p><strong>Student ID:</strong> {selectedStudent.studentId}</p>
-                                <p><strong>Name:</strong> {selectedStudent.name}</p>
-                                <p><strong>Email:</strong> {selectedStudent.email}</p>
-                                <p><strong>Gender:</strong> {selectedStudent.gender}</p>
-                            </div>
-                            <div>
-                                <p><strong>Date of Birth:</strong> {new Date(selectedStudent.dateOfBirth).toLocaleDateString()}</p>
-                                <p><strong>Class:</strong> {selectedStudent.classId.className} - {selectedStudent.classId.section}</p>
-                                <p><strong>Academic Year:</strong> {selectedStudent.classId.academicYear}</p>
-                            </div>
-                            <div>
-                                <p><strong>Guardian Name:</strong> {selectedStudent.guardianName}</p>
-                                <p><strong>Guardian Phone:</strong> {selectedStudent.guardianPhone}</p>
-                            </div>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="attendance-table">
-                        <table>
+                {/* Student Table */}
+                <div className="attendance-table" style={{ background: 'white', borderRadius: '8px', border: '1px solid #eee', overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                             <thead>
-                                <tr>
-                                    <th>Student ID</th>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Guardian</th>
-                                    <th>Contact</th>
-                                    <th>Actions</th>
+                                <tr style={{ backgroundColor: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
+                                    <th style={{ padding: '14px 16px', color: '#4b5563', fontWeight: '600' }}>Student ID</th>
+                                    <th style={{ padding: '14px 16px', color: '#4b5563', fontWeight: '600' }}>Name</th>
+                                    <th style={{ padding: '14px 16px', color: '#4b5563', fontWeight: '600' }}>Email</th>
+                                    <th style={{ padding: '14px 16px', color: '#4b5563', fontWeight: '600' }}>Guardian</th>
+                                    <th style={{ padding: '14px 16px', color: '#4b5563', fontWeight: '600' }}>Contact</th>
+                                    <th style={{ padding: '14px 16px', color: '#4b5563', fontWeight: '600' }}>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredStudents.length > 0 ? (
                                     filteredStudents.map((student) => (
-                                        <tr key={student._id}>
-                                            <td>{student.studentId}</td>
-                                            <td>{student.name}</td>
-                                            <td>{student.email}</td>
-                                            <td>{student.guardianName}</td>
-                                            <td>{student.guardianPhone}</td>
-                                            <td>
+                                        <tr key={student._id} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                                            <td style={{ padding: '14px 16px', whiteSpace: 'nowrap' }}><strong>{student.studentId}</strong></td>
+                                            <td style={{ padding: '14px 16px', whiteSpace: 'nowrap' }}>{student.name}</td>
+                                            <td style={{ padding: '14px 16px', color: '#6b7280' }}>{student.email}</td>
+                                            <td style={{ padding: '14px 16px', whiteSpace: 'nowrap' }}>{student.guardianName}</td>
+                                            <td style={{ padding: '14px 16px', color: '#6b7280', whiteSpace: 'nowrap' }}>{student.guardianPhone}</td>
+                                            <td style={{ padding: '14px 16px' }}>
                                                 <button
                                                     className="btn btn-primary"
                                                     style={{ fontSize: '0.85rem', padding: '0.4rem 0.8rem' }}
-                                                    onClick={() => setSelectedStudent(student)}
+                                                    onClick={() => navigate(`/teacher/students/${student._id}`)}
                                                 >
                                                     View Details
                                                 </button>
@@ -190,7 +203,6 @@ function ViewStudents() {
                             </tbody>
                         </table>
                     </div>
-                )}
             </div>
         </div>
     );

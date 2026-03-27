@@ -14,6 +14,7 @@ import { Student, StudentDocument } from '../../schemas/student.schema';
 import { Teacher, TeacherDocument } from '../../schemas/teacher.schema';
 import { Class, ClassDocument } from '../../schemas/class.schema';
 import { Fee, FeeDocument } from '../../schemas/fee.schema';
+import { User, UserDocument, UserRole } from '../../schemas/user.schema';
 
 @Injectable()
 export class AnalyticsService {
@@ -25,6 +26,7 @@ export class AnalyticsService {
     @InjectModel(Teacher.name) private teacherModel: Model<TeacherDocument>,
     @InjectModel(Class.name) private classModel: Model<ClassDocument>,
     @InjectModel(Fee.name) private feeModel: Model<FeeDocument>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
   ) {}
 
   /**
@@ -364,10 +366,11 @@ export class AnalyticsService {
    * Dashboard statistics for admin
    */
   async getDashboardStats() {
-    const [totalStudents, totalTeachers, totalClasses] = await Promise.all([
+    const [totalStudents, totalTeachers, totalClasses, totalAdmins] = await Promise.all([
       this.studentModel.countDocuments({ isActive: true }),
       this.teacherModel.countDocuments({ isActive: true }),
       this.classModel.countDocuments({ isActive: true }),
+      this.userModel.countDocuments({ role: UserRole.ADMIN, isActive: true }),
     ]);
 
     // Get today's attendance rate
@@ -401,6 +404,7 @@ export class AnalyticsService {
       totalStudents,
       totalTeachers,
       totalClasses,
+      totalAdmins,
       attendanceToday: {
         present: presentToday,
         total: totalToday,

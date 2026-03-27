@@ -106,9 +106,9 @@ export class MarkcardsController {
     return this.markcardsService.publishMarks(id, user.role, user._id);
   }
 
-  // STUDENT: Get own marks (only PUBLISHED)
+  // STUDENT/TEACHER/ADMIN: Get marks for a student
   @Get('student/:studentId')
-  @Roles(UserRole.STUDENT, UserRole.ADMIN)
+  @Roles(UserRole.STUDENT, UserRole.ADMIN, UserRole.TEACHER)
   getStudentMarks(@Param('studentId') studentId: string) {
     return this.markcardsService.getStudentMarks(studentId);
   }

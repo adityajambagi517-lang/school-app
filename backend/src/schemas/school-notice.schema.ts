@@ -20,6 +20,9 @@ export class SchoolNotice {
 
   @Prop({ default: true })
   isActive: boolean;
+
+  @Prop({ type: Date, expires: 0, required: true })
+  expiresAt: Date;
 }
 
 export const SchoolNoticeSchema = SchemaFactory.createForClass(SchoolNotice);

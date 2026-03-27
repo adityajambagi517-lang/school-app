@@ -23,9 +23,6 @@ export class CreateAttendanceDto {
   @IsEnum(AttendanceStatus)
   status: AttendanceStatus;
 
-  @IsMongoId()
-  subjectId: string;
-
   @IsOptional()
   @IsString()
   remarks?: string;
@@ -49,9 +46,6 @@ export class BulkCreateAttendanceDto {
 
   @IsDateString()
   date: string;
-
-  @IsMongoId()
-  subjectId: string;
 
   @IsArray()
   @ValidateNested({ each: true })

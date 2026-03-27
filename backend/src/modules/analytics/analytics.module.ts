@@ -8,6 +8,7 @@ import { Student, StudentSchema } from '../../schemas/student.schema';
 import { Class, ClassSchema } from '../../schemas/class.schema';
 import { Teacher, TeacherSchema } from '../../schemas/teacher.schema';
 import { Fee, FeeSchema } from '../../schemas/fee.schema';
+import { User, UserSchema } from '../../schemas/user.schema';
 
 
 @Module({
@@ -19,6 +20,7 @@ import { Fee, FeeSchema } from '../../schemas/fee.schema';
       { name: Class.name, schema: ClassSchema },
       { name: Teacher.name, schema: TeacherSchema },
       { name: Fee.name, schema: FeeSchema },
+      { name: User.name, schema: UserSchema },
     ]),
   ],
   controllers: [AnalyticsController],

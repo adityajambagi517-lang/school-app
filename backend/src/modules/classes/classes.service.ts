@@ -37,17 +37,23 @@ export class ClassesService {
       .exec();
   }
 
-  async search(query: string) {
+  async search(query: string, user: any) {
     if (!query || query.trim() === '') return [];
     
+    const filter: any = {
+      $or: [
+        { className: { $regex: query, $options: 'i' } },
+        { section: { $regex: query, $options: 'i' } },
+      ]
+    };
+
+    if (user.role === 'teacher' && user.referenceId) {
+      filter.classTeacherId = user.referenceId;
+    }
+
     // Search by class name (e.g. "Class 10") or section (e.g. "A")
     return this.classModel
-      .find({
-        $or: [
-          { className: { $regex: query, $options: 'i' } },
-          { section: { $regex: query, $options: 'i' } },
-        ]
-      })
+      .find(filter)
       .populate('classTeacherId', 'name')
       .limit(10)
       .exec();

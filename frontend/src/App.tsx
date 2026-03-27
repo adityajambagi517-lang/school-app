@@ -17,6 +17,9 @@ import StudentDetailPage from './pages/Admin/StudentDetailPage';
 import TeacherDashboard from './pages/Teacher/Dashboard';
 import TeacherRegisterStudent from './pages/Teacher/RegisterStudent';
 import ViewStudents from './pages/Teacher/ViewStudents';
+import MyClasses from './pages/Teacher/MyClasses';
+import TeacherClassDetail from './pages/Teacher/TeacherClassDetail';
+import TeacherStudentDetail from './pages/Teacher/TeacherStudentDetail';
 import TeacherStudentSearch from './pages/Teacher/StudentSearch';
 import EnterMarks from './pages/Teacher/EnterMarks';
 import MarkAttendance from './pages/Teacher/MarkAttendance';
@@ -184,6 +187,22 @@ function App() {
           }
         />
         <Route
+          path="/teacher/my-classes"
+          element={
+            <ProtectedRoute allowedRoles={['teacher']}>
+              <MyClasses />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teacher/class/:id"
+          element={
+            <ProtectedRoute allowedRoles={['teacher']}>
+              <TeacherClassDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/teacher/register-student"
           element={
             <ProtectedRoute allowedRoles={['teacher']}>
@@ -196,6 +215,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['teacher']}>
               <ViewStudents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teacher/students/:id"
+          element={
+            <ProtectedRoute allowedRoles={['teacher']}>
+              <TeacherStudentDetail />
             </ProtectedRoute>
           }
         />
@@ -385,3 +412,4 @@ function App() {
 }
 
 export default App;
+

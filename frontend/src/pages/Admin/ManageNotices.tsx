@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Megaphone, Trash2, Plus, Image as ImageIcon, X } from 'lucide-react';
+import { Megaphone, Trash2, Plus, Image as ImageIcon, X, Clock } from 'lucide-react';
 import { authService, noticesService } from '../../services/api';
 import NavBar from '../../components/NavBar';
 import '../Admin/Dashboard.css';
+import './ManageNotices.css';
 
 function ManageNotices() {
     const navigate = useNavigate();
@@ -17,10 +18,12 @@ function ManageNotices() {
     const [formData, setFormData] = useState({
         title: '',
         content: '',
-        targetRoles: ['teacher', 'student'],
+        targetRoles: ['teacher', 'student'], // Default applies to 'both'
+        expiresAt: '',
     });
     const [selectedImage, setSelectedImage] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [audienceType, setAudienceType] = useState<'both' | 'teacher' | 'student'>('both');
 
     useEffect(() => {
         loadNotices();
@@ -57,7 +60,15 @@ function ManageNotices() {
             const data = new FormData();
             data.append('title', formData.title);
             data.append('content', formData.content);
-            data.append('targetRoles', JSON.stringify(formData.targetRoles));
+            
+            // Re-sync targetRoles based on audienceType before submission
+            const finalRoles = audienceType === 'both' ? ['teacher', 'student'] : [audienceType];
+            data.append('targetRoles', JSON.stringify(finalRoles));
+            
+            if (formData.expiresAt) {
+                data.append('expiresAt', formData.expiresAt);
+            }
+
             if (selectedImage) {
                 data.append('image', selectedImage);
             }
@@ -65,7 +76,8 @@ function ManageNotices() {
             await noticesService.create(data);
             setMessage({ type: 'success', text: 'Notice posted successfully!' });
             setShowForm(false);
-            setFormData({ title: '', content: '', targetRoles: ['teacher', 'student'] });
+            setFormData({ title: '', content: '', targetRoles: ['teacher', 'student'], expiresAt: '' });
+            setAudienceType('both');
             setSelectedImage(null);
             setImagePreview(null);
             loadNotices();
@@ -97,14 +109,14 @@ function ManageNotices() {
         <div className="dashboard-container">
             <NavBar role="admin" userName={user?.name} onLogout={handleLogout} backTo="/admin/dashboard" backLabel="← Dashboard" />
 
-            <div className="dashboard-content">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <div className="manage-notices-container dashboard-content">
+                <div className="notices-header">
                     <div className="page-header" style={{ margin: 0 }}>
                         <h1>📣 School Notice Board</h1>
                         <p>Share important information and announcements</p>
                     </div>
                     <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
-                        {showForm ? 'Cancel' : <><Plus size={18} /> New Notice</>}
+                        {showForm ? 'Close Form' : <><Plus size={18} /> Compose Notice</>}
                     </button>
                 </div>
 
@@ -115,9 +127,10 @@ function ManageNotices() {
                 )}
 
                 {showForm && (
-                    <div className="card" style={{ marginBottom: '2rem', padding: '1.5rem' }}>
+                    <div className="notice-form-card">
                         <form onSubmit={handleSubmit} className="form-container">
-                            <h3>Post New Announcement</h3>
+                            <h3 style={{ marginBottom: '1.5rem', fontSize: '1.25rem' }}>Compose New Announcement</h3>
+                            
                             <div className="form-group">
                                 <label>Title *</label>
                                 <input
@@ -126,38 +139,55 @@ function ManageNotices() {
                                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                     required
                                     className="form-input"
+                                    placeholder="e.g. Annual Sports Meet 2026"
                                 />
                             </div>
+
                             <div className="form-group">
-                                <label>Information/Content *</label>
+                                <label>Notice Content *</label>
                                 <textarea
                                     value={formData.content}
                                     onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                                     required
                                     className="form-input"
                                     rows={4}
+                                    placeholder="Write the detailed information here..."
                                 />
                             </div>
-                            <div className="form-group">
-                                <label>Target Audience</label>
-                                <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-                                    {['teacher', 'student'].map(role => (
-                                        <label key={role} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                            <input
-                                                type="checkbox"
-                                                checked={formData.targetRoles.includes(role)}
-                                                onChange={(e) => {
-                                                    const roles = e.target.checked 
-                                                        ? [...formData.targetRoles, role]
-                                                        : formData.targetRoles.filter(r => r !== role);
-                                                    setFormData({ ...formData, targetRoles: roles });
-                                                }}
-                                            />
-                                            {role.charAt(0).toUpperCase() + role.slice(1)}s
-                                        </label>
-                                    ))}
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Target Audience *</label>
+                                    <div className="audience-toggle-group">
+                                        {(['both', 'teacher', 'student'] as const).map(type => (
+                                            <button
+                                                key={type}
+                                                type="button"
+                                                className={`audience-toggle-btn ${audienceType === type ? 'active' : ''}`}
+                                                onClick={() => setAudienceType(type)}
+                                            >
+                                                {type.charAt(0).toUpperCase() + type.slice(1)}{type !== 'both' ? 's' : ''}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Notice Expiration Time *</label>
+                                    <input 
+                                        type="datetime-local" 
+                                        className="form-input"
+                                        required
+                                        value={formData.expiresAt}
+                                        onChange={(e) => setFormData({ ...formData, expiresAt: e.target.value })}
+                                        min={new Date().toISOString().slice(0,16)}
+                                    />
+                                    <small style={{ color: '#888', marginTop: '4px', display: 'block' }}>
+                                        Notice will be auto-deleted after this time.
+                                    </small>
                                 </div>
                             </div>
+
                             <div className="form-group">
                                 <label>Notice Image (Optional)</label>
                                 <div style={{ marginTop: '0.5rem' }}>
@@ -192,37 +222,42 @@ function ManageNotices() {
                     </div>
                 )}
 
-                <div className="notice-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+                <div className="notices-grid">
                     {notices.map(notice => (
-                        <div key={notice._id} className="card" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                        <div key={notice._id} className="notice-card">
                             {notice.imageUrl && (
                                 <img 
                                     src={notice.imageUrl} 
                                     alt={notice.title} 
-                                    style={{ width: '100%', height: '180px', objectFit: 'cover' }} 
+                                    className="notice-image" 
                                 />
                             )}
-                            <div style={{ padding: '1.25rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.5rem' }}>
-                                    <h3 style={{ margin: 0 }}>{notice.title}</h3>
-                                    <button onClick={() => handleDelete(notice._id)} style={{ color: '#ff4444', background: 'none', border: 'none', cursor: 'pointer' }}>
-                                        <Trash2 size={18} />
+                            <div className="notice-content-wrapper">
+                                <div className="notice-header-row">
+                                    <h3 className="notice-title">{notice.title}</h3>
+                                    <button onClick={() => handleDelete(notice._id)} className="btn-delete-icon" title="Delete Notice">
+                                        <Trash2 size={16} />
                                     </button>
                                 </div>
-                                <p style={{ color: '#666', fontSize: '0.9rem', flex: 1 }}>{notice.content}</p>
-                                <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
-                                    {notice.targetRoles.map((role: string) => (
-                                        <span key={role} style={{ 
-                                            padding: '2px 8px', 
-                                            borderRadius: '12px', 
-                                            fontSize: '0.7rem', 
-                                            background: '#f0f0f0',
-                                            color: '#666',
-                                            textTransform: 'uppercase'
-                                        }}>
-                                            {role}
-                                        </span>
-                                    ))}
+                                <p className="notice-body">{notice.content}</p>
+                                
+                                <div className="notice-meta-footer">
+                                    <div className="badge-group">
+                                        {notice.targetRoles.length === 2 ? (
+                                            <span className="badge badge-both">All</span>
+                                        ) : notice.targetRoles.map((role: string) => (
+                                            <span key={role} className={`badge badge-${role}`}>
+                                                {role}
+                                            </span>
+                                        ))}
+                                    </div>
+                                    
+                                    {notice.expiresAt && (
+                                        <div className="expiry-badge" title="Auto-deletes at this time">
+                                            <Clock size={12} />
+                                            {new Date(notice.expiresAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

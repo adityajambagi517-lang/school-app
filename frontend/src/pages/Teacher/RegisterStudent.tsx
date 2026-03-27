@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../../services/api';
 import api from '../../services/api';
@@ -23,6 +23,8 @@ interface StudentFormData {
     address: string;
     classId: string;
     password: string;
+    phone: string;
+    profileImage?: File;
 }
 
 function TeacherRegisterStudent() {
@@ -35,6 +37,7 @@ function TeacherRegisterStudent() {
         email: '',
         dateOfBirth: '',
         gender: 'male',
+        phone: '',
         guardianName: '',
         guardianPhone: '',
         address: '',
@@ -42,6 +45,7 @@ function TeacherRegisterStudent() {
         password: 'password123',
     });
 
+    const [imagePreview, setImagePreview] = useState<string>('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -57,20 +61,15 @@ function TeacherRegisterStudent() {
             const userData = await authService.getMe();
 
             const response = await api.get('/classes');
-            const allClasses = response.data;
+            const assignedClasses = userData.assignedClasses || [];
 
-            // If teacher is assigned to a class, filter to only that class
-            // Based on AuthService.getUserProfile, assignedClassId is directly on the user object for teachers
-            const assignedClassId = userData.assignedClassId;
-
-            if (assignedClassId) {
-                const filtered = allClasses.filter((c: any) => c._id === assignedClassId.toString());
-                setClasses(filtered);
-                if (filtered.length > 0) {
-                    setFormData(prev => ({ ...prev, classId: filtered[0]._id }));
+            if (assignedClasses.length > 0) {
+                setClasses(assignedClasses);
+                if (assignedClasses.length === 1) {
+                    setFormData(prev => ({ ...prev, classId: assignedClasses[0]._id }));
                 }
             } else {
-                setClasses(allClasses);
+                setClasses([]);
             }
         } catch (err) {
             console.error('Failed to fetch classes:', err);
@@ -85,6 +84,18 @@ function TeacherRegisterStudent() {
         });
     };
 
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setFormData({ ...formData, profileImage: file });
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -92,7 +103,36 @@ function TeacherRegisterStudent() {
         setSuccess('');
 
         try {
-            await api.post('/students/register', formData);
+            const response = await api.post('/students/register', {
+                studentId: formData.studentId,
+                name: formData.name,
+                email: formData.email,
+                dateOfBirth: formData.dateOfBirth,
+                gender: formData.gender,
+                guardianName: formData.guardianName,
+                guardianPhone: formData.guardianPhone,
+                address: formData.address,
+                phone: formData.phone,
+                classId: formData.classId,
+                password: formData.password,
+            });
+
+            const studentObjectId = response.data.student._id;
+
+            if (formData.profileImage) {
+                const imageFormData = new FormData();
+                imageFormData.append('image', formData.profileImage);
+                imageFormData.append('studentId', studentObjectId);
+
+                try {
+                    await api.post('/students/upload-image', imageFormData, {
+                        headers: { 'Content-Type': 'multipart/form-data' },
+                    });
+                } catch (imgError) {
+                    console.warn('Image upload failed, but student created:', imgError);
+                }
+            }
+
             setSuccess(`✅ Student ${formData.name} registered successfully! ID: ${formData.studentId}`);
 
             // Reset form
@@ -102,12 +142,14 @@ function TeacherRegisterStudent() {
                 email: '',
                 dateOfBirth: '',
                 gender: 'male',
+                phone: '',
                 guardianName: '',
                 guardianPhone: '',
                 address: '',
                 classId: '',
                 password: 'password123',
             });
+            setImagePreview('');
 
             // Redirect back to dashboard after a delay
             setTimeout(() => navigate('/teacher/dashboard'), 3000);
@@ -140,6 +182,31 @@ function TeacherRegisterStudent() {
 
                     <form onSubmit={handleSubmit} className="register-form">
                         <div className="form-section">
+                            <h3>Profile Photo (Optional)</h3>
+                            <div className="image-upload">
+                                <div className="image-preview">
+                                    {imagePreview ? (
+                                        <img src={imagePreview} alt="Preview" style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover' }} />
+                                    ) : (
+                                        <div className="placeholder" style={{ width: '100px', height: '100px', borderRadius: '50%', background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <span style={{ fontSize: '2rem' }}>📷</span>
+                                        </div>
+                                    )}
+                                </div>
+                                <input
+                                    type="file"
+                                    id="profileImage"
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                    className="file-input"
+                                />
+                                <label htmlFor="profileImage" className="file-label btn btn-secondary" style={{ marginTop: '10px', display: 'inline-block', cursor: 'pointer' }}>
+                                    Choose Photo
+                                </label>
+                            </div>
+                        </div>
+
+                        <div className="form-section">
                             <h3>Personal Details</h3>
                             <div className="form-grid">
                                 <div className="form-group">
@@ -157,6 +224,18 @@ function TeacherRegisterStudent() {
                                 <div className="form-group">
                                     <label>Date of Birth *</label>
                                     <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} required />
+                                </div>
+                                <div className="form-group">
+                                    <label>Gender *</label>
+                                    <select name="gender" value={formData.gender} onChange={handleChange} required>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Student Phone *</label>
+                                    <input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="+91 1234567890" required />
                                 </div>
                             </div>
                         </div>
