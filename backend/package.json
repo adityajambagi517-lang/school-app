@@ -6,19 +6,15 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "node --max-old-space-size=460 node_modules/@nestjs/cli/bin/nest.js build",
+    "build": "nest build",
+    "start": "node dist/main.js",
+    "start:prod": "node dist/main.js",
+    "dev": "nest start --watch",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "node --max-old-space-size=460 node_modules/@nestjs/cli/bin/nest.js start",
-    "dev": "npm run start:dev",
-    "start:dev": "node --max-old-space-size=460 node_modules/@nestjs/cli/bin/nest.js start --watch",
-    "start:debug": "nest start --debug --watch",
-    "start:prod": "node --max-old-space-size=460 dist/main",
-    "seed": "node --max-old-space-size=460 -r ts-node/register src/seed.ts",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
