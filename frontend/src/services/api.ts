@@ -9,6 +9,27 @@ const api = axios.create({
     },
 });
 
+/**
+ * Resolves a profile picture path to a full URL.
+ * Handles absolute URLs (http...), data URIs, and relative paths.
+ */
+export const resolveProfilePic = (path?: string): string => {
+    if (!path) return '/default-avatar.png';
+    if (path.startsWith('http') || path.startsWith('data:')) return path;
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `${API_URL}${cleanPath}`;
+};
+
+/**
+ * Resolves a general upload path to a full URL.
+ */
+export const resolveUploadUrl = (path?: string): string => {
+    if (!path) return '';
+    if (path.startsWith('http') || path.startsWith('data:')) return path;
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `${API_URL}${cleanPath}`;
+};
+
 // Add token to requests
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem('token');

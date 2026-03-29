@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { authService, studentsService, adminResetService } from '../../services/api';
+import { authService, studentsService, adminResetService, resolveProfilePic } from '../../services/api';
 import NavBar from '../../components/NavBar';
 import StudentCharts from '../../components/StudentCharts';
 import StudentAttendanceStats from '../../components/StudentAttendanceStats';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 function StudentDetailPage() {
     const { id } = useParams<{ id: string }>();
@@ -97,10 +96,8 @@ function StudentDetailPage() {
         </div>
     );
 
-    const rawPic = student.profilePicture || student.profileImage;
-    const profilePic = rawPic
-        ? (rawPic.startsWith('http') || rawPic.startsWith('data:') ? rawPic : `${API_URL}${rawPic.startsWith('/') ? '' : '/'}${rawPic}`)
-        : null;
+    const profilePic = resolveProfilePic(student.profilePicture || student.profileImage);
+    const hasProfilePic = student.profilePicture || student.profileImage;
 
     return (
         <div style={{ minHeight: '100vh', background: 'var(--bg-page)', paddingTop: '52px' }}>
@@ -109,8 +106,8 @@ function StudentDetailPage() {
                 {/* Header */}
                 <div style={{ background: 'var(--bg-card)', borderRadius: '16px', padding: '24px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap', justifyContent: 'space-between', boxShadow: 'var(--shadow-sm)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: profilePic ? `url(${profilePic}) center/cover` : 'linear-gradient(135deg, var(--primary), var(--primary-end))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', color: 'white', fontWeight: 700, border: '3px solid var(--border)', flexShrink: 0, overflow: 'hidden' }}>
-                            {!profilePic && student.name?.charAt(0)}
+                        <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: hasProfilePic ? `url(${profilePic}) center/cover` : 'linear-gradient(135deg, var(--primary), var(--primary-end))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', color: 'white', fontWeight: 700, border: '3px solid var(--border)', flexShrink: 0, overflow: 'hidden' }}>
+                            {!hasProfilePic && student.name?.charAt(0)}
                         </div>
                         <div>
                             <h1 style={{ margin: 0, fontSize: '22px', fontWeight: 700, color: 'var(--text-main)' }}>{student.name}</h1>

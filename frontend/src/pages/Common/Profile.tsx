@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService } from '../../services/api';
+import { authService, resolveProfilePic } from '../../services/api';
 import NavBar from '../../components/NavBar';
 import './Profile.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 function Profile() {
     const navigate = useNavigate();
@@ -150,9 +149,7 @@ function Profile() {
 
     if (loading) return <div className="loading-container">Loading...</div>;
 
-    const profilePicUrl = user?.profilePicture 
-        ? (user.profilePicture.startsWith('http') || user.profilePicture.startsWith('data:') ? user.profilePicture : `${API_URL}${user.profilePicture}`)
-        : '/default-avatar.png';
+    const profilePicUrl = resolveProfilePic(user?.profilePicture);
 
     return (
         <div className="profile-page-container">

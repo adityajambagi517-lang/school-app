@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { authService, teachersService, adminResetService, classesService } from '../../services/api';
+import { authService, teachersService, adminResetService, classesService, resolveProfilePic } from '../../services/api';
 import api from '../../services/api';
 import NavBar from '../../components/NavBar';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 function TeacherDetailPage() {
     const { id } = useParams<{ id: string }>();
@@ -111,9 +110,7 @@ function TeacherDetailPage() {
         </div>
     );
 
-    const profilePic = teacher.profilePicture
-        ? (teacher.profilePicture.startsWith('http') || teacher.profilePicture.startsWith('data:') ? teacher.profilePicture : `${API_URL}${teacher.profilePicture.startsWith('/') ? '' : '/'}${teacher.profilePicture}`)
-        : null;
+    const profilePic = resolveProfilePic(teacher.profilePicture);
 
     return (
         <div style={{ minHeight: '100vh', background: 'var(--bg-page)', paddingTop: '52px' }}>

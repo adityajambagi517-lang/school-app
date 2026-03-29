@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService, searchService } from '../services/api';
+import { authService, searchService, resolveProfilePic } from '../services/api';
 import { useTheme } from '../hooks/useTheme';
 import './NavBar.css';
 
@@ -51,11 +51,7 @@ function NavBar({
     const close = () => setOpen(false);
 
     const user = authService.getCurrentUser();
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-
-    const profilePicUrl = user?.profilePicture
-        ? (user.profilePicture.startsWith('http') || user.profilePicture.startsWith('data:') ? user.profilePicture : `${API_URL}${user.profilePicture}`)
-        : '/default-avatar.png';
+    const profilePicUrl = resolveProfilePic(user?.profilePicture);
 
     // Debounced search
     const doSearch = useCallback(async (q: string) => {

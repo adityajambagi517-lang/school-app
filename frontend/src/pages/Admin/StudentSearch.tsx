@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService, classesService, studentsService, teachersService, adminResetService } from '../../services/api';
+import { authService, classesService, studentsService, teachersService, adminResetService, resolveProfilePic } from '../../services/api';
 import type { StudentWithDetails } from '../../types/student';
 import NavBar from '../../components/NavBar';
 import SortDropdown from '../../components/SortDropdown';
 import StudentCharts from '../../components/StudentCharts';
 import './StudentSearch.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 function StudentSearch() {
     const navigate = useNavigate();
@@ -188,11 +187,7 @@ function StudentSearch() {
 
     const getProfilePic = (person: any, type: 'student' | 'teacher') => {
         const pic = type === 'student' ? person.profileImage || person.profilePicture : person.profilePicture || person.profileImage;
-        if (!pic) return null;
-        if (pic.startsWith('http') || pic.startsWith('data:')) return pic;
-        // Handle relative paths from server
-        const cleanPath = pic.startsWith('/') ? pic : `/${pic}`;
-        return `${API_URL}${cleanPath}`;
+        return resolveProfilePic(pic);
     };
 
     return (
@@ -303,7 +298,7 @@ function StudentSearch() {
                                             >
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
                                                     <div className="search-avatar teacher-avatar">
-                                                        {pic ? <img src={pic} alt={teacher.name} /> : (teacher.name?.charAt(0) || 'T')}
+                                                        {teacher.profilePicture || teacher.profileImage ? <img src={pic} alt={teacher.name} /> : (teacher.name?.charAt(0) || 'T')}
                                                     </div>
                                                     <div className="student-main" style={{ display: 'flex', flexDirection: 'column' }}>
                                                         <strong>{teacher.name} ({teacher.teacherId})</strong>
@@ -342,6 +337,7 @@ function StudentSearch() {
                                     <h4 style={{ margin: '1rem 0 0.5rem', color: 'var(--accent-secondary)' }}>Students ({results.length})</h4>
                                     {sortedStudents.map(student => {
                                         const pic = getProfilePic(student, 'student');
+                                        const hasPic = !!(student.profileImage || student.profilePicture);
                                         return (
                                             <div
                                                 key={student._id}
@@ -350,7 +346,7 @@ function StudentSearch() {
                                             >
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
                                                     <div className="search-avatar student-avatar">
-                                                        {pic ? <img src={pic} alt={student.name} /> : (student.name?.charAt(0) || 'S')}
+                                                        {hasPic ? <img src={pic} alt={student.name} /> : (student.name?.charAt(0) || 'S')}
                                                     </div>
                                                     <div className="student-main">
                                                         <strong>{student.name || 'Unknown Student'} ({student.studentId || 'No ID'})</strong>
@@ -399,7 +395,8 @@ function StudentSearch() {
                                 <div className="profile-avatar student-avatar-large">
                                     {(() => {
                                         const pic = getProfilePic(selectedStudent, 'student');
-                                        return pic ? <img src={pic} alt={selectedStudent.name} /> : (selectedStudent.name?.charAt(0) || 'S');
+                                        const hasPic = !!(selectedStudent.profileImage || selectedStudent.profilePicture);
+                                        return hasPic ? <img src={pic} alt={selectedStudent.name} /> : (selectedStudent.name?.charAt(0) || 'S');
                                     })()}
                                 </div>
                                 <div className="profile-main">
@@ -554,7 +551,8 @@ function StudentSearch() {
                                 <div className="profile-avatar teacher-avatar-large">
                                     {(() => {
                                         const pic = getProfilePic(selectedTeacher, 'teacher');
-                                        return pic ? <img src={pic} alt={selectedTeacher.name} /> : (selectedTeacher.name?.charAt(0) || 'T');
+                                        const hasPic = !!(selectedTeacher.profilePicture || selectedTeacher.profileImage);
+                                        return hasPic ? <img src={pic} alt={selectedTeacher.name} /> : (selectedTeacher.name?.charAt(0) || 'T');
                                     })()}
                                 </div>
                                 <div className="profile-main">

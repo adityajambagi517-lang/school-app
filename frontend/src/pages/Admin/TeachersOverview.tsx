@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService } from '../../services/api';
+import { authService, resolveProfilePic } from '../../services/api';
 import api from '../../services/api';
 import NavBar from '../../components/NavBar';
 import SortDropdown from '../../components/SortDropdown';
 import './TeachersOverview.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 interface TeacherStats {
     _id: string;
@@ -129,11 +128,11 @@ function TeachersOverview() {
                                 onClick={() => navigate(`/admin/teachers/${teacher._id}`)}
                             >
                                 {(() => {
-                                    const pic = teacher.profilePicture;
-                                    const resolvedPic = pic ? (pic.startsWith('http') || pic.startsWith('data:') ? pic : `${API_URL}${pic.startsWith('/') ? '' : '/'}${pic}`) : null;
+                                    const resolvedPic = resolveProfilePic(teacher.profilePicture);
+                                    const hasPic = !!teacher.profilePicture;
                                     return (
-                                        <div className="accordion-avatar" style={resolvedPic ? { background: `url(${resolvedPic}) center/cover` } : {}}>
-                                            {!resolvedPic && <span>{teacher.name.charAt(0)}</span>}
+                                        <div className="accordion-avatar" style={hasPic ? { background: `url(${resolvedPic}) center/cover` } : {}}>
+                                            {!hasPic && <span>{teacher.name.charAt(0)}</span>}
                                         </div>
                                     );
                                 })()}
