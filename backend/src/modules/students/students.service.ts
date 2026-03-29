@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { Student, StudentDocument } from '../../schemas/student.schema';
 import { Teacher, TeacherDocument } from '../../schemas/teacher.schema';
 import { User, UserDocument } from '../../schemas/user.schema';

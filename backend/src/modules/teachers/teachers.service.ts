@@ -1,7 +1,7 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { Teacher, TeacherDocument } from '../../schemas/teacher.schema';
 import { Class, ClassDocument } from '../../schemas/class.schema';
 import { Student, StudentDocument } from '../../schemas/student.schema';
