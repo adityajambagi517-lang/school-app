@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    Users, GraduationCap, School, BarChart3,
+    Users, GraduationCap, School,
     UserPlus, BookUser, CheckSquare, DollarSign, Search, Megaphone, ShieldCheck, HeadphonesIcon
 } from 'lucide-react';
 import { authService, approvalsService, feesService } from '../../services/api';

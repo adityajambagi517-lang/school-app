@@ -48,6 +48,12 @@ function TeacherStudentDetail() {
                 return;
             }
 
+            if (!data.student) {
+                setError('Student record not found.');
+                setLoading(false);
+                return;
+            }
+
             setStudent(data.student);
             setMarks(Array.isArray(data.marks) ? data.marks : []);
             setFees(Array.isArray(data.fees) ? data.fees : []);

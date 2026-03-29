@@ -131,10 +131,14 @@ export class FeesService {
       throw new ForbiddenException('You can only submit your own fee records');
     }
 
+    // Get student to find classId
+    const student = await this.studentModel.findById(fee.studentId);
+
     // Create edit request
     const editRequest = new this.editRequestModel({
       entityType: EntityType.FEES,
       entityId: fee._id,
+      classId: student?.classId,
       requestType: EditRequestType.CREATE,
       newData: fee.toObject(),
       requestedBy: new Types.ObjectId(referenceId),
@@ -257,6 +261,7 @@ export class FeesService {
         status: EditRequestStatus.PENDING,
       })
       .populate('requestedBy', 'userId name')
+      .populate('classId', 'className section academicYear')
       .sort({ requestedAt: -1 })
       .limit(100)
       .exec();

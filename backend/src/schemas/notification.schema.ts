@@ -46,4 +46,5 @@ export const NotificationSchema = SchemaFactory.createForClass(Notification);
 
 // Compound index for user's unread notifications
 NotificationSchema.index({ recipientId: 1, isRead: 1 });
+NotificationSchema.index({ createdAt: 1 }, { expireAfterSeconds: 15 * 24 * 60 * 60 }); // 15 days
 NotificationSchema.index({ recipientId: 1, createdAt: -1 });

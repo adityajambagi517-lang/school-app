@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../../services/api';
 import NavBar from '../../components/NavBar';
@@ -7,7 +6,6 @@ import './Dashboard.css';
 
 function AttendanceView() {
     const navigate = useNavigate();
-    const user = authService.getCurrentUser();
     const user = authService.getCurrentUser();
 
     const handleLogout = () => {

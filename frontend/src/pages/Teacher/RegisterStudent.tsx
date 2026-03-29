@@ -60,7 +60,7 @@ function TeacherRegisterStudent() {
             // Refresh user data to get the latest assignedClassId
             const userData = await authService.getMe();
 
-            const response = await api.get('/classes');
+            await api.get('/classes');
             const assignedClasses = userData.assignedClasses || [];
 
             if (assignedClasses.length > 0) {

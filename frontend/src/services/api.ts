@@ -185,6 +185,10 @@ export const attendanceService = {
         const response = await api.get(`/attendance/student/${studentId}`);
         return response.data;
     },
+    getHistoryByClass: async (classId: string) => {
+        const response = await api.get(`/attendance/history/${classId}`);
+        return response.data;
+    },
 };
 
 export const studentsService = {

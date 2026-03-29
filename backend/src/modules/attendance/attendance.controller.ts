@@ -74,4 +74,17 @@ export class AttendanceController {
   findByStudent(@Param('studentId') studentId: string) {
     return this.attendanceService.findByStudent(studentId);
   }
+
+  @Get('history/:classId')
+  @Roles(UserRole.TEACHER, UserRole.ADMIN)
+  getHistory(
+    @Param('classId') classId: string,
+    @CurrentUser() user: CurrentUserData,
+  ) {
+    return this.attendanceService.getHistoryByClass(
+      classId,
+      user.role,
+      user.referenceId || '',
+    );
+  }
 }

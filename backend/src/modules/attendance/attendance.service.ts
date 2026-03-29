@@ -106,6 +106,20 @@ export class AttendanceService {
       .exec();
   }
 
+  async getHistoryByClass(classId: string, userRole: string, referenceId: string) {
+    // Verify access
+    if (userRole === UserRole.TEACHER) {
+      await this.verifyTeacherAccess(referenceId, classId);
+    }
+
+    // Get unique dates where attendance was marked for this class
+    const dates = await this.attendanceModel
+      .distinct('date', { classId: new Types.ObjectId(classId) });
+    
+    // Sort dates descending
+    return dates.sort((a, b) => b.getTime() - a.getTime());
+  }
+
   private async verifyTeacherAccess(teacherId: string, classId: string) {
     const classModel = this.teacherModel.db.model('Class');
     const isAssigned = await classModel.exists({ 

@@ -27,7 +27,7 @@ export class AuditLog {
   @Prop()
   ipAddress: string;
 
-  @Prop({ default: () => new Date(), index: true })
+  @Prop({ default: () => new Date(), index: { expires: '30d' } })
   timestamp: Date;
 }
 

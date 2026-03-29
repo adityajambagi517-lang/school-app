@@ -28,6 +28,25 @@ function MarkAttendance() {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
+    
+    // History & Confirmation states
+    const [history, setHistory] = useState<string[]>([]);
+    const [showConfirm, setShowConfirm] = useState(false);
+
+    useEffect(() => {
+        if (activeTab) {
+            loadHistory(activeTab);
+        }
+    }, [activeTab]);
+
+    const loadHistory = async (classId: string) => {
+        try {
+            const historyData = await attendanceService.getHistoryByClass(classId);
+            setHistory(historyData);
+        } catch (error) {
+            console.error('Failed to load history', error);
+        }
+    };
 
     useEffect(() => {
         if (activeTab && date) {
@@ -81,6 +100,11 @@ function MarkAttendance() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setShowConfirm(true);
+    };
+
+    const confirmSubmit = async () => {
+        setShowConfirm(false);
         setSubmitting(true);
         setMessage({ type: 'info', text: '🚀 Submitting attendance...' });
 
@@ -97,7 +121,8 @@ function MarkAttendance() {
             });
 
             setMessage({ type: 'success', text: '✅ Attendance saved successfully!' });
-            // Allow them to look at it instead of immediately navigating away!
+            loadHistory(activeTab); // Refresh history list
+            
             setTimeout(() => {
                 setMessage({ type: '', text: '' });
             }, 3000);
@@ -208,7 +233,65 @@ function MarkAttendance() {
                         {submitting ? 'Submitting...' : `🚀 Submit Daily Attendance`}
                     </button>
                 </div>
+
+                {/* Recent Attendance History */}
+                <div className="history-section">
+                    <div className="section-title">
+                        <span>📅 Recent Attendance Cards</span>
+                    </div>
+
+                    {history.length === 0 ? (
+                        <div className="empty-msg">No attendance records found for this class yet.</div>
+                    ) : (
+                        <div className="history-grid">
+                            {history.slice(0, 6).map(histDate => {
+                                const formattedDate = new Date(histDate).toLocaleDateString(undefined, {
+                                    weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+                                });
+                                return (
+                                    <div key={histDate} className="history-card">
+                                        <div className="history-info">
+                                            <h4>{formattedDate}</h4>
+                                            <p>Marked by you</p>
+                                        </div>
+                                        <div className="history-actions">
+                                            <button 
+                                                className="btn-icon-action view" 
+                                                title="View"
+                                                onClick={() => setDate(histDate.split('T')[0])}
+                                            >
+                                                👁️
+                                            </button>
+                                            <button 
+                                                className="btn-icon-action edit" 
+                                                title="Edit"
+                                                onClick={() => setDate(histDate.split('T')[0])}
+                                            >
+                                                ✏️
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
             </div>
+
+            {/* Confirmation Modal */}
+            {showConfirm && (
+                <div className="modal-overlay" onClick={() => setShowConfirm(false)}>
+                    <div className="confirm-modal" onClick={e => e.stopPropagation()}>
+                        <div className="confirm-icon">📝</div>
+                        <h2>Confirm Attendance?</h2>
+                        <p>You are about to submit the attendance for <strong>{students.length} students</strong> on <strong>{new Date(date).toLocaleDateString()}</strong>.</p>
+                        <div className="modal-actions">
+                            <button className="modal-btn cancel" onClick={() => setShowConfirm(false)}>Cancel</button>
+                            <button className="modal-btn confirm" onClick={confirmSubmit}>Yes, Submit</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

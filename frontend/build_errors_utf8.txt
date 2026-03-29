@@ -1,0 +1,3 @@
+﻿src/pages/Admin/Dashboard.tsx(4,35): error TS6133: 'BarChart3' is declared but its value is never read.
+src/pages/Student/FeesView.tsx(3,43): error TS6133: 'AlertCircle' is declared but its value is never read.
+src/pages/Teacher/RegisterStudent.tsx(63,19): error TS6133: 'response' is declared but its value is never read.

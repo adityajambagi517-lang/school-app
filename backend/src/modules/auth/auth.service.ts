@@ -41,6 +41,7 @@ export class AuthService {
       userId: user.userId,
       _id: user._id.toString(),
       role: user.role,
+      name: user.name,
       referenceId: user.referenceId?.toString(),
     };
 

@@ -18,7 +18,7 @@ export class Attendance {
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Student', required: true, index: true })
   studentId: Types.ObjectId;
 
-  @Prop({ required: true, index: true })
+  @Prop({ required: true, index: { expires: '365d' } })
   date: Date;
 
   @Prop({ required: true, enum: AttendanceStatus })

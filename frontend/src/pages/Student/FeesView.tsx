@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DollarSign, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { DollarSign, Clock, CheckCircle2 } from 'lucide-react';
 import { authService, feesService } from '../../services/api';
 import NavBar from '../../components/NavBar';
 import './Dashboard.css';

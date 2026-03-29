@@ -13,7 +13,8 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { memoryStorage } from 'multer';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 import { TeachersService } from './teachers.service';
 import { RegisterTeacherDto } from './dto/register-teacher.dto';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
@@ -66,7 +67,14 @@ export class TeachersController {
   @Roles(UserRole.ADMIN, UserRole.TEACHER)
   @UseInterceptors(
     FileInterceptor('image', {
-      storage: memoryStorage(),
+      storage: diskStorage({
+        destination: './uploads/teachers',
+        filename: (req, file, cb) => {
+          const teacherId = req.body.teacherId || 'unknown';
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          cb(null, `${teacherId}-${uniqueSuffix}${extname(file.originalname)}`);
+        },
+      }),
       limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
       fileFilter: (req, file, cb) => {
         if (!file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
@@ -88,10 +96,9 @@ export class TeachersController {
       throw new BadRequestException('Teacher ID is required');
     }
 
-    // Convert file buffer buffer to Base64 string
-    const base64Image = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+    const imageUrl = `/uploads/teachers/${file.filename}`;
 
-    return this.teachersService.updateProfileImage(teacherId, base64Image);
+    return this.teachersService.updateProfileImage(teacherId, imageUrl);
   }
 
   @Patch(':id/assign-class')

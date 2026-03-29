@@ -62,9 +62,8 @@ function ChangePassword({ role }: ChangePasswordProps) {
                 role={role}
                 userName={user?.name || 'User'}
                 onLogout={handleLogout}
-                title="SREM School, Horti"
-                showBackRight={true}
-                backPath={`/${role}/dashboard`}
+                backTo={`/${role}/dashboard`}
+                backLabel="← Dashboard"
             />
             
             <div className="dash-scroll">

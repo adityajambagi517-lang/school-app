@@ -64,3 +64,5 @@ export const MarkcardSchema = SchemaFactory.createForClass(Markcard);
 MarkcardSchema.index({ studentId: 1, status: 1 });
 MarkcardSchema.index({ classId: 1, examType: 1 });
 MarkcardSchema.index({ status: 1, submittedBy: 1 });
+MarkcardSchema.index({ createdAt: 1 }, { expireAfterSeconds: 365 * 24 * 60 * 60 }); // 1 year
+
