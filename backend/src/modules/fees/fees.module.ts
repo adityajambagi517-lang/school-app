@@ -1,5 +1,8 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { MulterModule } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 import { FeesService } from './fees.service';
 import { FeesController } from './fees.controller';
 import { Fee, FeeSchema } from '../../schemas/fee.schema';
@@ -18,6 +21,15 @@ import { Student, StudentSchema } from '../../schemas/student.schema';
       { name: Teacher.name, schema: TeacherSchema },
       { name: Student.name, schema: StudentSchema },
     ]),
+    MulterModule.register({
+      storage: diskStorage({
+        destination: './uploads/fees',
+        filename: (req, file, cb) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
+        },
+      }),
+    }),
   ],
   controllers: [FeesController],
   providers: [FeesService],

@@ -93,10 +93,10 @@ function FeesView() {
                                         </div>
                                     </div>
                                     
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', fontSize: '0.95rem', color: '#4a5568', background: isPaid ? '#f0fff4' : '#fffaf0', padding: '0.75rem', borderRadius: '8px' }}>
-                                        <div><strong>Total:</strong> ₹{fee.amount.toLocaleString()}</div>
-                                        <div style={{ color: '#2f855a' }}><strong>Paid:</strong> ₹{(fee.paidAmount || 0).toLocaleString()}</div>
-                                        <div style={{ color: remaining > 0 ? '#e53e3e' : '#2f855a' }}><strong>Remaining:</strong> ₹{remaining.toLocaleString()}</div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', fontSize: '0.95rem', background: isPaid ? '#f0fff4' : '#fffaf0', padding: '0.75rem', borderRadius: '8px' }}>
+                                        <div style={{ color: '#111827' }}><strong>Total:</strong> ₹{fee.amount.toLocaleString()}</div>
+                                        <div style={{ color: '#166534' }}><strong>Paid:</strong> ₹{(fee.paidAmount || 0).toLocaleString()}</div>
+                                        <div style={{ color: remaining > 0 ? '#991b1b' : '#166534' }}><strong>Remaining:</strong> ₹{remaining.toLocaleString()}</div>
                                     </div>
 
                                     <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}>

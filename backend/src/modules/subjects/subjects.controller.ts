@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { SubjectsService } from './subjects.service';
 import { CreateSubjectDto } from './dto/create-subject.dto';
@@ -40,8 +41,11 @@ export class SubjectsController {
 
   @Get()
   @Roles(UserRole.TEACHER, UserRole.ADMIN)
-  findAll(@CurrentUser() user: CurrentUserData) {
-    return this.subjectsService.findAll(user.role, user.referenceId || '');
+  findAll(
+    @CurrentUser() user: CurrentUserData,
+    @Query('classId') classId?: string,
+  ) {
+    return this.subjectsService.findAll(user.role, user.referenceId || '', classId);
   }
 
   @Get(':id')

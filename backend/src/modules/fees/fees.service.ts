@@ -66,6 +66,12 @@ export class FeesService {
       isPaid: false,
     });
 
+    if (createFeeDto.paidAmount && createFeeDto.paidAmount >= createFeeDto.amount) {
+      fee.isPaid = true;
+      fee.status = FeeStatus.PAID;
+      fee.paidAt = new Date();
+    }
+
     return fee.save();
   }
 
@@ -219,22 +225,129 @@ export class FeesService {
   }
 
   /**
-   * Record partial or full payment
+   * Record payment with proof (Teacher/Admin submits for approval)
    */
-  async recordPayment(id: string, amountPaid: number) {
-    const fee = await this.feeModel.findById(id);
-    if (!fee) {
-      throw new NotFoundException('Fee not found');
+  async recordPaymentWithProof(
+    feeId: string,
+    amountPaid: number,
+    userRole: string,
+    referenceId: string,
+    proofUrl?: string,
+    transactionId?: string,
+    remarks?: string,
+  ) {
+    const fee = await this.feeModel.findById(feeId);
+    if (!fee) throw new NotFoundException('Fee record not found');
+
+    // Create a payment object (PENDING)
+    const payment = {
+      _id: new Types.ObjectId(),
+      amount: amountPaid,
+      proofUrl,
+      transactionId,
+      remarks,
+      submittedBy: new Types.ObjectId(referenceId),
+      status: 'PENDING',
+      paidAt: new Date(),
+    };
+
+    fee.payments.push(payment);
+    await fee.save();
+
+    // Create an EditRequest for this payment to show up in Admin Approval Board
+    // We'll use the 'newData' to store which payment index/id is being approved
+    const student = await this.studentModel.findById(fee.studentId);
+    const editRequest = new this.editRequestModel({
+      entityType: EntityType.FEES,
+      entityId: fee._id,
+      classId: student?.classId,
+      requestType: EditRequestType.UPDATE, // Using update for payment approval
+      newData: {
+        paymentId: payment._id,
+        amount: amountPaid,
+        proofUrl,
+        type: 'PAYMENT_APPROVAL',
+      },
+      requestedBy: new Types.ObjectId(referenceId),
+      status: EditRequestStatus.PENDING,
+    });
+    await editRequest.save();
+
+    return { message: 'Payment recorded and submitted for approval', paymentId: payment._id };
+  }
+
+  /**
+   * Admin approves a specific payment record
+   */
+  async approvePayment(feeId: string, paymentId: string, userId: string) {
+    const fee = await this.feeModel.findById(feeId);
+    if (!fee) throw new NotFoundException('Fee not found');
+
+    const paymentIndex = fee.payments.findIndex(p => p._id.toString() === paymentId);
+    if (paymentIndex === -1) throw new NotFoundException('Payment record not found');
+
+    if (fee.payments[paymentIndex].status !== 'PENDING') {
+      throw new BadRequestException('This payment has already been processed');
     }
 
-    fee.paidAmount = (fee.paidAmount || 0) + Number(amountPaid);
+    // Update payment status
+    fee.payments[paymentIndex].status = 'APPROVED';
+    fee.payments[paymentIndex].approvedBy = new Types.ObjectId(userId);
+
+    // Update overall fee balance
+    fee.paidAmount = (fee.paidAmount || 0) + fee.payments[paymentIndex].amount;
+    
     if (fee.paidAmount >= fee.amount) {
       fee.isPaid = true;
       fee.status = FeeStatus.PAID;
       fee.paidAt = new Date();
     }
-    
-    return fee.save();
+
+    // Also find and approve the associated EditRequest
+    const editRequest = await this.editRequestModel.findOne({
+      entityId: fee._id,
+      'newData.paymentId': new Types.ObjectId(paymentId),
+      status: EditRequestStatus.PENDING
+    });
+
+    if (editRequest) {
+      editRequest.status = EditRequestStatus.APPROVED;
+      editRequest.reviewedBy = new Types.ObjectId(userId);
+      editRequest.reviewedAt = new Date();
+      await editRequest.save();
+    }
+
+    await fee.save();
+    return { message: 'Payment approved successfully' };
+  }
+
+  /**
+   * Admin rejects a specific payment record
+   */
+  async rejectPayment(feeId: string, paymentId: string) {
+    const fee = await this.feeModel.findById(feeId);
+    if (!fee) throw new NotFoundException('Fee not found');
+
+    const paymentIndex = fee.payments.findIndex(p => p._id.toString() === paymentId);
+    if (paymentIndex === -1) throw new NotFoundException('Payment record not found');
+
+    fee.payments[paymentIndex].status = 'REJECTED';
+
+    // Also find and reject the associated EditRequest
+    const editRequest = await this.editRequestModel.findOne({
+      entityId: fee._id,
+      'newData.paymentId': new Types.ObjectId(paymentId),
+      status: EditRequestStatus.PENDING
+    });
+
+    if (editRequest) {
+      editRequest.status = EditRequestStatus.REJECTED;
+      editRequest.reviewedAt = new Date();
+      await editRequest.save();
+    }
+
+    await fee.save();
+    return { message: 'Payment rejected' };
   }
 
   /**

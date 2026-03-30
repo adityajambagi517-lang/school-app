@@ -8,7 +8,10 @@ import {
   Delete,
   UseGuards,
   Query,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { FeesService } from './fees.service';
 import { CreateFeeDto } from './dto/create-fee.dto';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
@@ -99,14 +102,46 @@ export class FeesController {
     return this.feesService.markAsPaid(id);
   }
 
-  // Record partial or full payment
-  @Patch(':id/payment')
+  // Record payment with proof (Teacher/Admin)
+  @Post(':id/record-payment')
   @Roles(UserRole.ADMIN, UserRole.TEACHER)
-  recordPayment(
+  @UseInterceptors(FileInterceptor('receipt'))
+  recordPaymentWithProof(
     @Param('id') id: string,
-    @Body() body: { amountPaid: number },
+    @Body() body: { amountPaid: string; transactionId?: string; remarks?: string },
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser() user: CurrentUserData,
   ) {
-    return this.feesService.recordPayment(id, body.amountPaid);
+    return this.feesService.recordPaymentWithProof(
+      id,
+      Number(body.amountPaid),
+      user.role,
+      user.referenceId || '',
+      file?.path,
+      body.transactionId,
+      body.remarks
+    );
+  }
+
+  // Admin approves a specific payment record
+  @Patch(':id/payments/:paymentId/approve')
+  @Roles(UserRole.ADMIN)
+  approvePayment(
+    @Param('id') id: string,
+    @Param('paymentId') paymentId: string,
+    @CurrentUser() user: CurrentUserData,
+  ) {
+    return this.feesService.approvePayment(id, paymentId, user.userId);
+  }
+
+  // Admin rejects a specific payment record
+  @Patch(':id/payments/:paymentId/reject')
+  @Roles(UserRole.ADMIN)
+  rejectPayment(
+    @Param('id') id: string,
+    @Param('paymentId') paymentId: string,
+  ) {
+    return this.feesService.rejectPayment(id, paymentId);
   }
 
   // Student views their own fees; Teacher/Admin can view any student's fees

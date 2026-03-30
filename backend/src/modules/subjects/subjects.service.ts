@@ -56,23 +56,35 @@ export class SubjectsService {
     return subject.save();
   }
 
-  async findAll(userRole: string, referenceId: string) {
+  async findAll(userRole: string, referenceId: string, classId?: string) {
     if (userRole === UserRole.TEACHER) {
       const teacher = await this.teacherModel.findById(referenceId);
       if (!teacher) {
         throw new NotFoundException('Teacher not found');
       }
 
-      // If teacher is assigned to a class, let them see all subjects for that class
-      // This is needed for bulk marks entry where class teacher enters marks for all subjects
       const classModel = this.teacherModel.db.model('Class');
       const assignedClasses = await classModel.find({ classTeacherId: teacher._id }).lean().exec();
       
       if (assignedClasses && assignedClasses.length > 0) {
-        const classIds = assignedClasses.map(c => c._id as Types.ObjectId);
+        const assignedClassIds = assignedClasses.map(c => c._id.toString());
+        
+        // If specific classId requested, verify teacher has access
+        if (classId) {
+          if (!assignedClassIds.includes(classId)) {
+            throw new ForbiddenException('You are not assigned to this class');
+          }
+          return this.subjectModel
+            .find({ classId: new Types.ObjectId(classId), isActive: true })
+            .sort({ name: 1 })
+            .exec();
+        }
+
+        // Default: return subjects for all assigned classes
+        const classObjectIds = assignedClasses.map(c => c._id as Types.ObjectId);
         return this.subjectModel
           .find({
-            classId: { $in: classIds },
+            classId: { $in: classObjectIds },
             isActive: true,
           })
           .sort({ name: 1 })
@@ -89,11 +101,16 @@ export class SubjectsService {
         .exec();
     }
 
-    // Admin can see all subjects
+    // Admin can see all subjects, filter by classId if provided
+    const query: any = { isActive: true };
+    if (classId) {
+      query.classId = new Types.ObjectId(classId);
+    }
+
     return this.subjectModel
-      .find({ isActive: true })
+      .find(query)
       .populate('teacherId', 'name teacherId')
-      .populate('classId', 'name')
+      .populate('classId', 'className section') // Populating className and section for better admin visibility
       .sort({ createdAt: -1 })
       .exec();
   }

@@ -162,6 +162,26 @@ export const feesService = {
         const response = await api.patch(`/fees/${id}/payment`, { amountPaid });
         return response.data;
     },
+    recordPaymentWithProof: async (feeId: string, amountPaid: number, receipt?: File, transactionId?: string, remarks?: string) => {
+        const formData = new FormData();
+        formData.append('amountPaid', amountPaid.toString());
+        if (receipt) formData.append('receipt', receipt);
+        if (transactionId) formData.append('transactionId', transactionId);
+        if (remarks) formData.append('remarks', remarks);
+        
+        const response = await api.post(`/fees/${feeId}/record-payment`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return response.data;
+    },
+    approvePayment: async (feeId: string, paymentId: string) => {
+        const response = await api.patch(`/fees/${feeId}/payments/${paymentId}/approve`);
+        return response.data;
+    },
+    rejectPayment: async (feeId: string, paymentId: string) => {
+        const response = await api.patch(`/fees/${feeId}/payments/${paymentId}/reject`);
+        return response.data;
+    },
     submit: async (id: string) => {
         const response = await api.patch(`/fees/${id}/submit`);
         return response.data;
@@ -347,8 +367,9 @@ export const subjectsService = {
         const response = await api.post('/subjects', data);
         return response.data;
     },
-    getAll: async () => {
-        const response = await api.get('/subjects');
+    getAll: async (classId?: string) => {
+        const params = classId ? { classId } : {};
+        const response = await api.get('/subjects', { params });
         return response.data;
     },
     update: async (id: string, data: any) => {

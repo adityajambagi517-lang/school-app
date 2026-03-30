@@ -58,6 +58,18 @@ export class Fee {
 
   @Prop()
   paidAt: Date;
+
+  @Prop([{
+    amount: { type: Number, required: true },
+    paidAt: { type: Date, default: Date.now },
+    proofUrl: { type: String }, // Path to receipt image
+    status: { type: String, enum: ['PENDING', 'APPROVED', 'REJECTED'], default: 'PENDING' },
+    submittedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Teacher' },
+    approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    transactionId: { type: String },
+    remarks: { type: String }
+  }])
+  payments: any[];
 }
 
 export const FeeSchema = SchemaFactory.createForClass(Fee);

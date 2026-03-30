@@ -9,6 +9,7 @@ export enum EditRequestType {
   UPDATE = 'update',
   DELETE = 'delete',
   REVALUATION = 'revaluation',
+  PAYMENT = 'payment',
 }
 
 export enum EditRequestStatus {

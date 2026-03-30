@@ -128,7 +128,7 @@ function TeacherStudentDetail() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '14px', marginBottom: '20px' }}>
                     {[
                         { label: 'Attendance', value: `${attendancePct}%`, icon: '✅', color: attendancePct >= 75 ? '#10b981' : '#ef4444' },
-                        { label: 'Total Fees', value: `₹${totalFees}`, icon: '💰', color: 'var(--text-main)' },
+                        { label: 'Total Fees', value: `₹${totalFees}`, icon: '💰', color: '#0f172a' },
                         { label: 'Pending Fees', value: `₹${pendingFees}`, icon: '⏳', color: pendingFees > 0 ? '#ef4444' : '#10b981' },
                         { label: 'Marks Records', value: marks.length, icon: '📊', color: 'var(--primary)' },
                         { label: 'Overall Perf.', value: `${overallMarksPct}%`, icon: '🎓', color: overallMarksPct >= 40 ? '#10b981' : '#ef4444' },
@@ -174,7 +174,7 @@ function TeacherStudentDetail() {
                                         <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{fee.dueDate ? new Date(fee.dueDate).toLocaleDateString() : ''}</div>
                                     </div>
                                     <div style={{ textAlign: 'right' }}>
-                                        <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>₹{fee.amount}</div>
+                                        <div style={{ fontWeight: 700, color: '#0f172a' }}>₹{fee.amount}</div>
                                         <span style={{ padding: '2px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: fee.isPaid ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)', color: fee.isPaid ? '#10b981' : '#ef4444' }}>
                                             {fee.isPaid ? 'Paid' : 'Unpaid'}
                                         </span>

@@ -19,6 +19,7 @@ function ManageFees() {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
+    const [receiptFiles, setReceiptFiles] = useState<{[key: string]: File | null}>({});
 
     const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -103,6 +104,8 @@ function ManageFees() {
 
     const handleRecordPayment = async (feeId: string) => {
         const amountStr = paymentAmount[feeId];
+        const receipt = receiptFiles[feeId];
+
         if (!amountStr || isNaN(Number(amountStr)) || Number(amountStr) <= 0) {
             setMessage({ type: 'error', text: 'Please enter a valid payment amount' });
             return;
@@ -110,15 +113,23 @@ function ManageFees() {
         
         try {
             setSubmitting(true);
-            await feesService.recordPayment(feeId, Number(amountStr));
-            setMessage({ type: 'success', text: `Payment of ₹${amountStr} recorded successfully!` });
+            await feesService.recordPaymentWithProof(feeId, Number(amountStr), receipt || undefined);
+            setMessage({ type: 'success', text: `Payment of ₹${amountStr} submitted for approval!` });
+            
+            // Clear inputs
             setPaymentAmount({ ...paymentAmount, [feeId]: '' });
-            if (user.assignedClassId) await loadStudents(user.assignedClassId); // Refresh to get updated amounts
+            setReceiptFiles({ ...receiptFiles, [feeId]: null });
+            
+            if (user.assignedClassId) await loadStudents(user.assignedClassId); // Refresh to get updated history
         } catch (error: any) {
             setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to record payment' });
         } finally {
             setSubmitting(false);
         }
+    };
+
+    const handleFileChange = (feeId: string, file: File | null) => {
+        setReceiptFiles(prev => ({ ...prev, [feeId]: file }));
     };
 
     const handleEditDraft = (fee: any) => {
@@ -171,7 +182,7 @@ function ManageFees() {
             <div className="dashboard-content">
                 <div className="page-header">
                     <h1>💰 Manage Fees</h1>
-                    <p>Create and manage student fee records</p>
+                    <p>Create fee assignments and record student payments with proof</p>
                 </div>
 
                 {message.text && (
@@ -248,7 +259,7 @@ function ManageFees() {
                                 type="number"
                                 value={formData.paidAmount}
                                 onChange={(e) => setFormData({ ...formData, paidAmount: e.target.value })}
-                                placeholder="e.g., 2000 (Optional)"
+                                placeholder="Optional"
                                 min="0"
                                 className="form-input"
                             />
@@ -269,7 +280,7 @@ function ManageFees() {
 
                     <div style={{ display: 'flex', gap: '1rem' }}>
                         <button type="submit" className="btn btn-primary" disabled={submitting}>
-                            {submitting ? 'Saving...' : (editingId ? 'Update Draft' : 'Create Fee Record')}
+                            {submitting ? 'Saving...' : (editingId ? 'Update Draft' : 'Create Fee Assignment')}
                         </button>
                         {editingId && (
                             <button type="button" className="btn btn-secondary" onClick={() => { setEditingId(null); setFormData(initialFormState); }}>
@@ -280,34 +291,70 @@ function ManageFees() {
                 </form>
 
                 <div className="info-box">
-                    <p>ℹ️ Fee records are saved as drafts. Submit them for admin approval to publish to students.</p>
+                    <p>ℹ️ <strong>Process:</strong> Create Draft → Submit for Admin Approval → Admin Publishes → Record Payments.</p>
                 </div>
 
                 {formData.studentId && (
                     <div style={{ marginTop: '2rem' }}>
                         <div className="section-header">
-                            <h2 className="section-title">Student Fee Records</h2>
+                            <h2 className="section-title">Fee Assignments & Payments</h2>
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginTop: '1rem' }}>
                             {classFees.filter(f => (f.studentId?._id || f.studentId) === formData.studentId).length === 0 ? (
                                 <p style={{ color: '#666' }}>No fees found for this student.</p>
                             ) : (
                                 classFees.filter(f => (f.studentId?._id || f.studentId) === formData.studentId).map(fee => {
                                     const remaining = fee.amount - (fee.paidAmount || 0);
                                     return (
-                                        <div key={fee._id} className="activity-card" style={{ padding: '1.25rem' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                                <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#2d3748' }}>{fee.termName} ({fee.academicYear})</h3>
+                                        <div key={fee._id} className="activity-card" style={{ padding: '1.5rem', border: '1px solid #e2e8f0', background: '#fff' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                                                <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#1a202c' }}>{fee.termName} ({fee.academicYear})</h3>
                                                 <span className={`badge ${fee.status === 'PAID' ? 'badge-success' : (fee.status === 'PUBLISHED' ? 'badge-warning' : (fee.status === 'DRAFT' ? 'badge-danger' : 'badge-info'))}`} style={{ textTransform: 'uppercase' }}>
-                                                    {fee.status === 'PUBLISHED' ? 'PENDING' : fee.status}
+                                                    {fee.status === 'PUBLISHED' ? 'ACTIVE' : fee.status}
                                                 </span>
                                             </div>
                                             
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', fontSize: '0.95rem', color: '#4a5568', background: '#f7fafc', padding: '0.75rem', borderRadius: '8px' }}>
-                                                <div><strong>Total:</strong> ₹{fee.amount.toLocaleString()}</div>
-                                                <div style={{ color: '#2f855a' }}><strong>Paid:</strong> ₹{(fee.paidAmount || 0).toLocaleString()}</div>
-                                                <div style={{ color: remaining > 0 ? '#e53e3e' : '#2f855a' }}><strong>Remaining:</strong> ₹{remaining.toLocaleString()}</div>
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1.5rem', background: '#f8fafc', padding: '1rem', borderRadius: '12px' }}>
+                                                <div>
+                                                    <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '4px' }}>Total Charge</div>
+                                                    <div style={{ fontWeight: 'bold', color: '#0f172a' }}>₹{fee.amount.toLocaleString()}</div>
+                                                </div>
+                                                <div>
+                                                    <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '4px' }}>Paid (Verified)</div>
+                                                    <div style={{ fontWeight: 'bold', color: '#10b981' }}>₹{(fee.paidAmount || 0).toLocaleString()}</div>
+                                                </div>
+                                                <div>
+                                                    <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '4px' }}>Balance</div>
+                                                    <div style={{ fontWeight: 'bold', color: remaining > 0 ? '#ef4444' : '#10b981' }}>₹{remaining.toLocaleString()}</div>
+                                                </div>
                                             </div>
+
+                                            {/* Payment History Sub-section */}
+                                            {fee.payments && fee.payments.length > 0 && (
+                                                <div style={{ marginBottom: '1.5rem', border: '1px solid #edf2f7', borderRadius: '8px', overflow: 'hidden' }}>
+                                                    <div style={{ background: '#edf2f7', padding: '8px 12px', fontSize: '0.85rem', fontWeight: 600 }}>Previous Payments</div>
+                                                    <div style={{ maxHeight: '150px', overflowY: 'auto' }}>
+                                                        {fee.payments.map((p: any, idx: number) => (
+                                                            <div key={idx} style={{ padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9rem', borderTop: '1px solid #edf2f7' }}>
+                                                                <div>
+                                                                    <strong>₹{p.amount.toLocaleString()}</strong> 
+                                                                    <span style={{ color: '#64748b', fontSize: '0.8rem', marginLeft: '8px' }}>{new Date(p.paidAt).toLocaleDateString()}</span>
+                                                                </div>
+                                                                <span style={{ 
+                                                                    padding: '2px 8px', 
+                                                                    borderRadius: '12px', 
+                                                                    fontSize: '0.75rem', 
+                                                                    fontWeight: 600,
+                                                                    background: p.status === 'APPROVED' ? '#dcfce7' : (p.status === 'REJECTED' ? '#fee2e2' : '#fef3c7'),
+                                                                    color: p.status === 'APPROVED' ? '#166534' : (p.status === 'REJECTED' ? '#991b1b' : '#92400e')
+                                                                }}>
+                                                                    {p.status}
+                                                                </span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
                                             
                                             {fee.status === 'DRAFT' && (
                                                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
@@ -317,27 +364,48 @@ function ManageFees() {
                                                 </div>
                                             )}
 
-                                            {(fee.status === 'PUBLISHED' && remaining > 0) && (
-                                                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-                                                    <input 
-                                                        type="number" 
-                                                        placeholder="Enter payment amount" 
-                                                        className="form-input" 
-                                                        style={{ flex: 1, margin: 0 }}
-                                                        value={paymentAmount[fee._id] || ''}
-                                                        onChange={e => setPaymentAmount({...paymentAmount, [fee._id]: e.target.value})}
-                                                        max={remaining}
-                                                        min="1"
-                                                    />
-                                                    <button 
-                                                        type="button"
-                                                        className="btn btn-primary" 
-                                                        onClick={() => handleRecordPayment(fee._id)}
-                                                        disabled={submitting || !paymentAmount[fee._id]}
-                                                        style={{ whiteSpace: 'nowrap' }}
-                                                    >
-                                                        Record Payment
-                                                    </button>
+                                            {(fee.status === 'PUBLISHED' || fee.status === 'APPROVED' || (fee.status === 'PAID' && remaining > 0)) && (
+                                                <div style={{ marginTop: '1rem', borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
+                                                    <p style={{ margin: '0 0 10px 0', fontSize: '0.9rem', fontWeight: 600, color: '#4a5568' }}>Report New Payment:</p>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                            <input 
+                                                                type="number" 
+                                                                placeholder="Amount" 
+                                                                className="form-input" 
+                                                                style={{ flex: 1, margin: 0 }}
+                                                                value={paymentAmount[fee._id] || ''}
+                                                                onChange={e => setPaymentAmount({...paymentAmount, [fee._id]: e.target.value})}
+                                                                max={remaining}
+                                                                min="1"
+                                                            />
+                                                            <div style={{ position: 'relative', flex: 1 }}>
+                                                                <input 
+                                                                    type="file" 
+                                                                    id={`receipt-${fee._id}`}
+                                                                    style={{ display: 'none' }}
+                                                                    onChange={e => handleFileChange(fee._id, e.target.files?.[0] || null)}
+                                                                    accept="image/*,.pdf"
+                                                                />
+                                                                <label 
+                                                                    htmlFor={`receipt-${fee._id}`}
+                                                                    className="btn btn-secondary"
+                                                                    style={{ display: 'block', margin: 0, textAlign: 'center', cursor: 'pointer', fontSize: '0.85rem' }}
+                                                                >
+                                                                    {receiptFiles[fee._id] ? '📎 Receipt Selected' : '📸 Add Receipt'}
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                        <button 
+                                                            type="button"
+                                                            className="btn btn-primary" 
+                                                            onClick={() => handleRecordPayment(fee._id)}
+                                                            disabled={submitting || !paymentAmount[fee._id]}
+                                                            style={{ width: '100%' }}
+                                                        >
+                                                            Submit Payment for Approval
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
